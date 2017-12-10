@@ -1,0 +1,25 @@
+{application, espace,
+ [{description, "An Erlang implementation of tuple spaces"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, { espace_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    sasl
+   ]},
+  {env,[]},
+  {modules, [
+	     espace_app,
+	     espace_cli,
+	     espace_sup,
+	     espace_test1,
+	     tspool_srv,
+	     wkpool_srv,
+	     wkpool_sup,
+	     worker_sup
+	    ]},
+  {maintainers, []},
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.

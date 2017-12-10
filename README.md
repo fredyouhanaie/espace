@@ -71,3 +71,26 @@ On the server side there are two main components:
 - `wkpool_sup` is a `supervisor` that manages worker processes, this in turn has the following components:
   - `wkpool_srv` is a `gen_server` that will receive the `eval` requests, and pass the request to the worker supervisor.
   - `worker_sup` is a `supervisor` that will create a new child process that in turn will `apply` the supplied `{M,F,A}` function.
+
+### TSPOOL - Tuple Space Pool
+
+The tuples are kept in an ETS table with two columns, A unique ref,
+and the tuple itself. A single `gen_server` handles all access to the
+ETS table. This is not scalable and will be addressed in due course.
+
+For the cases where no matching tuple is found, a second ETS table is
+used to remember the pattern, the client PID and a unique reference
+for this case, and the client API will then block on a receive for the
+unique reference.
+
+Each `out` operation, after inserting the new tuple, will scan through
+the waiting list and if it matches, the client is sent a message with
+the unique reference and the entry is removed from the waiting patterns
+table. Once the waiting client receives the unique reference, it will
+attempt the `rd` or `in` operation again.
+
+### WKPOOL - Worker Pool
+
+Each `eval` operation, is executed within a child process of a
+`simple_one_for_one` supervisor. No attempt is made to throttle the
+number of eval processes.

@@ -52,6 +52,14 @@ For now, you need to build and run it manually :-(
     > `erl -boot start_sasl`
   * start the `espace` application
     > `application:start(espace).`
+  * start the test adder
+    > `espace_test1:start().
+  * use the table viewer in `observer:start` to see the progress of the adder.
+  * try adding new tuples to the pool, e.g.
+    > `espace_cli:out({add, 42, 43}).`
+  * You should see a `{sum, 42, 43, 85}` in the `tspool` table
+  * There will always be a `{add, '$1', '$2'}` pattern waiting in the `tspool_patt` table.
+
 
 ## Organization
 

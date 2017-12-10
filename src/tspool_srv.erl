@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, espace_out/1, espace_in/1, stop/0]).
+-export([start_link/0, espace_out/1, espace_in/1, espace_rd/1, stop/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -54,9 +54,35 @@ espace_out(Tuple) ->
 %%--------------------------------------------------------------------
 
 espace_in(Pattern) ->
-    Match = gen_server:call(?SERVER, {espace_in, Pattern}),
-    io:format("espace_in: ~p.~n", [Match]),
-    Match.
+    Reply = gen_server:call(?SERVER, {espace_in, Pattern}),
+    case Reply of
+	{match, Match} ->
+	    Match;
+	{nomatch, Cli_ref} ->
+	    receive
+		Cli_ref ->
+		    espace_in(Pattern) % our tuple has arrived, try again!
+	    end
+    end.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Perform a "rd" operation
+%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%% @end
+%%--------------------------------------------------------------------
+%% TODO - surely you can combine this with espace_in!
+espace_rd(Pattern) ->
+    Reply = gen_server:call(?SERVER, {espace_rd, Pattern}),
+    case Reply of
+	{match, Match} ->
+	    Match;
+	{nomatch, Cli_ref} ->
+	    receive
+		Cli_ref ->
+		    espace_rd(Pattern) % our tuple has arrived, try again!
+	    end
+    end.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -107,27 +133,38 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-
-handle_call({espace_in, Pattern}, _From, State) ->
-    Match = ets:match(State#state.tspool, {'_', Pattern}),
+%% TODO - in/rd are really ugly - refactor
+handle_call({espace_in, Pattern}, From, State) ->
+    TabId = State#state.tspool,
+    Match = ets:match(TabId, {'$0', Pattern}, 1),
     case Match of
-	[] ->
-	    {reply, notfound, State};
-	_ ->
-	    {reply, {match, Match}, State}
+	'$end_of_table' ->
+	    {Cli_pid, _} = From,  %% so that we can notify the client
+	    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
+	    ets:insert(State#state.tspatt, {Pattern, Cli_pid, Cli_ref}),
+	    {reply, {nomatch, Cli_ref}, State};
+	{[[TabKey|Fields]],_} -> %% We only want one match, and we ignore the ets:match continuation
+	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always return the whole tuple
+	    Reply = {match, {Fields, Tuple}}, %% Fileds may contain data, if Pattern had '$N'
+	    ets:delete(TabId, TabKey),
+	    {reply, Reply, State}
     end;
 
-handle_call({espace_inp, _Pattern}, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State};
-
-handle_call({espace_rd, _Pattern}, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State};
-
-handle_call({espace_rdp, _Pattern}, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State};
+%% TODO - this is ugly, same as espace_in, except we don't remove the tuple!
+handle_call({espace_rd, Pattern}, From, State) ->
+    TabId = State#state.tspool,
+    Match = ets:match(TabId, {'$0', Pattern}, 1),
+    case Match of
+	'$end_of_table' ->
+	    {Client, _} = From,
+	    Cli_ref = make_ref(),
+	    ets:insert(State#state.tspatt, {Pattern, Client, Cli_ref}),
+	    {reply, {nomatch, Cli_ref}, State};
+	{[[TabKey|Fields]],_} ->
+	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey),
+	    Reply = {match, {Fields, Tuple}},
+	    {reply, Reply, State}
+    end;
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
@@ -146,6 +183,8 @@ handle_call(_Request, _From, State) ->
 
 handle_cast({espace_out, Tuple}, State) ->
     ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
+    TSpatt = State#state.tspatt,
+    check_waitlist(Tuple, TSpatt, ets:tab2list(TSpatt)), % this will tell any waiting in/rd to recurse!
     {noreply, State};
 
 handle_cast(stop, State) ->
@@ -195,3 +234,20 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+check_waitlist(_Tuple, _TabId, []) ->
+    none;
+check_waitlist(Tuple, TabId, [Cli|Clients]) ->
+    {Pattern, Cli_pid, Cli_ref} = Cli,
+    case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
+	{ok, false} ->
+	    check_waitlist(Tuple, TabId, Clients);
+	_ ->
+	    Cli_pid ! Cli_ref, %% don't forget to delete the tspatt!
+	    ets:delete_object(TabId, Cli)
+    end.

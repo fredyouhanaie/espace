@@ -35,12 +35,12 @@ The basic idea is to make availabe a space for the tuples, currently
 
 ## Current Status
 
-* The project has been developed on a *Linux* system.
+* The project has been developed and tested on a *Linux* system.
 * Having issues with getting `rebar3` to compile the code - newbie issue!
-* The modules are being compiled manually via `make`.
-* The worker side looks good.
-* On the TS side, `out` is good, but the pattern matching side, `in` and `rd`, is still work in progress.
+* The modules are, for now, being compiled manually via `make`.
+* All seems to be working, with manual test.
 * No test scripts, yet.
+* Not an scalable implementation, yet.
 
 ## To check out the application
 

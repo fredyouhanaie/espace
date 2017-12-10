@@ -49,7 +49,7 @@ For now, you need to build and run it manually :-(
 * Change to the `src/` directory, `cd src`, then run `make`
 * To run the application
   * start the shell with SASL
-    > `erl -boot sasl`
+    > `erl -boot start_sasl`
   * start the `espace` application
     > `application:start(espace).`
 

@@ -11,7 +11,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0, stop/0]).
+-export([start_link/0, stop/0, run_child/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -71,7 +71,8 @@ init([]) ->
 		 period => 5},    %% TODO needs tuning
 
     AChild = #{id => tsworker,
-	       start => {erlang, apply, []}, %% TODO need own wrapper here
+	       start => {worker_sup, run_child, []},
+	       restart => temporary,
 	       shutdown => brutal_kill,
 	       type => worker},
 
@@ -80,3 +81,6 @@ init([]) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+run_child(M, F, A) ->
+    {ok, spawn_link(M, F, A)}.

@@ -7,4 +7,15 @@
 
 BEAMS=$(patsubst %.erl, %.beam, $(wildcard *.erl))
 
-all: $(BEAMS)
+all: $(BEAMS) espace.app
+
+espace.app: espace.app.src
+	cp -vp espace.app.src espace.app
+
+.PHONY: clean
+clean:
+	rm -f *.beam espace.app
+
+.PHONY: run
+run:
+	erl -boot start_sasl -s observer

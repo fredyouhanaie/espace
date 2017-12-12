@@ -23,6 +23,12 @@ added to the pool, probably by another worker via the `out` operation.
 The worker processes are started via the `eval` operation. A worker can
 in turn start further workers via the `eval` operation.
 
+A typical application will start with a series of `out` and `eval`
+oprations. Some of the worker processes will then, using the `in` or `rd`
+operations, pick the tuples added via the `out` operations, process them,
+then `out` the results. Other worker processes can then pick the results
+and process them further.
+
 ## The current implementation
 
 This initial implementation is carried out as part of the [Spawfest
@@ -30,8 +36,8 @@ This initial implementation is carried out as part of the [Spawfest
 implementation time (48 hours) it is treated as a proof of concept,
 that will be optimized over time.
 
-The basic idea is to make availabe a space for the tuples, currently
-`ETS`, along with the four basic operations, `eval`, `out`, `in` and `rd`.
+To start with, we will provide a space for the tuples, currently `ETS`,
+along with the four basic operations, `eval`, `out`, `in` and `rd`.
 
 ## Current Status
 
@@ -63,13 +69,13 @@ For now, you need to build and run it manually :-(
 
 ## Organization
 
-`espace` has been build as an application, `espace_app`. Presently only
+`espace` has been built as an application, `espace_app`. Presently only
 one instance of the application can run on a given node.
 
 Once the server application is started, the client applications can use
-the `espace_cli` module to perform any of the four operations. In face
-one can kick off the whole process calling single purpose written boot
-function, e.g.
+the `espace_cli` module to perform any of the four operations. In fact
+one can kick off the whole process by calling a purpose written bootstrap
+function, which can in turn perform `out` and `eval` operations, e.g.
 
 > `espace_cli:eval({Mod, Func, Args})`.
 
@@ -78,7 +84,7 @@ On the server side there are two main components:
 - `tspool_srv` is a `gen_server` that manages the TS storage pool. This server will handle the `out`, `in` and `rd` requests.
 - `wkpool_sup` is a `supervisor` that manages worker processes, this in turn has the following components:
   - `wkpool_srv` is a `gen_server` that will receive the `eval` requests, and pass the request to the worker supervisor.
-  - `worker_sup` is a `supervisor` that will create a new child process that in turn will `apply` the supplied `{M,F,A}` function.
+  - `worker_sup` is a `supervisor` that will create a new child process with the supplied `{M,F,A}` function.
 
 ### TSPOOL - Tuple Space Pool
 
@@ -88,17 +94,20 @@ ETS table. This is not scalable and will be addressed in due course.
 
 For the cases where no matching tuple is found, a second ETS table is
 used to remember the pattern, the client PID and a unique reference
-for this case, and the client API will then block on a receive for the
-unique reference.
+for this specific request. The unique reference will be used by the
+`tspool_srv` client to block on a receive for the unique reference.
 
 Each `out` operation, after inserting the new tuple, will scan through
 the waiting list and if it matches, the client is sent a message with
 the unique reference and the entry is removed from the waiting patterns
 table. Once the waiting client receives the unique reference, it will
-attempt the `rd` or `in` operation again.
+attempt the `rd` or `in` operation again. Note that the client is not
+handed the tuple, but notified to ask for it again. If more than one
+client have waiting patterns that match the tuple, then they will end
+up competing for it.
 
 ### WKPOOL - Worker Pool
 
 Each `eval` operation, is executed within a child process of a
 `simple_one_for_one` supervisor. No attempt is made to throttle the
-number of eval processes.
+number of `eval` processes.

@@ -9,7 +9,7 @@
 -module(espace_cli).
 
 %% API
--export([eval/1, in/1, out/1, rd/1]).
+-export([eval/1, in/1, inp/1, out/1, rd/1, rdp/1]).
 
 %%%===================================================================
 %%% API
@@ -36,6 +36,15 @@ in(Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Perform an "inp" operation via the espace server.
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+inp(Pattern) ->
+    tspool_srv:espace_inp(Pattern).
+
+%%--------------------------------------------------------------------
+%% @doc
 %% Perform an "out" operation via the espace server.
 %% @spec
 %% @end
@@ -52,6 +61,14 @@ out(Tuple) ->
 rd(Pattern) ->
     tspool_srv:espace_rd(Pattern).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Perform a "rdp" operation via the espace server.
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+rdp(Pattern) ->
+    tspool_srv:espace_rdp(Pattern).
 
 %%%===================================================================
 %%% Internal functions

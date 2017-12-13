@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, espace_out/1, espace_in/1, espace_rd/1, stop/0]).
+-export([start_link/0, espace_out/1, espace_in/1, espace_rd/1, espace_inp/1, espace_rdp/1, stop/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -64,6 +64,23 @@ espace_in(Pattern) ->
 espace_rd(Pattern) ->
     espace_op(espace_rd, Pattern).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Perform an "in" operation
+%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%% @end
+%%--------------------------------------------------------------------
+espace_inp(Pattern) ->
+    espace_op(espace_inp, Pattern).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Perform a "rd" operation
+%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%% @end
+%%--------------------------------------------------------------------
+espace_rdp(Pattern) ->
+    espace_op(espace_rdp, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -117,8 +134,14 @@ init([]) ->
 handle_call({espace_in, Pattern}, From, State) ->
     handle_espace_op(espace_in, Pattern, From, State);
 
+handle_call({espace_inp, Pattern}, From, State) ->
+    handle_espace_op(espace_inp, Pattern, From, State);
+
 handle_call({espace_rd, Pattern}, From, State) ->
     handle_espace_op(espace_rd, Pattern, From, State);
+
+handle_call({espace_rdp, Pattern}, From, State) ->
+    handle_espace_op(espace_rdp, Pattern, From, State);
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
@@ -217,7 +240,9 @@ espace_op(Espace_Op, Pattern) ->
     case Reply of
 	{match, Match} ->
 	    Match;
-	{nomatch, Cli_ref} ->
+	{nomatch} -> %% only from the inp and rdp operations
+	    nomatch;
+	{nomatch, Cli_ref} -> %% only from the in and rd operations
 	    receive
 		Cli_ref ->
 		    Espace_Op(Pattern) % our tuple has arrived, try again!
@@ -226,7 +251,7 @@ espace_op(Espace_Op, Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% unified call handler for "in" and "rd"
+%% unified call handler for "in", "inp", "rd" and "rdp"
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
@@ -234,16 +259,25 @@ handle_espace_op(Espace_Op, Pattern, From, State) ->
     TabId = State#state.tspool,
     Match = ets:match(TabId, {'$0', Pattern}, 1),
     case Match of
-	'$end_of_table' ->
-	    {Cli_pid, _} = From,  %% so that we can notify the client
-	    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
-	    ets:insert(State#state.tspatt, {Pattern, Cli_pid, Cli_ref}),
-	    {reply, {nomatch, Cli_ref}, State};
+	'$end_of_table' ->  %% no match
+	    case Espace_Op of
+		espace_inp ->
+		    {reply, {nomatch}, State};
+		espace_rdp ->
+		    {reply, {nomatch}, State};
+		_ -> %% only "in" and "rd" should block on no match
+		    {Cli_pid, _} = From,  %% so that we can notify the client
+		    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
+		    ets:insert(State#state.tspatt, {Pattern, Cli_pid, Cli_ref}),
+		    {reply, {nomatch, Cli_ref}, State}
+	    end;
 	{[[TabKey|Fields]],_} -> %% We only want one match, and we ignore the ets:match continuation
 	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always return the whole tuple
 	    Reply = {match, {Fields, Tuple}}, %% Fileds may contain data, if Pattern had '$N'
-	    case Espace_Op of
+	    case Espace_Op of   %% "in" and "inp" should remove the tuple
 		espace_in ->
+		    ets:delete(TabId, TabKey);
+		espace_inp ->
 		    ets:delete(TabId, TabKey);
 		_ ->
 		    ok

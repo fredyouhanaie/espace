@@ -37,34 +37,41 @@ implementation time (48 hours) it is treated as a proof of concept,
 that will be optimized over time.
 
 To start with, we will provide a space for the tuples, currently `ETS`,
-along with the four basic operations, `eval`, `out`, `in` and `rd`.
+along with the six basic operations, `eval`, `out`, `in`, `inp`, `rd`
+and `rdp`.
 
 ## Current Status
 
-* The project has been developed and tested on a *Linux* system.
-* Having issues with getting `rebar3` to compile the code - newbie issue!
-* The modules are, for now, being compiled manually via `make`.
-* All seems to be working, with manual test.
+* The project has been developed and tested on a *Linux* system. Using Erlang/OTP 20.1 and rebar3 3.4.7
+* All seems to be working, with manual tests.
 * No test scripts, yet.
 * Not an scalable implementation, yet.
 
 ## To check out the application
 
-For now, you need to build and run it manually :-(
-
-* Change to the `src/` directory, `cd src`, then run `make`
-* To run the application
-  * start the shell with SASL
-    > `erl -boot start_sasl`
-  * start the `espace` application
-    > `application:start(espace).`
-  * start the test adder
-    > `espace_test1:start().
-  * use the table viewer in `observer:start` to see the progress of the adder.
-  * try adding new tuples to the pool, e.g.
-    > `espace_cli:out({add, 42, 43}).`
-  * You should see a `{sum, 42, 43, 85}` in the `tspool` table
-  * There will always be a `{add, '$1', '$2'}` pattern waiting in the `tspool_patt` table.
+* Change to the top level directory of the project
+* ensure that you have erlang binaries and rebar3 in your shell path
+* build the application
+> `rebar3 do clean,compile`
+* Start the application
+> `rebar3 shell`
+* At the erlang shell prompt, if desired, bring up the Observer
+> `observer:start().`
+* Run the tiny test program
+> `espace_test1:start().`
+  * This will kick off two worker processes via `eval`.
+  * One will, continuously, wait for an `{add, X, Y}` tuple to appear in
+    the pool, and it will then add the two numbers and `out` their sum as
+    `{sum, X, Y, X+Y}`.
+  * The second worker will, continuously, wait for a `{sum,X,Y,Z}` tuple,
+    and it will then print the contents via `io:format/3`
+* You can use the table viewer in the Observer to see the progress of the two workers.
+* try adding new tuples to the pool, e.g.
+> `espace_cli:out({add, 42, 43}).`
+* There will always be two patterns in the `tspace_patt` table, `{add,
+  '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`. You can check that the
+  waiting pattern pids match the child process pids of `worker_sup` on
+  the Applcation tab.
 
 
 ## Organization

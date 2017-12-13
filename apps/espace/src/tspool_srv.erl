@@ -64,23 +64,6 @@ espace_in(Pattern) ->
 espace_rd(Pattern) ->
     espace_op(espace_rd, Pattern).
 
-%%--------------------------------------------------------------------
-%% @doc
-%% perform a "in" or "rd" operation
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-espace_op(Espace_Op, Pattern) ->
-    Reply = gen_server:call(?SERVER, {Espace_Op, Pattern}),
-    case Reply of
-	{match, Match} ->
-	    Match;
-	{nomatch, Cli_ref} ->
-	    receive
-		Cli_ref ->
-		    Espace_Op(Pattern) % our tuple has arrived, try again!
-	    end
-    end.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -248,4 +231,22 @@ check_waitlist(Tuple, TabId, [Cli|Clients]) ->
 	_ ->
 	    Cli_pid ! Cli_ref, %% don't forget to delete the tspatt!
 	    ets:delete_object(TabId, Cli)
+    end.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% unified function for "in" and "rd" client API functions
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+espace_op(Espace_Op, Pattern) ->
+    Reply = gen_server:call(?SERVER, {Espace_Op, Pattern}),
+    case Reply of
+	{match, Match} ->
+	    Match;
+	{nomatch, Cli_ref} ->
+	    receive
+		Cli_ref ->
+		    Espace_Op(Pattern) % our tuple has arrived, try again!
+	    end
     end.

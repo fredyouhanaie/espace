@@ -114,38 +114,11 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-%% TODO - in/rd are really ugly - refactor
 handle_call({espace_in, Pattern}, From, State) ->
-    TabId = State#state.tspool,
-    Match = ets:match(TabId, {'$0', Pattern}, 1),
-    case Match of
-	'$end_of_table' ->
-	    {Cli_pid, _} = From,  %% so that we can notify the client
-	    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
-	    ets:insert(State#state.tspatt, {Pattern, Cli_pid, Cli_ref}),
-	    {reply, {nomatch, Cli_ref}, State};
-	{[[TabKey|Fields]],_} -> %% We only want one match, and we ignore the ets:match continuation
-	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always return the whole tuple
-	    Reply = {match, {Fields, Tuple}}, %% Fileds may contain data, if Pattern had '$N'
-	    ets:delete(TabId, TabKey),
-	    {reply, Reply, State}
-    end;
+    handle_espace_op(espace_in, Pattern, From, State);
 
-%% TODO - this is ugly, same as espace_in, except we don't remove the tuple!
 handle_call({espace_rd, Pattern}, From, State) ->
-    TabId = State#state.tspool,
-    Match = ets:match(TabId, {'$0', Pattern}, 1),
-    case Match of
-	'$end_of_table' ->
-	    {Client, _} = From,
-	    Cli_ref = make_ref(),
-	    ets:insert(State#state.tspatt, {Pattern, Client, Cli_ref}),
-	    {reply, {nomatch, Cli_ref}, State};
-	{[[TabKey|Fields]],_} ->
-	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey),
-	    Reply = {match, {Fields, Tuple}},
-	    {reply, Reply, State}
-    end;
+    handle_espace_op(espace_rd, Pattern, From, State);
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
@@ -249,4 +222,31 @@ espace_op(Espace_Op, Pattern) ->
 		Cli_ref ->
 		    Espace_Op(Pattern) % our tuple has arrived, try again!
 	    end
+    end.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% unified call handler for "in" and "rd"
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+handle_espace_op(Espace_Op, Pattern, From, State) ->
+    TabId = State#state.tspool,
+    Match = ets:match(TabId, {'$0', Pattern}, 1),
+    case Match of
+	'$end_of_table' ->
+	    {Cli_pid, _} = From,  %% so that we can notify the client
+	    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
+	    ets:insert(State#state.tspatt, {Pattern, Cli_pid, Cli_ref}),
+	    {reply, {nomatch, Cli_ref}, State};
+	{[[TabKey|Fields]],_} -> %% We only want one match, and we ignore the ets:match continuation
+	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always return the whole tuple
+	    Reply = {match, {Fields, Tuple}}, %% Fileds may contain data, if Pattern had '$N'
+	    case Espace_Op of
+		espace_in ->
+		    ets:delete(TabId, TabKey);
+		_ ->
+		    ok
+	    end,
+	    {reply, Reply, State}
     end.

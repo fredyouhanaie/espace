@@ -245,7 +245,7 @@ espace_op(Espace_Op, Pattern) ->
 	{nomatch, Cli_ref} -> %% only from the in and rd operations
 	    receive
 		Cli_ref ->
-		    Espace_Op(Pattern) % our tuple has arrived, try again!
+		    espace_op(Espace_Op, Pattern) % our tuple has arrived, try again!
 	    end
     end.
 

@@ -52,18 +52,8 @@ espace_out(Tuple) ->
 %% @spec espace_in(Pattern) -> [any()] | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-
 espace_in(Pattern) ->
-    Reply = gen_server:call(?SERVER, {espace_in, Pattern}),
-    case Reply of
-	{match, Match} ->
-	    Match;
-	{nomatch, Cli_ref} ->
-	    receive
-		Cli_ref ->
-		    espace_in(Pattern) % our tuple has arrived, try again!
-	    end
-    end.
+    espace_op(espace_in, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -71,16 +61,24 @@ espace_in(Pattern) ->
 %% @spec espace_in(Pattern) -> [any()] | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-%% TODO - surely you can combine this with espace_in!
 espace_rd(Pattern) ->
-    Reply = gen_server:call(?SERVER, {espace_rd, Pattern}),
+    espace_op(espace_rd, Pattern).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% perform a "in" or "rd" operation
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+espace_op(Espace_Op, Pattern) ->
+    Reply = gen_server:call(?SERVER, {Espace_Op, Pattern}),
     case Reply of
 	{match, Match} ->
 	    Match;
 	{nomatch, Cli_ref} ->
 	    receive
 		Cli_ref ->
-		    espace_rd(Pattern) % our tuple has arrived, try again!
+		    Espace_Op(Pattern) % our tuple has arrived, try again!
 	    end
     end.
 

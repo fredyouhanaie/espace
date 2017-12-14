@@ -9,7 +9,7 @@
 -module(espace_cli).
 
 %% API
--export([eval/1, in/1, inp/1, out/1, rd/1, rdp/1]).
+-export([eval/1, in/1, inp/1, out/1, rd/1, rdp/1, infile/1]).
 
 %%%===================================================================
 %%% API
@@ -70,6 +70,37 @@ rd(Pattern) ->
 rdp(Pattern) ->
     tspool_srv:espace_rdp(Pattern).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Read and process an espace input file.
+%% The file should be a valid Erlang terms file.
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+infile(File) ->
+    {ok, Terms} = file:consult(File),
+    do_esp(Terms).
+
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Process espace input commands
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+do_esp([]) ->
+    ok;
+
+do_esp([ {Cmd,Arg} | Rest]) ->
+    case Cmd of
+	eval ->
+	    eval(Arg);
+	out ->
+	    out(Arg);
+	include ->
+	    infile(Arg)
+    end,
+    do_esp(Rest).

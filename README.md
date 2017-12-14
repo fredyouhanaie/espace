@@ -31,21 +31,24 @@ and process them further.
 
 ## The current implementation
 
-This initial implementation is carried out as part of the [Spawfest
+The initial implementation was carried out as part of the [Spawnfest
 2017](https://spawnfest.github.io/) hackathon. So, due to the short
-implementation time (48 hours) it is treated as a proof of concept,
-that will be optimized over time.
+implementation time (48 hours) it was treated as a proof of concept,
+that would be optimized over time.
 
-To start with, we will provide a space for the tuples, currently `ETS`,
-along with the six basic operations, `eval`, `out`, `in`, `inp`, `rd`
-and `rdp`.
+We are now in the post-Spawnfest phase of the project.
+
+The implementation now provides a space for the tuples, currently
+`ETS`, along with the six basic operations, `eval`, `out`, `in`,
+`inp`, `rd` and `rdp`.
 
 ## Current Status
 
 * The project has been developed and tested on a *Linux* system. Using Erlang/OTP 20.1 and rebar3 3.4.7
-* All seems to be working, with manual tests.
-* No test scripts, yet.
-* Not an scalable implementation, yet.
+* No automated test scripts, yet!
+* Documentation is work in progress.
+* Not an scalable implementation, that will come over time.
+* Example programs are being added in the `Examples/` directory.
 
 ## To check out the application
 
@@ -64,8 +67,14 @@ and `rdp`.
     the pool, and it will then add the two numbers and `out` their sum as
     `{sum, X, Y, X+Y}`.
   * The second worker will, continuously, wait for a `{sum,X,Y,Z}` tuple,
-    and it will then print the contents via `io:format/3`
-* You can use the table viewer in the Observer to see the progress of the two workers.
+    and it will then print the contents via `io:format/2`
+  * Following the `eval` calls, three `{add, X, Y}` tuples are added
+    to the pool, which result in the first worker to pick them up and
+    generate the corresponding `{sum, X, Y, X+Y}` tuples. These are in
+    turn picked up by the second worker, which in turn prints the
+    result to the terminal.
+* You can use the table viewer in the Observer to see the progress of
+  the two workers.
 * try adding new tuples to the pool, e.g.
 > `espace_cli:out({add, 42, 43}).`
 * There will always be two patterns in the `tspace_patt` table, `{add,
@@ -73,14 +82,98 @@ and `rdp`.
   waiting pattern pids match the child process pids of `worker_sup` on
   the Applcation tab.
 
+## Client API Library
 
-## Organization
+The `espace_cli` module can be used to perform the six operations. The
+functions in turn call their corrosponding function in `tspool_srv` or
+`wkpool_srv`. These are summarized below:
 
-`espace` has been built as an application, `espace_app`. Presently only
-one instance of the application can run on a given node.
+| Operation | Functions    | Notes |
+| :---------| :---------   | :-----|
+| `in`      | in(Pattern)  | removes and returns tuple, blocks if pattern does not exist |
+| `inp`     | inp(Pattern) | non-blocking version of `in`, returns `nomatch` if pattern does not exists |
+| `rd`      | rd(Pattern)  | same as `in`, but does not remove the tuple |
+| `rdp`     | rdp(Pattern) | non-blocking version of `rd`, returns `nomatch` if pattern does not exists |
+|           |              |       |
+| `out`     | out(Tuple)   | adds the tuple to the Pool                                                 |
+|           |              |       |
+| `eval`    | eval(MFA)    | the function MFA will run within a child process |
+
+### Input Operations
+
+The four input functions result in a call to the `tspool_srv` `gen_server`.
+
+* `in` and `inp` will return a tuple, and remove it from the pool, if a tuple matching the pattern is found.
+* `rd` and `rdp` will return a tuple, but *will not* remove it from the pool, if a tuple matching the pattern is found.
+* `in` and `rd` will block, if a tuple matching the pattern is not present.
+* `inp` and `rdp` will return `nomatch`, if a tuple matching the pattern is not present.
+* All four operations, upon finding a match, will return `{Fields,
+  Tuple}`, where `Tuple` is the entire matched tuple, and `Fields` is
+  a list of terms corresponding to the `'$N'` terms in the pattern, if
+  any.
+
+### Output Operation
+
+Currently, `out` will accept any Erlang term and store it in the
+pool. In future this may be restricted to be a tuple.
+
+### Eval Operation
+
+`eval` will send a request to the worker supervisor, which in turn
+will start a new child process, that will `apply` the `{M, F, A}`
+function. `{M, F, A}` can be a single shot functions, or it can be
+recursive loop that runs continuously.
+
+### `espace_cli:infile(File)`
+
+Normally, the above operations are called via functions within Erlang
+modules, which will need to be compiled when modified.
+
+To make life easier for the `espace` programmer, an include file
+mechanism allows one to put simple, `out` and `eval` operations in a
+file. Below is an example of such a file, which corresponds to the
+`espace_test1:start/0` function. This is a copy of the file
+`Examples/adder1.esp`, the file can be run with
+`espace_cli:infile(Examples/adder1.esp)`, instead of calling
+`espace_test1:start()`:
+
+```
+%% this is the adder example
+
+% start the worker processes
+%
+{eval, {espace_test1, test_add2, []}}.
+{eval, {espace_test1, test_sums, []}}.
+
+% initial set of numbers
+%
+{out, {add, 1, 2}}.
+{out, {add, 2, 3}}.
+{out, {add, 3, 5}}.
+
+% read more numbers to be added together.
+%
+{include, "Examples/adder1a.esp"}.
+```
+
+The contents of the file are tuples of the form `{Tag, Tuple}`, where
+`Tag` is one of `eval`, `out` or `include`. The file is read with
+`file:consult/1`, so all the rules of that function apply.
+
+The meanings of the three types of tags should be clear to the reader:
+
+* `eval` will call `espace_cli:eval/1` with the corresponding `Tuple`,
+  which should be of the form `{Mod, Fun, Arg}`
+* `out` will call `espace_cli:out/1` with the corresponding `Tuple`
+* `include` will recursively call `espace_cli:infile/1`.
+
+## Organization of the Project Modules
+
+`espace` has been built as an OTP application, `espace_app`. Presently
+only one instance of the application can run on a given node.
 
 Once the server application is started, the client applications can use
-the `espace_cli` module to perform any of the four operations. In fact
+the `espace_cli` module to perform any of the six operations. In fact
 one can kick off the whole process by calling a purpose written bootstrap
 function, which can in turn perform `out` and `eval` operations, e.g.
 

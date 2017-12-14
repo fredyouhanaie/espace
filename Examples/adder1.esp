@@ -1,0 +1,18 @@
+
+%% this is the adder example
+
+% start the worker processes
+%
+{eval, {espace_test1, test_add2, []}}.	% worker one
+{eval, {espace_test1, test_sums, []}}.	% worker two
+
+% initial set of numbers
+%
+{out, {add, 1, 2}}.
+{out, {add, 2, 3}}.
+{out, {add, 3, 5}}.
+
+% read more numbers to be added together.
+%
+{include, "Examples/adder1a.esp"}.
+

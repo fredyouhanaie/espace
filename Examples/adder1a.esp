@@ -1,0 +1,6 @@
+
+%% this is the adder example
+
+{out, {add, 9, 8}}.
+{out, {add, 8, 7}}.
+{out, {add, 7, 5}}.

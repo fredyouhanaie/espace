@@ -18,5 +18,5 @@ test_add2() ->
 %% take and print the sum results
 test_sums() ->
     {[X, Y, Sum], _} = espace_cli:in({sum, '$1', '$2', '$3'}),
-    io:format("~p + ~p = ~p.~n", [X, Y, Sum]),
+    io:format("~n~p + ~p = ~p.~n", [X, Y, Sum]),
     test_sums().

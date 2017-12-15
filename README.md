@@ -132,10 +132,9 @@ modules, which will need to be compiled when modified.
 To make life easier for the `espace` programmer, an include file
 mechanism allows one to put simple, `out` and `eval` operations in a
 file. Below is an example of such a file, which corresponds to the
-`espace_test1:start/0` function. This is a copy of the file
-`Examples/adder1.esp`, the file can be run with
-`espace_cli:infile(Examples/adder1.esp)`, instead of calling
-`espace_test1:start()`:
+`espace_test1:start/0` function. Below is a copy of the file
+`Examples/adder1/adder1.esp`:
+
 
 ```
 %% this is the adder example
@@ -153,19 +152,34 @@ file. Below is an example of such a file, which corresponds to the
 
 % read more numbers to be added together.
 %
-{include, "Examples/adder1a.esp"}.
+{include, "adder1a.esp"}.
 ```
 
-The contents of the file are tuples of the form `{Tag, Tuple}`, where
+The above file can be run with `espace_cli:infile("adder1.esp")`,
+while in the `Examples/adder1` directory, instead of calling
+`espace_test1:start()`, for example starting from the top level
+directory:
+
+```
+$ rebar3 shell
+... Erlang shell start up messages
+1> cd("Examples/adder1").
+2> espace_cli:infile("adder1.esp").
+... adder output
+```
+
+The contents of the file are tuples of the form `{Tag, Term}`, where
 `Tag` is one of `eval`, `out` or `include`. The file is read with
 `file:consult/1`, so all the rules of that function apply.
 
-The meanings of the three types of tags should be clear to the reader:
+The meanings of the three types of tags should, hopefully, be clear to
+the reader:
 
-* `eval` will call `espace_cli:eval/1` with the corresponding `Tuple`,
+* `eval` will call `espace_cli:eval/1` with the corresponding `Term`,
   which should be of the form `{Mod, Fun, Arg}`
-* `out` will call `espace_cli:out/1` with the corresponding `Tuple`
-* `include` will recursively call `espace_cli:infile/1`.
+* `out` will call `espace_cli:out/1` with the corresponding `Term`
+* `include` will recursively call `espace_cli:infile/1`, where `Term`
+  is expected to be a valid filename.
 
 ## Organization of the Project Modules
 

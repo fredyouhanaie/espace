@@ -14,5 +14,5 @@
 
 % read more numbers to be added together.
 %
-{include, "Examples/adder1a.esp"}.
+{include, "adder1a.esp"}.
 

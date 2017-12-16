@@ -225,8 +225,9 @@ check_waitlist(Tuple, TabId, [Cli|Clients]) ->
 	{ok, false} ->
 	    check_waitlist(Tuple, TabId, Clients);
 	_ ->
-	    Cli_pid ! Cli_ref, %% don't forget to delete the tspatt!
-	    ets:delete_object(TabId, Cli)
+	    Cli_pid ! Cli_ref,
+	    ets:delete_object(TabId, Cli),
+	    check_waitlist(Tuple, TabId, Clients)
     end.
 
 %%--------------------------------------------------------------------

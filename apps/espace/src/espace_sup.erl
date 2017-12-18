@@ -2,7 +2,8 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%%
+%%% Main espace application supervisor.
+%%% It handles the main application components, TSPOOL and WKPOOL.
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------

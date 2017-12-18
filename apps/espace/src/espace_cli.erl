@@ -2,7 +2,7 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%%
+%%% This module provides the client access to the user applications.
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -18,7 +18,7 @@
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "eval" operation via the espace server.
-%% @spec
+%% @spec eval(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
 eval(MFA) ->
@@ -28,7 +28,7 @@ eval(MFA) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "in" operation via the espace server.
-%% @spec
+%% @spec in(tuple()) -> {list(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
 in(Pattern) ->
@@ -37,7 +37,7 @@ in(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "inp" operation via the espace server.
-%% @spec
+%% @spec inp(tuple()) -> nomatch | {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
 inp(Pattern) ->
@@ -46,7 +46,7 @@ inp(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "out" operation via the espace server.
-%% @spec
+%% @spec out(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
 out(Tuple) ->
@@ -55,7 +55,7 @@ out(Tuple) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rd" operation via the espace server.
-%% @spec
+%% @spec rd(tuple()) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
 rd(Pattern) ->
@@ -64,7 +64,7 @@ rd(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rdp" operation via the espace server.
-%% @spec
+%% @spec rdp(tuple()) -> nomatch | {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
 rdp(Pattern) ->
@@ -74,7 +74,7 @@ rdp(Pattern) ->
 %% @doc
 %% Read and process an espace input file.
 %% The file should be a valid Erlang terms file.
-%% @spec
+%% @spec infile(filename()) -> ok
 %% @end
 %%--------------------------------------------------------------------
 infile(File) ->
@@ -88,7 +88,7 @@ infile(File) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Process espace input commands
-%% @spec
+%% @spec do_esp(list()) -> ok
 %% @end
 %%--------------------------------------------------------------------
 do_esp([]) ->

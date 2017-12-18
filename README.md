@@ -38,7 +38,7 @@ that would be optimized over time.
 
 We are now in the post-Spawnfest phase of the project.
 
-The implementation now provides a space for the tuples, currently
+The implementation provides a space for the tuples, currently
 `ETS`, along with the six basic operations, `eval`, `out`, `in`,
 `inp`, `rd` and `rdp`.
 
@@ -195,7 +195,7 @@ function, which can in turn perform `out` and `eval` operations, e.g.
 
 On the server side there are two main components:
 
-- `tspool_srv` is a `gen_server` that manages the TS storage pool. This server will handle the `out`, `in` and `rd` requests.
+- `tspool_srv` is a `gen_server` that manages the TS storage pool. This server will handle the `out`, `in`, `inp`, `rd` and `rdp` requests.
 - `wkpool_sup` is a `supervisor` that manages worker processes, this in turn has the following components:
   - `wkpool_srv` is a `gen_server` that will receive the `eval` requests, and pass the request to the worker supervisor.
   - `worker_sup` is a `supervisor` that will create a new child process with the supplied `{M,F,A}` function.

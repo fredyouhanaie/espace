@@ -2,7 +2,7 @@
 %%% @author Fred Youhanaie <fyrlang@anydata,co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%% 
+%%% Supervises the "eval" worker processes.
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata,co.uk>
 %%%-------------------------------------------------------------------
@@ -29,7 +29,6 @@
 %% @spec stop() -> ok
 %% @end
 %%--------------------------------------------------------------------
-
 stop() ->
     case whereis(?SERVER) of
 	P when is_pid(P) ->

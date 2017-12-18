@@ -2,7 +2,7 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%% Service espace "eval" requests.
+%%% Worker Pool manager. Handles espace "eval" requests.
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -25,6 +25,13 @@
 %%% API
 %%%===================================================================
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Stops the server
+%%
+%% @spec stop() -> ok
+%% @end
+%%--------------------------------------------------------------------
 stop() ->
     gen_server:stop(?SERVER).
 
@@ -32,10 +39,9 @@ stop() ->
 %% @doc
 %% perform an "eval" operation.
 %%
-%% @spec espace_eval() -> ok | {error, Error}
+%% @spec espace_eval(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
-
 espace_eval(MFA) ->
     gen_server:cast(?SERVER, {espace_eval, MFA}).
 

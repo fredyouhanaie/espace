@@ -2,7 +2,7 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%%
+%%% This is the server that manages the Tuple Space.
 %%% @end
 %%% Created :  9 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -42,7 +42,6 @@ start_link() ->
 %% @spec espace_out(Tuple) -> ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-
 espace_out(Tuple) ->
     gen_server:cast(?SERVER, {espace_out, Tuple}).
 
@@ -58,7 +57,7 @@ espace_in(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rd" operation
-%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%% @spec espace_rd(Pattern) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
 espace_rd(Pattern) ->
@@ -66,8 +65,8 @@ espace_rd(Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform an "in" operation
-%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%% Perform an "inp" operation
+%% @spec espace_inp(Pattern) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
 espace_inp(Pattern) ->
@@ -75,8 +74,8 @@ espace_inp(Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform a "rd" operation
-%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%% Perform a "rdp" operation
+%% @spec espace_rdp(Pattern) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
 espace_rdp(Pattern) ->
@@ -84,12 +83,11 @@ espace_rdp(Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% stop the server.
+%% Stop the server.
 %% 
 %% @spec stop() -> ignore
 %% @end
 %%--------------------------------------------------------------------
-
 stop() ->
     gen_server:cast(?SERVER, stop).
 
@@ -214,7 +212,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% @spec
+%% @spec check_waitlist(tuple(), tab(), tuple()) -> none
 %% @end
 %%--------------------------------------------------------------------
 check_waitlist(_Tuple, _TabId, []) ->
@@ -233,7 +231,7 @@ check_waitlist(Tuple, TabId, [Cli|Clients]) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% unified function for "in" and "rd" client API functions
-%% @spec
+%% @spec espace_op(atom(), tuple()) -> nomatch | {list(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
 espace_op(Espace_Op, Pattern) ->
@@ -253,7 +251,7 @@ espace_op(Espace_Op, Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% unified call handler for "in", "inp", "rd" and "rdp"
-%% @spec
+%% @spec handle_espace_op(atom(), tuple(), tuple(), tuple()) -> {atom(), tuple(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
 handle_espace_op(Espace_Op, Pattern, From, State) ->

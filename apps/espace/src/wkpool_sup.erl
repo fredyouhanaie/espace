@@ -2,7 +2,7 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%%
+%%% Worker Pool supervisor. Supervises the gen_server and the supervisor of the workers.
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -36,7 +36,7 @@ start_link() ->
 %% @doc
 %% Stops the supervisor
 %% Taken, unashemedly, from LYSE.
-%% @spec
+%% @spec stop() -> ok
 %% @end
 %%--------------------------------------------------------------------
 stop() ->

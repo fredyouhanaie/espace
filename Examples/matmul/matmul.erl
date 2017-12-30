@@ -71,7 +71,7 @@ print_matrix(M) ->
     lists:foreach(fun (R) -> io:format("~w~n", [R]) end, M).
 
 gatherer(Tag1, Tag2, Tag3) ->
-    % we need to know how may dot product elements to expect and wait for
+    % we need to know how many dot product elements to expect and wait for
     {[Nrows], _} = espace_cli:rd({matsize, Tag1, '$1', '_'}),
     {[Ncols], _} = espace_cli:rd({matsize, Tag2, '_', '$2'}),
     ResultElements = Nrows*Ncols,
@@ -123,7 +123,7 @@ element(Tag, RowNum, ColNum) ->
 gen_dotprodme(Tag1, Tag2, Tag3) ->
     {[Rows1, _], _} = espace_cli:rd({matsize, Tag1, '$1', '$2'}),
     {[_, Cols2], _} = espace_cli:rd({matsize, Tag2, '$1', '$2'}),
-    % we generate the tuples sequentially, but we can also parllelize this
+    % we generate the tuples sequentially, but we can also parallelize this
     DotProd = fun ({R, C}) -> espace_cli:out({dotprodme, Tag1, R, Tag2, C, Tag3}) end,
     lists:foreach(DotProd, [ {R,C} || R <- lists:seq(1,Rows1), C <- lists:seq(1,Cols2)]),
     ok.
@@ -145,7 +145,7 @@ split_matrix([H|T], Tag, RowNum) ->
     split_matrix(T, Tag, RowNum+1).
 
 split_row_vector_bytag(Tag) ->
-    {[Nrows, _], _} = espace_cli:rd({matsize, Tag, '$1', '$2'}),
+    {[Nrows], _} = espace_cli:rd({matsize, Tag, '$1', '_'}),
     lists:foreach(
       fun (RowNum) ->
 	      {[RowVec],_} = espace_cli:in({row_vector, Tag, RowNum, '$1'}),
@@ -162,7 +162,7 @@ split_row_vector([H|T], Tag, RowNum, ColNum) ->
 dotprod_worker() ->
     {[Tag1, RowNum, Tag2, ColNum, Tag3], Tuple} = espace_cli:in({dotprodme, '$1', '$2', '$3', '$4', '$5'}),
     case Tag1 of
-	'STOP' -> % "poisson pill"?
+	'STOP' -> % "poison pill"?
 	    espace_cli:out(Tuple), % put it back for the fellow workers!
 	    done;
 	_ ->

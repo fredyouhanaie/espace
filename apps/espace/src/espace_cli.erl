@@ -21,8 +21,8 @@
 %% @spec eval(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
--spec eval(_) -> 'ok'.
-eval(MFA) ->
+-spec eval(tuple()) -> 'ok'.
+eval(MFA) when is_tuple(MFA) ->
     wkpool_srv:espace_eval(MFA),
     ok.
 
@@ -42,8 +42,8 @@ in(Pattern) ->
 %% @spec inp(tuple()) -> nomatch | {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
--spec inp(_) -> any().
-inp(Pattern) ->
+-spec inp(tuple()) -> any().
+inp(Pattern) when is_tuple(Pattern) ->
     tspool_srv:espace_inp(Pattern).
 
 %%--------------------------------------------------------------------
@@ -52,8 +52,8 @@ inp(Pattern) ->
 %% @spec out(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
--spec out(_) -> 'ok'.
-out(Tuple) ->
+-spec out(tuple()) -> 'ok'.
+out(Tuple) when is_tuple(Tuple) ->
     tspool_srv:espace_out(Tuple).
 
 %%--------------------------------------------------------------------
@@ -62,8 +62,8 @@ out(Tuple) ->
 %% @spec rd(tuple()) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
--spec rd(_) -> any().
-rd(Pattern) ->
+-spec rd(tuple()) -> any().
+rd(Pattern) when is_tuple(Pattern) ->
     tspool_srv:espace_rd(Pattern).
 
 %%--------------------------------------------------------------------
@@ -72,8 +72,8 @@ rd(Pattern) ->
 %% @spec rdp(tuple()) -> nomatch | {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
--spec rdp(_) -> any().
-rdp(Pattern) ->
+-spec rdp(tuple()) -> any().
+rdp(Pattern) when is_tuple(Pattern) ->
     tspool_srv:espace_rdp(Pattern).
 
 %%--------------------------------------------------------------------
@@ -98,11 +98,11 @@ infile(File) ->
 %% @spec do_esp(list()) -> ok
 %% @end
 %%--------------------------------------------------------------------
--spec do_esp([{'eval',_} | {'include',_} | {'out',_}]) -> 'ok'.
+-spec do_esp([{'eval', tuple()} | {'include', string()} | {'out', tuple()}]) -> 'ok'.
 do_esp([]) ->
     ok;
 
-do_esp([ {Cmd,Arg} | Rest]) ->
+do_esp([ {Cmd, Arg} | Rest]) ->
     case Cmd of
 	eval ->
 	    eval(Arg);

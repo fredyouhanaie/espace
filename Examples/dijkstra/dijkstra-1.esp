@@ -1,0 +1,32 @@
+% -*- mode:erlang -*-
+
+% This is the example graph from the following tutorial:
+% http://www.gilles-bertrand.com/2014/03/disjkstra-algorithm-description-shortest-path-pseudo-code-data-structure-example-image.html
+
+{out, {graph, [
+	       {s, [{a, 2}, {b, 1}] },
+	       {a, [{s, 3}, {b, 4}, {c, 8}] },
+	       {b, [{s, 4}, {a, 2}, {d, 2}] },
+	       {c, [{a, 2}, {b, 7}, {d, 4}] },
+	       {d, [{b, 1}, {c, 11}, {t, 5}] },
+	       {t, [{c, 3}, {d, 5}] }
+	      ]
+      }
+}.
+
+% generate the individual vertex tuples for the whole graph
+{eval, {dijkstra, gen_vertex, []}}.
+
+% We need one or more workers to process the next hop tuples
+% these workers will work with any {Src,Dst} tuples.
+% Repeat the following entry for multiple concurrent workers.
+{eval, {dijkstra, nexthop_worker, []}}.
+
+% compute all the shortest paths from s to all the vertices
+{eval, {dijkstra, compute_sp, [{s, s}]}}.
+{eval, {dijkstra, compute_sp, [{s, a}]}}.
+{eval, {dijkstra, compute_sp, [{s, b}]}}.
+{eval, {dijkstra, compute_sp, [{s, c}]}}.
+{eval, {dijkstra, compute_sp, [{s, d}]}}.
+{eval, {dijkstra, compute_sp, [{s, t}]}}.
+

@@ -32,6 +32,7 @@
 %% @spec stop() -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec stop() -> 'ok' | {'ok',_}.
 stop() ->
     gen_server:stop(?SERVER).
 
@@ -42,6 +43,7 @@ stop() ->
 %% @spec espace_eval(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_eval(_) -> 'ok'.
 espace_eval(MFA) ->
     gen_server:cast(?SERVER, {espace_eval, MFA}).
 
@@ -52,6 +54,7 @@ espace_eval(MFA) ->
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
@@ -70,6 +73,7 @@ start_link() ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
+-spec init([]) -> {'ok',#state{workersup::'worker_sup'}}.
 init([]) ->
     process_flag(trap_exit, true),
     {ok, #state{workersup=worker_sup}}.
@@ -88,6 +92,7 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_call(_,_,_) -> {'reply','ok',_}.
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -102,6 +107,7 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_cast(_,_) -> {'noreply',_}.
 handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
     supervisor:start_child(State#state.workersup, [M, F, A]),
     {noreply, State};
@@ -119,6 +125,7 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_info(_,_) -> {'noreply',_}.
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -133,6 +140,7 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
+-spec terminate(_,_) -> 'ok'.
 terminate(_Reason, _State) ->
     ok.
 
@@ -144,6 +152,7 @@ terminate(_Reason, _State) ->
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec code_change(_,_,_) -> {'ok',_}.
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 

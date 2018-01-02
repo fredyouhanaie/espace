@@ -33,6 +33,8 @@
 %%      StartArgs = term()
 %% @end
 %%--------------------------------------------------------------------
+-spec start(_StartType, _StartArgs) -> ( {ok, pid()} | {error, any()} ).
+
 start(_StartType, _StartArgs) ->
     case espace_sup:start_link() of
 	{ok, Pid} ->
@@ -51,6 +53,8 @@ start(_StartType, _StartArgs) ->
 %% @spec stop(State) -> void()
 %% @end
 %%--------------------------------------------------------------------
+-spec stop(_State) -> ok.
+
 stop(_State) ->
     ok.
 

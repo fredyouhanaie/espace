@@ -32,6 +32,7 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
@@ -42,6 +43,7 @@ start_link() ->
 %% @spec espace_out(Tuple) -> ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_out(_) -> 'ok'.
 espace_out(Tuple) ->
     gen_server:cast(?SERVER, {espace_out, Tuple}).
 
@@ -51,6 +53,7 @@ espace_out(Tuple) ->
 %% @spec espace_in(Pattern) -> [any()] | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_in(_) -> any().
 espace_in(Pattern) ->
     espace_op(espace_in, Pattern).
 
@@ -60,6 +63,7 @@ espace_in(Pattern) ->
 %% @spec espace_rd(Pattern) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_rd(_) -> any().
 espace_rd(Pattern) ->
     espace_op(espace_rd, Pattern).
 
@@ -69,6 +73,7 @@ espace_rd(Pattern) ->
 %% @spec espace_inp(Pattern) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_inp(_) -> any().
 espace_inp(Pattern) ->
     espace_op(espace_inp, Pattern).
 
@@ -78,6 +83,7 @@ espace_inp(Pattern) ->
 %% @spec espace_rdp(Pattern) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_rdp(_) -> any().
 espace_rdp(Pattern) ->
     espace_op(espace_rdp, Pattern).
 
@@ -88,6 +94,7 @@ espace_rdp(Pattern) ->
 %% @spec stop() -> ignore
 %% @end
 %%--------------------------------------------------------------------
+-spec stop() -> 'ok'.
 stop() ->
     gen_server:cast(?SERVER, stop).
 
@@ -109,6 +116,7 @@ stop() ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
+-spec init([]) -> {'ok',#state{tspool::atom() | ets:tid(),tspatt::atom() | ets:tid()}}.
 init([]) ->
     process_flag(trap_exit, true),
     Pool = ets:new(tspace, [duplicate_bag, protected]),
@@ -129,6 +137,7 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_call(_,_,_) -> {'reply','ok' | {'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},_}.
 handle_call({espace_in, Pattern}, From, State) ->
     handle_espace_op(espace_in, Pattern, From, State);
 
@@ -156,6 +165,7 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 
+-spec handle_cast(_,_) -> {'noreply',_} | {'stop','normal',_}.
 handle_cast({espace_out, Tuple}, State) ->
     ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
     TSpatt = State#state.tspatt,
@@ -178,6 +188,7 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_info(_,_) -> {'noreply',_}.
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -192,6 +203,7 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
+-spec terminate(_,_) -> 'ok'.
 terminate(_Reason, _State) ->
     ok.
 
@@ -203,6 +215,7 @@ terminate(_Reason, _State) ->
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec code_change(_,_,_) -> {'ok',_}.
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
@@ -215,6 +228,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% @spec check_waitlist(tuple(), tab(), tuple()) -> none
 %% @end
 %%--------------------------------------------------------------------
+-spec check_waitlist(_,atom() | ets:tid(),[{atom() | tuple(),_,_}]) -> 'none'.
 check_waitlist(_Tuple, _TabId, []) ->
     none;
 check_waitlist(Tuple, TabId, [Cli|Clients]) ->
@@ -234,6 +248,7 @@ check_waitlist(Tuple, TabId, [Cli|Clients]) ->
 %% @spec espace_op(atom(), tuple()) -> nomatch | {list(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_) -> any().
 espace_op(Espace_Op, Pattern) ->
     Reply = gen_server:call(?SERVER, {Espace_Op, Pattern}),
     case Reply of
@@ -254,6 +269,7 @@ espace_op(Espace_Op, Pattern) ->
 %% @spec handle_espace_op(atom(), tuple(), tuple(), tuple()) -> {atom(), tuple(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_,_,#state{tspool::atom() | ets:tid()}) -> {'reply',{'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},#state{tspool::atom() | ets:tid()}}.
 handle_espace_op(Espace_Op, Pattern, From, State) ->
     TabId = State#state.tspool,
     Match = ets:match(TabId, {'$0', Pattern}, 1),

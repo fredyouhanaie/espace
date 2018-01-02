@@ -29,6 +29,7 @@
 %% @spec stop() -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec stop() -> 'ok' | 'true'.
 stop() ->
     case whereis(?SERVER) of
 	P when is_pid(P) ->
@@ -43,6 +44,7 @@ end.
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
@@ -63,6 +65,7 @@ start_link() ->
 %%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
+-spec init([]) -> {'ok',{map(),[map(),...]}}.
 init([]) ->
 
     SupFlags = #{strategy => simple_one_for_one,
@@ -81,5 +84,6 @@ init([]) ->
 %%% Internal functions
 %%%===================================================================
 
+-spec run_child(atom(),atom(),[any()]) -> {'ok',pid()}.
 run_child(M, F, A) ->
     {ok, spawn_link(M, F, A)}.

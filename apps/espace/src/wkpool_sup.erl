@@ -29,6 +29,7 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
@@ -39,6 +40,7 @@ start_link() ->
 %% @spec stop() -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec stop() -> 'ok' | 'true'.
 stop() ->
     case whereis(?SERVER) of
 	P when is_pid(P) ->
@@ -63,6 +65,7 @@ stop() ->
 %%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
+-spec init([]) -> {'ok',{#{'intensity':=1, 'period':=5, 'strategy':='one_for_all'},[map(),...]}}.
 init([]) ->
 
     SupFlags = #{strategy => one_for_all,

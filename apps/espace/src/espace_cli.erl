@@ -21,6 +21,7 @@
 %% @spec eval(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec eval(_) -> 'ok'.
 eval(MFA) ->
     wkpool_srv:espace_eval(MFA),
     ok.
@@ -31,6 +32,7 @@ eval(MFA) ->
 %% @spec in(tuple()) -> {list(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec in(_) -> any().
 in(Pattern) ->
     tspool_srv:espace_in(Pattern).
 
@@ -40,6 +42,7 @@ in(Pattern) ->
 %% @spec inp(tuple()) -> nomatch | {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec inp(_) -> any().
 inp(Pattern) ->
     tspool_srv:espace_inp(Pattern).
 
@@ -49,6 +52,7 @@ inp(Pattern) ->
 %% @spec out(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec out(_) -> 'ok'.
 out(Tuple) ->
     tspool_srv:espace_out(Tuple).
 
@@ -58,6 +62,7 @@ out(Tuple) ->
 %% @spec rd(tuple()) -> {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec rd(_) -> any().
 rd(Pattern) ->
     tspool_srv:espace_rd(Pattern).
 
@@ -67,6 +72,7 @@ rd(Pattern) ->
 %% @spec rdp(tuple()) -> nomatch | {list() | tuple()}
 %% @end
 %%--------------------------------------------------------------------
+-spec rdp(_) -> any().
 rdp(Pattern) ->
     tspool_srv:espace_rdp(Pattern).
 
@@ -77,6 +83,7 @@ rdp(Pattern) ->
 %% @spec infile(filename()) -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec infile(atom() | binary() | [atom() | [any()] | char()]) -> 'ok'.
 infile(File) ->
     {ok, Terms} = file:consult(File),
     do_esp(Terms).
@@ -91,6 +98,7 @@ infile(File) ->
 %% @spec do_esp(list()) -> ok
 %% @end
 %%--------------------------------------------------------------------
+-spec do_esp([{'eval',_} | {'include',_} | {'out',_}]) -> 'ok'.
 do_esp([]) ->
     ok;
 

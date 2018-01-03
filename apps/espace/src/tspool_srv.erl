@@ -169,7 +169,10 @@ handle_call(_Request, _From, State) ->
 handle_cast({espace_out, Tuple}, State) ->
     ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
     TSpatt = State#state.tspatt,
-    check_waitlist(Tuple, TSpatt, ets:tab2list(TSpatt)), % this will tell any waiting in/rd to recurse!
+    %% scan and tell any waiting in/rd clients to recurse!
+    ets:safe_fixtable(TSpatt, true), % we may be deleting records while scanning
+    check_waitlist(Tuple, TSpatt, ets:first(TSpatt)),
+    ets:safe_fixtable(TSpatt, false),
     {noreply, State};
 
 handle_cast(stop, State) ->
@@ -225,22 +228,22 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% @spec check_waitlist(tuple(), tab(), tuple()) -> none
+%% @spec check_waitlist(tuple(), ets:tid(), atom()) -> none
 %% @end
 %%--------------------------------------------------------------------
--spec check_waitlist(_,atom() | ets:tid(),[{atom() | tuple(),_,_}]) -> 'none'.
-check_waitlist(_Tuple, _TabId, []) ->
+-spec check_waitlist( tuple(), ets:tid(), atom() ) -> none.
+check_waitlist(_Tuple, _TabId, '$end_of_table') ->
     none;
-check_waitlist(Tuple, TabId, [Cli|Clients]) ->
-    {Cli_ref, Pattern, Cli_pid} = Cli,
+check_waitlist(Tuple, TabId, Key) ->
+    [{Cli_ref, Pattern, Cli_pid}] = ets:lookup(TabId, Key),
     case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
 	{ok, false} ->
-	    check_waitlist(Tuple, TabId, Clients);
+	    nomatch;
 	_ ->
 	    Cli_pid ! Cli_ref,
-	    ets:delete_object(TabId, Cli),
-	    check_waitlist(Tuple, TabId, Clients)
-    end.
+	    ets:delete(TabId, Key)
+    end,
+    check_waitlist(Tuple, TabId, ets:next(TabId, Key)).
 
 %%--------------------------------------------------------------------
 %% @doc

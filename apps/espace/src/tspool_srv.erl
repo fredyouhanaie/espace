@@ -119,8 +119,8 @@ stop() ->
 -spec init([]) -> {'ok',#state{tspool::atom() | ets:tid(),tspatt::atom() | ets:tid()}}.
 init([]) ->
     process_flag(trap_exit, true),
-    Pool = ets:new(tspace, [duplicate_bag, protected]),
-    Patt = ets:new(tspace_patt, [duplicate_bag, protected]),
+    Pool = ets:new(tspace, [set, protected]),
+    Patt = ets:new(tspace_patt, [set, protected]),
     {ok, #state{tspool=Pool, tspatt=Patt}}.
 
 %%--------------------------------------------------------------------
@@ -232,7 +232,7 @@ code_change(_OldVsn, State, _Extra) ->
 check_waitlist(_Tuple, _TabId, []) ->
     none;
 check_waitlist(Tuple, TabId, [Cli|Clients]) ->
-    {Pattern, Cli_pid, Cli_ref} = Cli,
+    {Cli_ref, Pattern, Cli_pid} = Cli,
     case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
 	{ok, false} ->
 	    check_waitlist(Tuple, TabId, Clients);
@@ -283,7 +283,7 @@ handle_espace_op(Espace_Op, Pattern, From, State) ->
 		_ -> %% only "in" and "rd" should block on no match
 		    {Cli_pid, _} = From,  %% so that we can notify the client
 		    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
-		    ets:insert(State#state.tspatt, {Pattern, Cli_pid, Cli_ref}),
+		    ets:insert(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
 		    {reply, {nomatch, Cli_ref}, State}
 	    end;
 	{[[TabKey|Fields]],_} -> %% We only want one match, and we ignore the ets:match continuation

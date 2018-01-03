@@ -112,6 +112,10 @@ handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
     supervisor:start_child(State#state.workersup, [M, F, A]),
     {noreply, State};
 
+handle_cast(_Msg={espace_eval, {Fun, Args}}, State) ->
+    supervisor:start_child(State#state.workersup, [Fun, Args]),
+    {noreply, State};
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

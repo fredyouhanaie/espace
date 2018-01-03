@@ -11,7 +11,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0, stop/0, run_child/3]).
+-export([start_link/0, stop/0, run_child/3, run_child/2]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -87,3 +87,13 @@ init([]) ->
 -spec run_child(atom(),atom(),[any()]) -> {'ok',pid()}.
 run_child(M, F, A) ->
     {ok, spawn_link(M, F, A)}.
+
+-spec run_child(string()|function(), [any()]) -> {'ok',pid()}.
+run_child(Fun, Args) when is_function(Fun) ->
+    {ok, spawn_link(erlang, apply, [Fun, Args])};
+
+run_child(Fun, Args) ->
+    {ok, Tokens, _} = erl_scan:string(Fun),
+    {ok, Parsed} = erl_parse:parse_exprs(Tokens),
+    {value, F, _} = erl_eval:exprs(Parsed, []),
+    {ok, spawn_link(erlang, apply, [F, Args])}.

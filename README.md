@@ -55,13 +55,22 @@ The implementation provides a space for the tuples, currently
 * Change to the top level directory of the project
 * ensure that you have erlang binaries and rebar3 in your shell path
 * build the application
-> `rebar3 do clean,compile`
+```
+$ rebar3 do clean,compile
+```
 * Start the application
-> `rebar3 shell`
+```
+$ rebar3 shell
+```
 * At the erlang shell prompt, if desired, bring up the Observer
-> `observer:start().`
+```
+> observer:start().
+```
 * Run the tiny test program
-> `espace_test1:start().`
+```
+> cd("Examples/adder1").
+> adder1:start().
+```
   * This will kick off two worker processes via `eval`.
   * One will, continuously, wait for an `{add, X, Y}` tuple to appear in
     the pool, and it will then add the two numbers and `out` their sum as
@@ -76,7 +85,9 @@ The implementation provides a space for the tuples, currently
 * You can use the table viewer in the Observer to see the progress of
   the two workers.
 * try adding new tuples to the pool, e.g.
-> `espace_cli:out({add, 42, 43}).`
+```
+> espace_cli:out({add, 42, 43}).
+```
 * There will always be two patterns in the `tspace_patt` table, `{add,
   '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`. You can check that the
   waiting pattern pids match the child process pids of `worker_sup` on
@@ -132,7 +143,7 @@ modules, which will need to be compiled when modified.
 To make life easier for the `espace` programmer, an include file
 mechanism allows one to put simple, `out` and `eval` operations in a
 file. Below is an example of such a file, which corresponds to the
-`espace_test1:start/0` function. Below is a copy of the file
+`adder1:start/0` function. Below is a copy of the file
 `Examples/adder1/adder1.esp`:
 
 
@@ -141,8 +152,8 @@ file. Below is an example of such a file, which corresponds to the
 
 % start the worker processes
 %
-{eval, {espace_test1, test_add2, []}}.
-{eval, {espace_test1, test_sums, []}}.
+{eval, {adder1, test_add2, []}}.
+{eval, {adder1, test_sums, []}}.
 
 % initial set of numbers
 %
@@ -157,7 +168,7 @@ file. Below is an example of such a file, which corresponds to the
 
 The above file can be run with `espace_cli:infile("adder1.esp")`,
 while in the `Examples/adder1` directory, instead of calling
-`espace_test1:start()`, for example starting from the top level
+`adder1:start()`, for example starting from the top level
 directory:
 
 ```

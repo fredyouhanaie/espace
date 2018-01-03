@@ -1,4 +1,4 @@
--module(espace_test1).
+-module(adder1).
 
 -export([start/0, test_add2/0, test_sums/0]).
 

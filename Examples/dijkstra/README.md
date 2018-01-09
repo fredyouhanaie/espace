@@ -123,8 +123,8 @@ To try out this example, assuming the application has been built with
 ```
 $ rebar3 shell
 > cd("Examples/dijkstra").
-> espace_cli:infile("dijkstra-1.esp").
-> espace_cli:rdp({shortest_path, {s, t}, '_', '_'}).
+> espace:infile("dijkstra-1.esp").
+> espace:rdp({shortest_path, {s, t}, '_', '_'}).
 ```
 
 While in the shell, and while the `graph` and `vertex` tuples are
@@ -133,7 +133,7 @@ vertices, e.g.
 
 ```
 > dijkstra:compute_sp({t, s}).
-> espace_cli:rdp({shortest_path, {t, s}, '_', '_'}).
+> espace:rdp({shortest_path, {t, s}, '_', '_'}).
 ```
 
 ## Further work

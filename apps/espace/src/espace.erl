@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
--module(espace_cli).
+-module(espace).
 
 %% API
 -export([eval/1, in/1, inp/1, out/1, rd/1, rdp/1, infile/1]).

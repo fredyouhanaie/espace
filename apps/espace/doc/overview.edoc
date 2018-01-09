@@ -55,12 +55,12 @@ and <code>rdp</code>.</p>
 only one instance of the application can run on a given node.</p>
 
 <p>Once the server application is started, the client applications can use
-the <code>espace_cli</code> module to perform any of the six operations. In fact
+the <code>espace</code> module to perform any of the six operations. In fact
 one can kick off the whole process by calling a purpose written bootstrap
 function, which can in turn perform <code>out</code> and <code>eval</code> operations, e.g.</p>
 <blockquote>
 
-<p><code>espace_cli:eval({Mod, Func, Args})</code>.</p>
+<p><code>espace:eval({Mod, Func, Args})</code>.</p>
 </blockquote>
 
 <p>On the server side there are two main components:</p>

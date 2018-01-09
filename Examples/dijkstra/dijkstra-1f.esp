@@ -25,9 +25,9 @@
 % compute all the shortest paths from s to all the vertices.
 {eval, {"fun (Src, DstList) ->
 		lists:foreach(fun (Dst) ->
-				      espace_cli:eval({dijkstra, compute_sp, [{Src, Dst}]})
+				      espace:eval({dijkstra, compute_sp, [{Src, Dst}]})
 			      end, DstList)
 	end.", [s, [a, b, c, d, s, t]]}}.
-% Note, although espace_cli:eval/1 can take fun and string types, for
+% Note, although espace:eval/1 can take fun and string types, for
 % this file we can only use strings since it is being read via
 % file:consult/1.

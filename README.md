@@ -86,7 +86,7 @@ $ rebar3 shell
   the two workers.
 * try adding new tuples to the pool, e.g.
 ```
-> espace_cli:out({add, 42, 43}).
+> espace:out({add, 42, 43}).
 ```
 * There will always be two patterns in the `tspace_patt` table, `{add,
   '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`. You can check that the
@@ -95,7 +95,7 @@ $ rebar3 shell
 
 ## Client API Library
 
-The `espace_cli` module can be used to perform the six operations. The
+The `espace` module can be used to perform the six operations. The
 functions in turn call their corrosponding function in `tspool_srv` or
 `wkpool_srv`. These are summarized below:
 
@@ -135,7 +135,7 @@ will start a new child process, that will `apply` the `{M, F, A}`
 function. `{M, F, A}` can be a single shot functions, or it can be
 recursive loop that runs continuously.
 
-### `espace_cli:infile(File)`
+### `espace:infile(File)`
 
 Normally, the above operations are called via functions within Erlang
 modules, which will need to be compiled when modified.
@@ -166,7 +166,7 @@ file. Below is an example of such a file, which corresponds to the
 {include, "adder1a.esp"}.
 ```
 
-The above file can be run with `espace_cli:infile("adder1.esp")`,
+The above file can be run with `espace:infile("adder1.esp")`,
 while in the `Examples/adder1` directory, instead of calling
 `adder1:start()`, for example starting from the top level
 directory:
@@ -175,7 +175,7 @@ directory:
 $ rebar3 shell
 ... Erlang shell start up messages
 1> cd("Examples/adder1").
-2> espace_cli:infile("adder1.esp").
+2> espace:infile("adder1.esp").
 ... adder output
 ```
 
@@ -186,10 +186,10 @@ The contents of the file are tuples of the form `{Tag, Term}`, where
 The meanings of the three types of tags should, hopefully, be clear to
 the reader:
 
-* `eval` will call `espace_cli:eval/1` with the corresponding `Term`,
+* `eval` will call `espace:eval/1` with the corresponding `Term`,
   which should be of the form `{Mod, Fun, Arg}`
-* `out` will call `espace_cli:out/1` with the corresponding `Term`
-* `include` will recursively call `espace_cli:infile/1`, where `Term`
+* `out` will call `espace:out/1` with the corresponding `Term`
+* `include` will recursively call `espace:infile/1`, where `Term`
   is expected to be a valid filename.
 
 ## Organization of the Project Modules
@@ -198,11 +198,11 @@ the reader:
 only one instance of the application can run on a given node.
 
 Once the server application is started, the client applications can use
-the `espace_cli` module to perform any of the six operations. In fact
+the `espace` module to perform any of the six operations. In fact
 one can kick off the whole process by calling a purpose written bootstrap
 function, which can in turn perform `out` and `eval` operations, e.g.
 
-> `espace_cli:eval({Mod, Func, Args})`.
+> `espace:eval({Mod, Func, Args})`.
 
 On the server side there are two main components:
 

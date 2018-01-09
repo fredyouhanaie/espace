@@ -148,11 +148,8 @@ handle_call({espace_rd, Pattern}, From, State) ->
     handle_espace_op(espace_rd, Pattern, From, State);
 
 handle_call({espace_rdp, Pattern}, From, State) ->
-    handle_espace_op(espace_rdp, Pattern, From, State);
+    handle_espace_op(espace_rdp, Pattern, From, State).
 
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -176,10 +173,8 @@ handle_cast({espace_out, Tuple}, State) ->
     {noreply, State};
 
 handle_cast(stop, State) ->
-    {stop, normal, State};
+    {stop, normal, State}.
 
-handle_cast(_Msg, State) ->
-    {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% @private

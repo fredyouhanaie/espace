@@ -19,8 +19,6 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {tspool, tspatt}).
-
 %%%===================================================================
 %%% API
 %%%===================================================================
@@ -116,12 +114,10 @@ stop() ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
--spec init([]) -> {'ok',#state{tspool::atom() | ets:tid(),tspatt::atom() | ets:tid()}}.
+-spec init([]) -> {'ok', {}}.
 init([]) ->
     process_flag(trap_exit, true),
-    Pool = ets:new(tspace, [set, protected]),
-    Patt = ets:new(tspace_patt, [set, protected]),
-    {ok, #state{tspool=Pool, tspatt=Patt}}.
+    {ok, {}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -164,12 +160,7 @@ handle_call({espace_rdp, Pattern}, From, State) ->
 
 -spec handle_cast(_,_) -> {'noreply',_} | {'stop','normal',_}.
 handle_cast({espace_out, Tuple}, State) ->
-    ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
-    TSpatt = State#state.tspatt,
-    %% scan and tell any waiting in/rd clients to recurse!
-    ets:safe_fixtable(TSpatt, true), % we may be deleting records while scanning
-    check_waitlist(Tuple, TSpatt, ets:first(TSpatt)),
-    ets:safe_fixtable(TSpatt, false),
+    tspace_srv:add_tuple(Tuple),
     {noreply, State};
 
 handle_cast(stop, State) ->
@@ -223,25 +214,6 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% @spec check_waitlist(tuple(), ets:tid(), atom()) -> none
-%% @end
-%%--------------------------------------------------------------------
--spec check_waitlist( tuple(), ets:tid(), atom() ) -> none.
-check_waitlist(_Tuple, _TabId, '$end_of_table') ->
-    none;
-check_waitlist(Tuple, TabId, Key) ->
-    [{Cli_ref, Pattern, Cli_pid}] = ets:lookup(TabId, Key),
-    case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
-	{ok, false} ->
-	    nomatch;
-	_ ->
-	    Cli_pid ! Cli_ref,
-	    ets:delete(TabId, Key)
-    end,
-    check_waitlist(Tuple, TabId, ets:next(TabId, Key)).
-
-%%--------------------------------------------------------------------
-%% @doc
 %% unified function for "in" and "rd" client API functions
 %% @spec espace_op(atom(), tuple()) -> nomatch | {list(), tuple()}
 %% @end
@@ -267,31 +239,28 @@ espace_op(Espace_Op, Pattern) ->
 %% @spec handle_espace_op(atom(), tuple(), tuple(), tuple()) -> {atom(), tuple(), tuple()}
 %% @end
 %%--------------------------------------------------------------------
--spec handle_espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_,_,#state{tspool::atom() | ets:tid()}) -> {'reply',{'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},#state{tspool::atom() | ets:tid()}}.
+-spec handle_espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_,_,_) -> {'reply',{'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},any()}.
 handle_espace_op(Espace_Op, Pattern, From, State) ->
-    TabId = State#state.tspool,
-    Match = ets:match(TabId, {'$0', Pattern}, 1),
-    case Match of
-	'$end_of_table' ->  %% no match
+    case tspace_srv:get_tuple(Pattern) of
+	{nomatch} ->
 	    case Espace_Op of
 		espace_inp ->
 		    {reply, {nomatch}, State};
 		espace_rdp ->
 		    {reply, {nomatch}, State};
 		_ -> %% only "in" and "rd" should block on no match
-		    {Cli_pid, _} = From,  %% so that we can notify the client
-		    Cli_ref = make_ref(), %% so that we have a unique id to send to the client
-		    ets:insert(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
+		    {Cli_pid, _} = From,  %% we use the pid to notify the client
+		    Cli_ref = make_ref(), %% the client should wait for this ref
+		    tspatt_srv:add_pattern(Cli_ref, Pattern, Cli_pid),
 		    {reply, {nomatch, Cli_ref}, State}
 	    end;
-	{[[TabKey|Fields]],_} -> %% We only want one match, and we ignore the ets:match continuation
-	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always return the whole tuple
-	    Reply = {match, {Fields, Tuple}}, %% Fileds may contain data, if Pattern had '$N'
+	{match, {TabKey, Fields, Tuple}} ->
+	    Reply = {match, {Fields, Tuple}},
 	    case Espace_Op of   %% "in" and "inp" should remove the tuple
 		espace_in ->
-		    ets:delete(TabId, TabKey);
+		    tspace_srv:del_tuple(TabKey);
 		espace_inp ->
-		    ets:delete(TabId, TabKey);
+		    tspace_srv:del_tuple(TabKey);
 		_ ->
 		    ok
 	    end,

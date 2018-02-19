@@ -1,13 +1,12 @@
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
-%%% @copyright (C) 2017, Fred Youhanaie
+%%% @copyright (C) 2018, Fred Youhanaie
 %%% @doc
-%%% Main espace application supervisor.
-%%% It handles the main application components, TSPOOL and WKPOOL.
+%%% Supervisor for the TSPOOL gen_servers.
 %%% @end
-%%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
+%%% Created :  9 Jan 2018 by fy <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
--module(espace_sup).
+-module(tspool_sup).
 
 -behaviour(supervisor).
 
@@ -30,8 +29,6 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
--spec start_link() -> ({ok, pid()} | ignore | {error, any()}).
-
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
@@ -52,29 +49,31 @@ start_link() ->
 %%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
--spec init([]) -> {'ok',{#{'intensity':=1, 'period':=5, 'strategy':='one_for_one'},[map(),...]}}.
 init([]) ->
 
     SupFlags = #{strategy => one_for_one,
 		 intensity => 1,
 		 period => 5},
 
-    Children = [
-
-		#{id => tspool_sup,
-		  start => {tspool_sup, start_link, []},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => supervisor,
-		  modules => [tspool_sup]},
-
-		#{id => wkpool_sup,
-		  start => {wkpool_sup, start_link, []},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => supervisor,
-		  modules => [wkpool_sup]}
-		],
+    Children = [ #{id => 'tspool_srv',
+		   start => {'tspool_srv', start_link, []},
+		   restart => permanent,
+		   shutdown => 5000,
+		   type => worker,
+		   modules => ['tspool_srv']},
+		 #{id => 'tspace_srv',
+		   start => {'tspace_srv', start_link, []},
+		   restart => permanent,
+		   shutdown => 5000,
+		   type => worker,
+		   modules => ['tspace_srv']},
+		 #{id => 'tspatt_srv',
+		   start => {'tspatt_srv', start_link, []},
+		   restart => permanent,
+		   shutdown => 5000,
+		   type => worker,
+		   modules => ['tspatt_srv']}
+	       ],
 
     {ok, {SupFlags, Children}}.
 

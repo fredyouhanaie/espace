@@ -4,8 +4,8 @@
 
 -spec start() -> 'ok'.
 start() ->
-    espace:eval({espace_test1, test_add2, []}),
-    espace:eval({espace_test1, test_sums, []}),
+    espace:eval({adder1, test_add2, []}),
+    espace:eval({adder1, test_sums, []}),
     espace:out({add, 1, 2}),
     espace:out({add, 2, 3}),
     espace:out({add, 3, 5}).

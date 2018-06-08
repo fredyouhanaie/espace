@@ -40,5 +40,5 @@ inp_test() ->
 
 rdp_test() ->
     application:ensure_all_started(espace),
-    nomatch = espace:inp({erlang:make_ref()}).
+    nomatch = espace:rdp({erlang:make_ref()}).
 

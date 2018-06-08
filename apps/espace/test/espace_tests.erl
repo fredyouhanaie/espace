@@ -8,7 +8,13 @@
 %%%-------------------------------------------------------------------
 -module(espace_tests).
 
+-export([test_add/0]).
+
 -include_lib("eunit/include/eunit.hrl").
+
+%%--------------------------------------------------------------------
+%% The tests
+%%--------------------------------------------------------------------
 
 eval_tuple_test() ->
     application:ensure_all_started(espace),
@@ -42,3 +48,21 @@ rdp_test() ->
     application:ensure_all_started(espace),
     nomatch = espace:rdp({erlang:make_ref()}).
 
+adder1_test() ->
+    application:ensure_all_started(espace),
+    espace:eval({adder1, test_add2, []}),
+    espace:out({add, 1, 2}),
+    espace:out({add, 2, 3}),
+    espace:out({add, 3, 4}),
+    {[3], _} = espace:in({sum, 1, 2, '$3'}),
+    {[5], _} = espace:in({sum, 2, 3, '$3'}),
+    {[7], _} = espace:in({sum, 3, 4, '$3'}).
+
+%%--------------------------------------------------------------------
+%% supporting functions for the tests
+%%--------------------------------------------------------------------
+
+test_add() ->
+    {[A, B], _} = espace:in({add, '$1', '$2'}),
+    espace:out({sum, A, B, A+B}),
+    test_add().

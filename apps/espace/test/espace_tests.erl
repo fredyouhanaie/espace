@@ -50,7 +50,7 @@ rdp_test() ->
 
 adder1_test() ->
     application:ensure_all_started(espace),
-    espace:eval({adder1, test_add2, []}),
+    espace:eval({?MODULE, test_add, []}),
     espace:out({add, 1, 2}),
     espace:out({add, 2, 3}),
     espace:out({add, 3, 4}),

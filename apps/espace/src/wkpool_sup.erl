@@ -26,7 +26,6 @@
 %% @doc
 %% Starts the supervisor
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
@@ -37,7 +36,7 @@ start_link() ->
 %% @doc
 %% Stops the supervisor
 %% Taken, unashemedly, from LYSE.
-%% @spec stop() -> ok
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec stop() -> 'ok' | 'true'.
@@ -60,9 +59,6 @@ stop() ->
 %% restart strategy, maximum restart intensity, and child
 %% specifications.
 %%
-%% @spec init(Args) -> {ok, {SupFlags, [ChildSpec]}} |
-%%                     ignore |
-%%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
 -spec init([]) -> {'ok',{#{'intensity':=1, 'period':=5, 'strategy':='one_for_all'},[map(),...]}}.

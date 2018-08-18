@@ -26,7 +26,7 @@
 %% @doc
 %% stop the supervisor.
 %% Unashemdly taken from "Learn You Some Erlang"
-%% @spec stop() -> ok
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec stop() -> 'ok' | 'true'.
@@ -41,7 +41,7 @@ end.
 %% @doc
 %% Starts the supervisor
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
@@ -60,9 +60,6 @@ start_link() ->
 %% restart strategy, maximum restart intensity, and child
 %% specifications.
 %%
-%% @spec init(Args) -> {ok, {SupFlags, [ChildSpec]}} |
-%%                     ignore |
-%%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
 -spec init([]) -> {'ok',{map(),[map(),...]}}.

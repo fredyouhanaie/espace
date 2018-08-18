@@ -35,7 +35,6 @@ add_pattern(Cli_ref, Pattern, Cli_pid) ->
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
@@ -50,10 +49,6 @@ start_link() ->
 %% @doc
 %% Initializes the server
 %%
-%% @spec init(Args) -> {ok, State} |
-%%                     {ok, State, Timeout} |
-%%                     ignore |
-%%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
@@ -67,13 +62,6 @@ init([]) ->
 %% @doc
 %% Handling call messages
 %%
-%% @spec handle_call(Request, From, State) ->
-%%                                   {reply, Reply, State} |
-%%                                   {reply, Reply, State, Timeout} |
-%%                                   {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, Reply, State} |
-%%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 handle_call(_Request, _From, State) ->
@@ -85,9 +73,6 @@ handle_call(_Request, _From, State) ->
 %% @doc
 %% Handling cast messages
 %%
-%% @spec handle_cast(Msg, State) -> {noreply, State} |
-%%                                  {noreply, State, Timeout} |
-%%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 handle_cast({check_tuple, Tuple}, State) ->
@@ -109,9 +94,6 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% Handling all non call/cast messages
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 handle_info(_Info, State) ->
@@ -125,7 +107,6 @@ handle_info(_Info, State) ->
 %% necessary cleaning up. When it returns, the gen_server terminates
 %% with Reason. The return value is ignored.
 %%
-%% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
@@ -136,7 +117,6 @@ terminate(_Reason, _State) ->
 %% @doc
 %% Convert process state when code is changed
 %%
-%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
@@ -150,7 +130,6 @@ code_change(_OldVsn, State, _Extra) ->
 %% @doc
 %% check tuple agains current pattern being waited for, by in or rd
 %%
-%% @spec check_tuple(tuple(), ets:tid(), atom()) -> none
 %% @end
 %%--------------------------------------------------------------------
 -spec check_tuple( tuple(), ets:tid(), atom() ) -> none.

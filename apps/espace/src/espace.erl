@@ -18,7 +18,7 @@
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "eval" operation via the espace server.
-%% @spec eval(tuple()) -> ok
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec eval(tuple()) -> 'ok'.
@@ -29,7 +29,7 @@ eval(MFA) when is_tuple(MFA) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "in" operation via the espace server.
-%% @spec in(tuple()) -> {list(), tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec in(_) -> any().
@@ -39,7 +39,7 @@ in(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "inp" operation via the espace server.
-%% @spec inp(tuple()) -> nomatch | {list() | tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec inp(tuple()) -> any().
@@ -49,7 +49,7 @@ inp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "out" operation via the espace server.
-%% @spec out(tuple()) -> ok
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec out(tuple()) -> 'ok'.
@@ -59,7 +59,7 @@ out(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rd" operation via the espace server.
-%% @spec rd(tuple()) -> {list() | tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec rd(tuple()) -> any().
@@ -69,7 +69,7 @@ rd(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rdp" operation via the espace server.
-%% @spec rdp(tuple()) -> nomatch | {list() | tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec rdp(tuple()) -> any().
@@ -80,7 +80,7 @@ rdp(Pattern) when is_tuple(Pattern) ->
 %% @doc
 %% Read and process an espace input file.
 %% The file should be a valid Erlang terms file.
-%% @spec infile(filename()) -> ok
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec infile(atom() | binary() | [atom() | [any()] | char()]) -> 'ok'.
@@ -95,7 +95,7 @@ infile(File) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Process espace input commands
-%% @spec do_esp(list()) -> ok
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec do_esp([{'eval', tuple()} | {'include', string()} | {'out', tuple()}]) -> 'ok'.

@@ -2,8 +2,10 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
+%%%
 %%% Main espace application supervisor.
 %%% It handles the main application components, TSPOOL and WKPOOL.
+%%%
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -27,7 +29,6 @@
 %% @doc
 %% Starts the supervisor
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link() -> ({ok, pid()} | ignore | {error, any()}).
@@ -42,14 +43,12 @@ start_link() ->
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
+%%
 %% Whenever a supervisor is started using supervisor:start_link/[2,3],
 %% this function is called by the new process to find out about
 %% restart strategy, maximum restart intensity, and child
 %% specifications.
 %%
-%% @spec init(Args) -> {ok, {SupFlags, [ChildSpec]}} |
-%%                     ignore |
-%%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
 -spec init([]) -> {'ok',{#{'intensity':=1, 'period':=5, 'strategy':='one_for_one'},[map(),...]}}.

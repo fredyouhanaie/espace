@@ -29,7 +29,6 @@
 %% @doc
 %% Stops the server
 %%
-%% @spec stop() -> ok
 %% @end
 %%--------------------------------------------------------------------
 -spec stop() -> 'ok' | {'ok',_}.
@@ -40,7 +39,6 @@ stop() ->
 %% @doc
 %% perform an "eval" operation.
 %%
-%% @spec espace_eval(tuple()) -> ok
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_eval(_) -> 'ok'.
@@ -51,7 +49,6 @@ espace_eval(MFA) ->
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
@@ -67,10 +64,6 @@ start_link() ->
 %% @doc
 %% Initializes the server
 %%
-%% @spec init(Args) -> {ok, State} |
-%%                     {ok, State, Timeout} |
-%%                     ignore |
-%%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
 -spec init([]) -> {'ok',#state{workersup::'worker_sup'}}.
@@ -83,13 +76,6 @@ init([]) ->
 %% @doc
 %% Handling call messages
 %%
-%% @spec handle_call(Request, From, State) ->
-%%                                   {reply, Reply, State} |
-%%                                   {reply, Reply, State, Timeout} |
-%%                                   {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, Reply, State} |
-%%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_call(_,_,_) -> {'reply','ok',_}.
@@ -102,9 +88,6 @@ handle_call(_Request, _From, State) ->
 %% @doc
 %% Handling cast messages
 %%
-%% @spec handle_cast(Msg, State) -> {noreply, State} |
-%%                                  {noreply, State, Timeout} |
-%%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_cast(_,_) -> {'noreply',_}.
@@ -124,9 +107,6 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% Handling all non call/cast messages
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_info(_,_) -> {'noreply',_}.
@@ -141,7 +121,6 @@ handle_info(_Info, State) ->
 %% necessary cleaning up. When it returns, the gen_server terminates
 %% with Reason. The return value is ignored.
 %%
-%% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(_,_) -> 'ok'.
@@ -153,7 +132,6 @@ terminate(_Reason, _State) ->
 %% @doc
 %% Convert process state when code is changed
 %%
-%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
 -spec code_change(_,_,_) -> {'ok',_}.

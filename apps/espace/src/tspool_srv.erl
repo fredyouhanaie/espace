@@ -27,7 +27,6 @@
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
@@ -38,7 +37,6 @@ start_link() ->
 %% @doc
 %% Perform an "out" operation.
 %% 
-%% @spec espace_out(Tuple) -> ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_out(_) -> 'ok'.
@@ -48,7 +46,7 @@ espace_out(Tuple) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "in" operation
-%% @spec espace_in(Pattern) -> [any()] | {error, Error}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_in(_) -> any().
@@ -58,7 +56,7 @@ espace_in(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rd" operation
-%% @spec espace_rd(Pattern) -> {list() | tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_rd(_) -> any().
@@ -68,7 +66,7 @@ espace_rd(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform an "inp" operation
-%% @spec espace_inp(Pattern) -> {list() | tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_inp(_) -> any().
@@ -78,7 +76,7 @@ espace_inp(Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Perform a "rdp" operation
-%% @spec espace_rdp(Pattern) -> {list() | tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_rdp(_) -> any().
@@ -89,7 +87,6 @@ espace_rdp(Pattern) ->
 %% @doc
 %% Stop the server.
 %% 
-%% @spec stop() -> ignore
 %% @end
 %%--------------------------------------------------------------------
 -spec stop() -> 'ok'.
@@ -108,10 +105,6 @@ stop() ->
 %% We create two ETS tables, the main tuple space pool, and one for
 %% patterns that do not yet exist in the TS pool.
 %%
-%% @spec init(Args) -> {ok, State} |
-%%                     {ok, State, Timeout} |
-%%                     ignore |
-%%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
 -spec init([]) -> {'ok', {}}.
@@ -124,13 +117,6 @@ init([]) ->
 %% @doc
 %% Handling call messages
 %%
-%% @spec handle_call(Request, From, State) ->
-%%                                   {reply, Reply, State} |
-%%                                   {reply, Reply, State, Timeout} |
-%%                                   {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, Reply, State} |
-%%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_call(_,_,_) -> {'reply','ok' | {'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},_}.
@@ -152,9 +138,6 @@ handle_call({espace_rdp, Pattern}, From, State) ->
 %% @doc
 %% Handling cast messages
 %%
-%% @spec handle_cast(Msg, State) -> {noreply, State} |
-%%                                  {noreply, State, Timeout} |
-%%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 
@@ -172,9 +155,6 @@ handle_cast(stop, State) ->
 %% @doc
 %% Handling all non call/cast messages
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_info(_,_) -> {'noreply',_}.
@@ -189,7 +169,6 @@ handle_info(_Info, State) ->
 %% necessary cleaning up. When it returns, the gen_server terminates
 %% with Reason. The return value is ignored.
 %%
-%% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(_,_) -> 'ok'.
@@ -201,7 +180,6 @@ terminate(_Reason, _State) ->
 %% @doc
 %% Convert process state when code is changed
 %%
-%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
 -spec code_change(_,_,_) -> {'ok',_}.
@@ -215,7 +193,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% unified function for "in" and "rd" client API functions
-%% @spec espace_op(atom(), tuple()) -> nomatch | {list(), tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_) -> any().
@@ -236,7 +214,7 @@ espace_op(Espace_Op, Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% unified call handler for "in", "inp", "rd" and "rdp"
-%% @spec handle_espace_op(atom(), tuple(), tuple(), tuple()) -> {atom(), tuple(), tuple()}
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_,_,_) -> {'reply',{'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},any()}.

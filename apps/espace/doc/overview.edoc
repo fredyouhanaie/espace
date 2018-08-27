@@ -64,20 +64,18 @@
   purpose written bootstrap function, which can in turn
   perform <code>out</code> and <code>eval</code> operations.</p>
 
-<p>On the server side there are two main groups of components:</p>
-
-<p>TSPOOL servers handle the Tuple Space Pool:</p>
+<p>The top level supervisor started by the <code>espace_app</code>
+  is <code>espace_sup</code>. This supervisor manages
+  three <code>gen_server</code>s and one <code>supervisor</code>, as
+  described below:</p>
 
 <ul>
 
-  <li><code>tspool_sup</code> is a <code>supervisor</code> that
-    manages the three <code>gen_server</code>s listed below.</li>
-
-  <li><code>tspace_srv</code> is a <code>gen_server</code> that
+  <li><code>tspool_srv</code> is a <code>gen_server</code> that
     manages the <code>out/in/rd/inp/rdp</code> requests. In turn it
     passes the requests to <code>tspool_srv</code></li>
 
-  <li><code>tspool_srv</code> maintains the <code>tspool</code> ETS
+  <li><code>tspace_srv</code> maintains the <code>tspace</code> ETS
     table, the main tuple space pool. If a requested pattern does not
     exist and the request is a blocking one, i.e. <code>in</code>
     or <code>rd</code>, then the pattern is forwarded
@@ -96,29 +94,13 @@
     existing patterns in the table and, if matched, blocked clients
     are notified.</li>
 
-</ul>
-
-
-<p>WKPOOL servers handle the worker pool:</p>
-
-<ul>
-
-  <li><code>wkpool_sup</code> is a <code>supervisor</code> that
-    manages worker pool processes, <code>wkpool_srv</code>
-    and <code>worker_sup</code></li>
-
-  <li><code>wkpool_srv</code> is a <code>gen_server</code> that will
-    receive the <code>eval</code> requests, and pass the request to
-    the worker supervisor.</li>
-
   <li><code>worker_sup</code> is a <code>supervisor</code> that will
     create a new child process with the <code>{M,F,A}</code> function
-    supplied with the request.</li>
-
-  <li>Each <code>eval</code> operation, is executed within a child
-    process of the <code>simple_one_for_one</code> supervisor. At
-    present, no attempt is made to throttle the number
-    of <code>eval</code> processes.</li>
+    supplied with the request. Each <code>eval</code> operation, is
+    executed within a child process of
+    the <code>simple_one_for_one</code> supervisor. At present, no
+    attempt is made to throttle the number of <code>eval</code>
+    processes.</li>
 
 </ul>
 
@@ -126,23 +108,24 @@
 
 <p>The tuples are kept in a pair of ETS tables.</p>
 
-<p>The first table, <code>tspool</code> has two columns, A unique ref,
+<p>The first table, <code>tspace</code> has two columns, a unique ref,
   and the tuple itself. A
-  single <code>gen_server</code>, <code>tspace_srv</code> handles all
+  single <code>gen_server</code>, <code>tspace_srv</code>, handles all
   accesses to this table.</p>
 
-<p>For the cases where no matching tuple is found, a second ETS
-  table <code>tspatt</code> is used to remember the pattern, the
-  client PID and a unique reference for this specific request. The
-  unique reference will be used by the
+<p>For the cases where no matching tuple is found for a given pattern,
+  a second ETS table <code>tspatt</code> is used to remember the
+  pattern, the client PID and a unique reference for this specific
+  request. The unique reference will be used by the
   <code>tspool_srv</code> client side function to block on a receive
-  for the unique reference.</p>
+  for that reference.</p>
 
 <p>Each <code>out</code> operation, after inserting the new tuple,
-  will notify <code>tspatt_srv</code> of the new tuple, which will
-  then scan the blocking clients whose pattern matches the newly added
-  tuple. If a match is found, the waiting client is notified and the
-  client entry is removed from the table.</p>
+  will notify <code>tspatt_srv</code> of the new
+  tuple. <code>tspatt_srv</code> which will then scan the blocking
+  clients whose pattern matches the newly added tuple. If a match is
+  found, the waiting client is notified and the client entry is
+  removed from the table.</p>
 
 <p>Once the waiting client receives the notification, it will attempt
   the <code>rd</code> or <code>in</code> operation again. Note that

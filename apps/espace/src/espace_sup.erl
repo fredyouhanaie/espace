@@ -4,7 +4,7 @@
 %%% @doc
 %%%
 %%% Main espace application supervisor.
-%%% It handles the main application components, TSPOOL and WKPOOL.
+%%% It handles the main application components.
 %%%
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
@@ -59,21 +59,35 @@ init([]) ->
 		 period => 5},
 
     Children = [
+		#{id => 'tspool_srv',
+		  start => {'tspool_srv', start_link, []},
+		  restart => permanent,
+		  shutdown => 5000,
+		  type => worker,
+		  modules => ['tspool_srv']},
 
-		#{id => tspool_sup,
-		  start => {tspool_sup, start_link, []},
+		#{id => 'tspace_srv',
+		  start => {'tspace_srv', start_link, []},
+		  restart => permanent,
+		  shutdown => 5000,
+		  type => worker,
+		  modules => ['tspace_srv']},
+
+		#{id => 'tspatt_srv',
+		  start => {'tspatt_srv', start_link, []},
+		  restart => permanent,
+		  shutdown => 5000,
+		  type => worker,
+		  modules => ['tspatt_srv']},
+
+		#{id => 'worker_sup',
+		  start => {'worker_sup', start_link, []},
 		  restart => permanent,
 		  shutdown => 5000,
 		  type => supervisor,
-		  modules => [tspool_sup]},
+		  modules => ['wkpool_srv']}
 
-		#{id => wkpool_sup,
-		  start => {wkpool_sup, start_link, []},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => supervisor,
-		  modules => [wkpool_sup]}
-		],
+	       ],
 
     {ok, {SupFlags, Children}}.
 

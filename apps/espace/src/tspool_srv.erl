@@ -11,13 +11,15 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, espace_out/1, espace_in/1, espace_rd/1, espace_inp/1, espace_rdp/1, stop/0]).
+-export([start_link/0, espace_eval/1, espace_out/1, espace_in/1, espace_rd/1, espace_inp/1, espace_rdp/1, stop/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE).
+
+-record(state, {workersup}).
 
 %%%===================================================================
 %%% API
@@ -32,6 +34,16 @@
 -spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% perform an "eval" operation.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec espace_eval(_) -> 'ok'.
+espace_eval(MFA) ->
+    gen_server:cast(?SERVER, {espace_eval, MFA}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -107,10 +119,10 @@ stop() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init([]) -> {'ok', {}}.
+-spec init([]) -> {'ok', tuple()}.
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, {}}.
+    {ok, #state{workersup=worker_sup}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -144,6 +156,14 @@ handle_call({espace_rdp, Pattern}, From, State) ->
 -spec handle_cast(_,_) -> {'noreply',_} | {'stop','normal',_}.
 handle_cast({espace_out, Tuple}, State) ->
     tspace_srv:add_tuple(Tuple),
+    {noreply, State};
+
+handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
+    supervisor:start_child(State#state.workersup, [M, F, A]),
+    {noreply, State};
+
+handle_cast(_Msg={espace_eval, {Fun, Args}}, State) ->
+    supervisor:start_child(State#state.workersup, [Fun, Args]),
     {noreply, State};
 
 handle_cast(stop, State) ->

@@ -23,7 +23,7 @@
 %%--------------------------------------------------------------------
 -spec eval(tuple()) -> 'ok'.
 eval(MFA) when is_tuple(MFA) ->
-    wkpool_srv:espace_eval(MFA),
+    tspool_srv:espace_eval(MFA),
     ok.
 
 %%--------------------------------------------------------------------

@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, add_tuple/1, del_tuple/1, get_tuple/1]).
+-export([start_link/1, add_tuple/2, del_tuple/2, get_tuple/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -19,20 +19,20 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {tspool}).
+-record(state, {inst_name, tspool}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-add_tuple(Tuple) ->
-    gen_server:cast(?SERVER, {add_tuple, Tuple}).
+add_tuple(Inst_name, Tuple) ->
+    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
-del_tuple(Tuple) ->
-    gen_server:cast(?SERVER, {del_tuple, Tuple}).
+del_tuple(Inst_name, Tuple) ->
+    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, Tuple}).
 
-get_tuple(Pattern) ->
-    gen_server:call(?SERVER, {get_tuple, Pattern}).
+get_tuple(Inst_name, Pattern) ->
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -40,8 +40,8 @@ get_tuple(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(Inst_name) ->
+    gen_server:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -54,10 +54,11 @@ start_link() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-init([]) ->
+init(Inst_name) ->
     process_flag(trap_exit, true),
-    Pool = ets:new(tspace, [set, protected]),
-    {ok, #state{tspool=Pool}}.
+    Pool_name = espace:inst_to_name(tspace, Inst_name),
+    Pool = ets:new(Pool_name, [set, protected]),
+    {ok, #state{inst_name=Inst_name, tspool=Pool}}.
 
 
 %%--------------------------------------------------------------------
@@ -92,7 +93,7 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({add_tuple, Tuple}, State) ->
     ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
-    tspatt_srv:check_waitlist(Tuple),
+    tspatt_srv:check_waitlist(State#state.inst_name, Tuple),
     {noreply, State};
 
 handle_cast({del_tuple, TabKey}, State) ->

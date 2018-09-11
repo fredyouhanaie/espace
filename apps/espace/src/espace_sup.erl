@@ -14,7 +14,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -31,10 +31,10 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link() -> ({ok, pid()} | ignore | {error, any()}).
-
-start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+-spec start_link(atom()) -> ({ok, pid()} | ignore | {error, any()}).
+start_link(Inst_name) ->
+    Server_name = espace:inst_to_name(?SERVER, Inst_name),
+    supervisor:start_link({local, Server_name}, ?MODULE, Inst_name).
 
 %%%===================================================================
 %%% Supervisor callbacks
@@ -51,8 +51,8 @@ start_link() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init([]) -> {'ok',{#{'intensity':=1, 'period':=5, 'strategy':='one_for_one'},[map(),...]}}.
-init([]) ->
+-spec init(atom()) -> {'ok',{#{'intensity':=1, 'period':=5, 'strategy':='one_for_one'},[map(),...]}}.
+init(Inst_name) ->
 
     SupFlags = #{strategy => one_for_one,
 		 intensity => 1,
@@ -60,28 +60,28 @@ init([]) ->
 
     Children = [
 		#{id => 'tspool_srv',
-		  start => {'tspool_srv', start_link, []},
+		  start => {'tspool_srv', start_link, [Inst_name]},
 		  restart => permanent,
 		  shutdown => 5000,
 		  type => worker,
 		  modules => ['tspool_srv']},
 
 		#{id => 'tspace_srv',
-		  start => {'tspace_srv', start_link, []},
+		  start => {'tspace_srv', start_link, [Inst_name]},
 		  restart => permanent,
 		  shutdown => 5000,
 		  type => worker,
 		  modules => ['tspace_srv']},
 
 		#{id => 'tspatt_srv',
-		  start => {'tspatt_srv', start_link, []},
+		  start => {'tspatt_srv', start_link, [Inst_name]},
 		  restart => permanent,
 		  shutdown => 5000,
 		  type => worker,
 		  modules => ['tspatt_srv']},
 
 		#{id => 'worker_sup',
-		  start => {'worker_sup', start_link, []},
+		  start => {'worker_sup', start_link, [Inst_name]},
 		  restart => permanent,
 		  shutdown => 5000,
 		  type => supervisor,

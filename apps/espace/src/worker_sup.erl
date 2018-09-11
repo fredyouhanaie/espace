@@ -11,7 +11,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0, stop/0, run_child/3, run_child/2]).
+-export([start_link/1, stop/1, run_child/3, run_child/2]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -29,9 +29,9 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec stop() -> 'ok' | 'true'.
-stop() ->
-    case whereis(?SERVER) of
+-spec stop(atom()) -> 'ok' | 'true'.
+stop(Inst_name) ->
+    case whereis(espace:inst_to_name(?SERVER, Inst_name)) of
 	P when is_pid(P) ->
 	    exit(P, kill);
 	_ -> ok
@@ -44,9 +44,9 @@ end.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link() -> 'ignore' | {'error',_} | {'ok',pid()}.
-start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+-spec start_link(atom()) -> 'ignore' | {'error',_} | {'ok',pid()}.
+start_link(Inst_name) ->
+    supervisor:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name).
 
 %%%===================================================================
 %%% Supervisor callbacks
@@ -62,15 +62,15 @@ start_link() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init([]) -> {'ok',{map(),[map(),...]}}.
-init([]) ->
+-spec init(atom()) -> {'ok',{map(),[map(),...]}}.
+init(_Inst_name) ->
 
     SupFlags = #{strategy => simple_one_for_one,
 		 intensity => 1,  %% TODO needs tuning
 		 period => 5},    %% TODO needs tuning
 
     AChild = #{id => tsworker,
-	       start => {worker_sup, run_child, []},
+	       start => {?MODULE, run_child, []},
 	       restart => temporary,
 	       shutdown => brutal_kill,
 	       type => worker},

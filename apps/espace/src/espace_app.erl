@@ -31,8 +31,8 @@
 %%--------------------------------------------------------------------
 -spec start(_StartType, _StartArgs) -> ( {ok, pid()} | {error, any()} ).
 
-start(_StartType, _StartArgs) ->
-    case espace_sup:start_link() of
+start(_StartType, Inst_name) ->
+    case espace_sup:start_link(Inst_name) of
 	{ok, Pid} ->
 	    {ok, Pid};
 	Error ->

@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, check_waitlist/1, add_pattern/3]).
+-export([start_link/1, check_waitlist/2, add_pattern/4]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -19,17 +19,17 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {tspatt}).
+-record(state, {inst_name, tspatt}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-check_waitlist(Tuple) ->
-    gen_server:cast(?SERVER, {check_tuple, Tuple}).
+check_waitlist(Inst_name, Tuple) ->
+    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {check_tuple, Tuple}).
 
-add_pattern(Cli_ref, Pattern, Cli_pid) ->
-    gen_server:cast(?SERVER, {add_pattern, Cli_ref, Pattern, Cli_pid}).
+add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
+    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_pattern, Cli_ref, Pattern, Cli_pid}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -37,8 +37,10 @@ add_pattern(Cli_ref, Pattern, Cli_pid) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(Inst_name) ->
+    Server_name = espace:inst_to_name(?SERVER, Inst_name),
+    gen_server:start_link({local, Server_name}, ?MODULE, Inst_name, []).
+
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -51,10 +53,11 @@ start_link() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-init([]) ->
+init(Inst_name) ->
     process_flag(trap_exit, true),
-    Patt = ets:new(tspatt, [set, protected]),
-    {ok, #state{tspatt=Patt}}.
+    Patt_name = espace:inst_to_name(tspatt, Inst_name),
+    Patt = ets:new(Patt_name, [set, protected]),
+    {ok, #state{inst_name=Inst_name, tspatt=Patt}}.
 
 
 %%--------------------------------------------------------------------

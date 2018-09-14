@@ -16,22 +16,52 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
+* Instead of single espace application on a node, you can now create
+  multiple, independent, named instances.
 * Added some basic Eunit tests.
 * The two ETS tables are now managed by separate servers.
 
 ## Upcoming changes
 
-* Instead of single espace application on a node, it will be possible
-  to create multiple, independent, named instances.
 * The set of examples will be expanded, and moved to a separate repo.
+* The project will be converted to a library, instead of an
+  application. One would need to explicitly start an instance of the
+  application with `espace:start/0,1`.
+
 
 ## Current Status
 
-* The project has been developed and tested on a *Linux* system. Using Erlang/OTP 20.1 and rebar3 3.4.7
+* The project has been developed and tested on a *Linux* system. Using
+  Erlang/OTP 20 and 21, and rebar3.
 * Tests are carried out using a set of basic Eunit tests, via `rebar3 eunit`.
 * General documentation can be found on the [wiki pages](https://github.com/fredyouhanaie/espace/wiki).
 * Documentation for the source code can be generated via `rebar3 docs`.
 * There are some example programs in the `Examples/` directory.
+
+## Build and testing
+
+`rebar3` is used throughout for all stages of the build and test. All
+the below commands should be run from the top level directory:
+
+* To compile the code:
+```
+rebar3 do clean,compile
+```
+
+* To run the tests:
+```
+rebar3 eunit
+```
+
+* To run dialyzer:
+```
+rebar3 dialyzer
+```
+
+* To generate the documentation:
+```
+rebar3 edoc
+```
 
 ## To try out the application
 

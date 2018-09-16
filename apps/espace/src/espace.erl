@@ -31,7 +31,7 @@
 %%--------------------------------------------------------------------
 -spec start() -> ok | {error, term()}.
 start() ->
-    application:start(espace).
+    start(espace).
 
 -spec start(atom()) -> ok | {error, term()}.
 start(espace) ->
@@ -173,23 +173,19 @@ infile(Inst_name, File) ->
 %%--------------------------------------------------------------------
 %% @doc
 %%
-%% convert an instance name to longer prefixed name. This is used for
+%% Convert an instance name to longer prefixed name. This is used for
 %% obtaining the instance specific server/table names.
 %%
 %% If the instance name is `espace', then the prefix is returned
-%% without an instance name.
+%% without an instance name suffix.
 %%
 %% @end
 %%--------------------------------------------------------------------
 -spec inst_to_name(atom(), atom()) -> atom().
+inst_to_name(Prefix, espace) ->
+    Prefix;
 inst_to_name(Prefix, Inst_name) ->
-    case Inst_name  of
-	espace ->
-	    Prefix;
-	_ ->
-	    list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name))
-    end.
-
+    list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)).
 
 %%%===================================================================
 %%% Internal functions

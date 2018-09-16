@@ -12,6 +12,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-define(Test_file1, "apps/espace/test/testfile-1.esp").
+
 %%--------------------------------------------------------------------
 %% The tests
 %%--------------------------------------------------------------------
@@ -83,6 +85,12 @@ adder1_test() ->
     espace:out({add, 3, 4}),
     {[3], _} = espace:in({sum, 1, 2, '$3'}),
     {[5], _} = espace:in({sum, 2, 3, '$3'}),
+    {[7], _} = espace:in({sum, 3, 4, '$3'}).
+
+infile_test() ->
+    application:ensure_all_started(espace),
+    espace:infile(?Test_file1),
+    {[3], _} = espace:in({sum, 1, 2, '$3'}),
     {[7], _} = espace:in({sum, 3, 4, '$3'}).
 
 %%--------------------------------------------------------------------

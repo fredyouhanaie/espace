@@ -1,0 +1,11 @@
+
+% start the worker process
+%
+{eval, {espace_tests, test_add, []}}.	% worker one
+
+% initial set of numbers
+%
+{out, {add, 1, 2}}.
+
+% nested test file
+{include, "apps/espace/test/testfile-2.esp"}.

@@ -11,11 +11,10 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, espace_eval/2, espace_out/2, espace_in/2, espace_rd/2, espace_inp/2, espace_rdp/2, stop/1]).
+-export([start_link/1, espace_eval/2, espace_out/2, espace_in/2, espace_rd/2, espace_inp/2, espace_rdp/2]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3]).
+-export([init/1, handle_call/3, handle_cast/2, terminate/2]).
 
 -define(SERVER, ?MODULE).
 
@@ -95,16 +94,6 @@ espace_inp(Inst_name, Pattern) ->
 espace_rdp(Inst_name, Pattern) ->
     espace_op(Inst_name, espace_rdp, Pattern).
 
-%%--------------------------------------------------------------------
-%% @doc
-%% Stop the server.
-%% 
-%% @end
-%%--------------------------------------------------------------------
--spec stop(atom()) -> 'ok'.
-stop(Inst_name) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), stop).
-
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -164,21 +153,6 @@ handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
 
 handle_cast(_Msg={espace_eval, {Fun, Args}}, State) ->
     supervisor:start_child(State#state.workersup, [Fun, Args]),
-    {noreply, State};
-
-handle_cast(stop, State) ->
-    {stop, normal, State}.
-
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Handling all non call/cast messages
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec handle_info(_,_) -> {'noreply',_}.
-handle_info(_Info, State) ->
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -194,17 +168,6 @@ handle_info(_Info, State) ->
 -spec terminate(_,_) -> 'ok'.
 terminate(_Reason, _State) ->
     ok.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Convert process state when code is changed
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec code_change(_,_,_) -> {'ok',_}.
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
 
 %%%===================================================================
 %%% Internal functions

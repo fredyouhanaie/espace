@@ -16,11 +16,26 @@
 %% The tests
 %%--------------------------------------------------------------------
 
+start_test() ->
+    espace:start().
+
+start_named_test() ->
+    espace:start(aaa),
+    espace:stop(aaa).
+
+stop_test() ->
+    application:ensure_all_started(espace),
+    espace:stop().
+
 eval_tuple_test() ->
     application:ensure_all_started(espace),
     espace:eval({erlang, system_time, []}).
 
 eval_fun_test() ->
+    application:ensure_all_started(espace),
+    espace:eval({fun () -> erlang:system_time() end, []}).
+
+eval_fun_str_test() ->
     application:ensure_all_started(espace),
     espace:eval({"fun () -> erlang:system_time() end.", []}).
 
@@ -40,11 +55,23 @@ rd_test() ->
     espace:out({Ref}),
     espace:rd({Ref}).
 
-inp_test() ->
+inp_match_test() ->
+    application:ensure_all_started(espace),
+    Ref = erlang:make_ref(),
+    espace:out({Ref}),
+    espace:inp({Ref}).
+
+inp_nomatch_test() ->
     application:ensure_all_started(espace),
     nomatch = espace:inp({erlang:make_ref()}).
 
-rdp_test() ->
+rdp_match_test() ->
+    application:ensure_all_started(espace),
+    Ref = erlang:make_ref(),
+    espace:out({Ref}),
+    espace:rdp({Ref}).
+
+rdp_nomatch_test() ->
     application:ensure_all_started(espace),
     nomatch = espace:rdp({erlang:make_ref()}).
 

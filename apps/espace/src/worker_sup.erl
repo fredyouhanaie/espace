@@ -11,7 +11,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/1, stop/1, run_child/3, run_child/2]).
+-export([start_link/1, run_child/3, run_child/2]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -21,21 +21,6 @@
 %%%===================================================================
 %%% API functions
 %%%===================================================================
-
-%%--------------------------------------------------------------------
-%% @doc
-%% stop the supervisor.
-%% Unashemdly taken from "Learn You Some Erlang"
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec stop(atom()) -> 'ok' | 'true'.
-stop(Inst_name) ->
-    case whereis(espace:inst_to_name(?SERVER, Inst_name)) of
-	P when is_pid(P) ->
-	    exit(P, kill);
-	_ -> ok
-end.
 
 %%--------------------------------------------------------------------
 %% @doc

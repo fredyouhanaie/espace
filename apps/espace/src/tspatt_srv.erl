@@ -14,8 +14,7 @@
 -export([start_link/1, check_waitlist/2, add_pattern/4]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3]).
+-export([init/1, handle_call/3, handle_cast/2, terminate/2]).
 
 -define(SERVER, ?MODULE).
 
@@ -87,19 +86,6 @@ handle_cast({check_tuple, Tuple}, State) ->
 
 handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
     ets:insert(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
-    {noreply, State};
-
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Handling all non call/cast messages
-%%
-%% @end
-%%--------------------------------------------------------------------
-handle_info(_Info, State) ->
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -114,16 +100,6 @@ handle_info(_Info, State) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
     ok.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% Convert process state when code is changed
-%%
-%% @end
-%%--------------------------------------------------------------------
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
 
 %%%===================================================================
 %%% Internal functions

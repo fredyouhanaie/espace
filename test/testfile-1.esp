@@ -8,4 +8,4 @@
 {out, {add, 1, 2}}.
 
 % nested test file
-{include, "apps/espace/test/testfile-2.esp"}.
+{include, "test/testfile-2.esp"}.

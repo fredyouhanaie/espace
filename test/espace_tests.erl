@@ -12,7 +12,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--define(Test_file1, "apps/espace/test/testfile-1.esp").
+-define(Test_file1, "test/testfile-1.esp").
 
 %%--------------------------------------------------------------------
 %% The tests

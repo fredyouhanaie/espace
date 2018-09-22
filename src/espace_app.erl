@@ -29,7 +29,10 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start(_StartType, _StartArgs) -> ( {ok, pid()} | {error, any()} ).
+-spec start(normal, atom()) ->
+		   {ok, pid()} |
+		   ignore |
+		   {error, {already_started, pid()} | {shutdown, term()} | term()}.
 start(normal, Inst_name) ->
     espace_sup:start_link(Inst_name).
 
@@ -43,8 +46,7 @@ start(normal, Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec stop(_State) -> ok.
-
+-spec stop(term()) -> ok.
 stop(_State) ->
     ok.
 

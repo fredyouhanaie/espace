@@ -73,11 +73,11 @@ stop(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec eval(tuple()) -> 'ok'.
+-spec eval(tuple()) -> ok.
 eval(MFA) when is_tuple(MFA) ->
     eval(espace, MFA).
 
--spec eval(atom(), tuple()) -> 'ok'.
+-spec eval(atom(), tuple()) -> ok.
 eval(Inst_name, MFA) when is_tuple(MFA) ->
     tspool_srv:espace_eval(Inst_name, MFA).
 
@@ -87,11 +87,11 @@ eval(Inst_name, MFA) when is_tuple(MFA) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec in(tuple()) -> any().
+-spec in(tuple()) -> {list(), tuple()}.
 in(Pattern) ->
     in(espace, Pattern).
 
--spec in(atom(), tuple()) -> any().
+-spec in(atom(), tuple()) -> {list(), tuple()}.
 in(Inst_name, Pattern) ->
     tspool_srv:espace_in(Inst_name, Pattern).
 
@@ -101,11 +101,11 @@ in(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec inp(tuple()) -> any().
+-spec inp(tuple()) -> nomatch | {list(), tuple()}.
 inp(Pattern) when is_tuple(Pattern) ->
     inp(espace, Pattern).
 
--spec inp(atom(), tuple()) -> any().
+-spec inp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 inp(Inst_name, Pattern) when is_tuple(Pattern) ->
     tspool_srv:espace_inp(Inst_name, Pattern).
 
@@ -115,11 +115,11 @@ inp(Inst_name, Pattern) when is_tuple(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec out(tuple()) -> 'ok'.
+-spec out(tuple()) -> ok.
 out(Tuple) when is_tuple(Tuple) ->
     out(espace, Tuple).
 
--spec out(atom(), tuple()) -> 'ok'.
+-spec out(atom(), tuple()) -> ok.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
     tspool_srv:espace_out(Inst_name, Tuple).
 
@@ -129,11 +129,11 @@ out(Inst_name, Tuple) when is_tuple(Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec rd(tuple()) -> any().
+-spec rd(tuple()) -> {list(), tuple()}.
 rd(Pattern) when is_tuple(Pattern) ->
     rd(espace, Pattern).
 
--spec rd(atom(), tuple()) -> any().
+-spec rd(atom(), tuple()) -> {list(), tuple()}.
 rd(Inst_name, Pattern) when is_tuple(Pattern) ->
     tspool_srv:espace_rd(Inst_name, Pattern).
 
@@ -143,11 +143,11 @@ rd(Inst_name, Pattern) when is_tuple(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec rdp(tuple()) -> any().
+-spec rdp(tuple()) -> nomatch | {list(), tuple()}.
 rdp(Pattern) when is_tuple(Pattern) ->
     rdp(espace, Pattern).
 
--spec rdp(atom(), tuple()) -> any().
+-spec rdp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 rdp(Inst_name, Pattern) when is_tuple(Pattern) ->
     tspool_srv:espace_rdp(Inst_name, Pattern).
 
@@ -158,11 +158,11 @@ rdp(Inst_name, Pattern) when is_tuple(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec infile(atom() | binary() | [atom() | [any()] | char()]) -> 'ok'.
+-spec infile(file:name_all()) -> ok.
 infile(File) ->
     infile(espace, File).
 
--spec infile(atom(), atom() | binary() | [atom() | [any()] | char()]) -> 'ok'.
+-spec infile(atom(), file:name_all()) -> ok.
 infile(Inst_name, File) ->
     {ok, Terms} = file:consult(File),
     do_esp(Inst_name, Terms).
@@ -195,7 +195,7 @@ inst_to_name(Prefix, Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec do_esp(atom(), [{'eval', tuple()} | {'include', string()} | {'out', tuple()}]) -> 'ok'.
+-spec do_esp(atom(), [{eval, tuple()} | {include, string()} | {out, tuple()}]) -> ok.
 do_esp(_Inst_name, []) ->
     ok;
 

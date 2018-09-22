@@ -24,12 +24,15 @@
 %%% API
 %%%===================================================================
 
+-spec add_tuple(atom(), tuple()) -> ok.
 add_tuple(Inst_name, Tuple) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
+-spec del_tuple(atom(), reference()) -> ok.
 del_tuple(Inst_name, TabKey) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
 
+-spec get_tuple(atom(), tuple()) -> {nomatch} | {match, {reference(), list(), tuple()}}.
 get_tuple(Inst_name, Pattern) ->
     gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
 
@@ -39,6 +42,7 @@ get_tuple(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec start_link(atom()) -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
 start_link(Inst_name) ->
     gen_server:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
@@ -53,6 +57,7 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec init(atom()) -> {ok, term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     Pool_name = espace:inst_to_name(tspace, Inst_name),
@@ -67,6 +72,8 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_call({get_tuple, term()}, pid(), term()) ->
+			 {reply, {nomatch}, term()} | {reply, {match, {reference(), list(), tuple()}, term()}}.
 handle_call({get_tuple, Pattern}, _From, State) ->
     TabId = State#state.tspool,
     Match = ets:match(TabId, {'$0', Pattern}, 1),
@@ -86,6 +93,7 @@ handle_call({get_tuple, Pattern}, _From, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_cast({add_tuple, tuple()}|{del_tuple, reference()}, term()) -> {noreply, term()}.
 handle_cast({add_tuple, Tuple}, State) ->
     ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
     tspatt_srv:check_waitlist(State#state.inst_name, Tuple),
@@ -106,6 +114,7 @@ handle_cast({del_tuple, TabKey}, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec terminate(term(), term()) -> ok.
 terminate(_Reason, _State) ->
     ok.
 

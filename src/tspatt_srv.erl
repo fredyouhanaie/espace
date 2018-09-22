@@ -24,9 +24,11 @@
 %%% API
 %%%===================================================================
 
+-spec check_waitlist(atom(), tuple()) -> ok.
 check_waitlist(Inst_name, Tuple) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {check_tuple, Tuple}).
 
+-spec add_pattern(atom(), reference(), tuple(), pid()) -> ok.
 add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_pattern, Cli_ref, Pattern, Cli_pid}).
 
@@ -36,6 +38,9 @@ add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec start_link(atom()) -> ignore |
+			    {error, {already_started, pid()} | term()} |
+			    {ok, pid()}.
 start_link(Inst_name) ->
     Server_name = espace:inst_to_name(?SERVER, Inst_name),
     gen_server:start_link({local, Server_name}, ?MODULE, Inst_name, []).
@@ -52,6 +57,7 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec init(atom()) -> {ok, term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     Patt_name = espace:inst_to_name(tspatt, Inst_name),
@@ -66,6 +72,7 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_call(term(), pid(), term()) -> {reply, ok, term()}.
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -77,6 +84,7 @@ handle_call(_Request, _From, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec handle_cast({atom(), tuple()}, term()) -> {noreply, term()}.
 handle_cast({check_tuple, Tuple}, State) ->
     TSpatt = State#state.tspatt,
     ets:safe_fixtable(TSpatt, true), % we may be deleting records while scanning
@@ -98,6 +106,7 @@ handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
+-spec terminate(atom(), term()) -> ok.
 terminate(_Reason, _State) ->
     ok.
 
@@ -113,7 +122,7 @@ terminate(_Reason, _State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec check_tuple( tuple(), ets:tid(), atom() ) -> none.
+-spec check_tuple(tuple(), ets:tid(), atom()) -> none.
 check_tuple(_Tuple, _TabId, '$end_of_table') ->
     none;
 check_tuple(Tuple, TabId, Key) ->

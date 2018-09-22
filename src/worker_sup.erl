@@ -29,7 +29,10 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) -> 'ignore' | {'error',_} | {'ok',pid()}.
+-spec start_link(atom()) ->
+			{ok, pid()} |
+			ignore |
+			{error, {already_started, pid()} | {shutdown, term()} | term()}.
 start_link(Inst_name) ->
     supervisor:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name).
 
@@ -47,7 +50,7 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {'ok',{map(),[map(),...]}}.
+-spec init(atom()) -> {ok, {map(), [map()]}}.
 init(_Inst_name) ->
 
     SupFlags = #{strategy => simple_one_for_one,
@@ -66,11 +69,11 @@ init(_Inst_name) ->
 %%% Internal functions
 %%%===================================================================
 
--spec run_child(atom(),atom(),[any()]) -> {'ok',pid()}.
+-spec run_child(atom(), atom(), list()) -> {ok, pid()}.
 run_child(M, F, A) ->
     {ok, spawn_link(M, F, A)}.
 
--spec run_child(string()|function(), [any()]) -> {'ok',pid()}.
+-spec run_child(string() | function(), list()) -> {ok, pid()}.
 run_child(Fun, Args) when is_function(Fun) ->
     {ok, spawn_link(erlang, apply, [Fun, Args])};
 

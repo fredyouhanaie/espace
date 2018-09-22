@@ -30,7 +30,9 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) -> 'ignore' | {'error',_} | {'ok',pid()}.
+-spec start_link(atom()) -> ignore |
+			    {error, {already_started, pid()} | term()}|
+			    {ok, pid()}.
 start_link(Inst_name) ->
     gen_server:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
@@ -40,7 +42,7 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_eval(atom(), tuple()) -> 'ok'.
+-spec espace_eval(atom(), tuple()) -> ok.
 espace_eval(Inst_name, MFA) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, MFA}).
 
@@ -50,7 +52,7 @@ espace_eval(Inst_name, MFA) ->
 %% 
 %% @end
 %%--------------------------------------------------------------------
--spec espace_out(atom(), tuple()) -> 'ok'.
+-spec espace_out(atom(), tuple()) -> ok.
 espace_out(Inst_name, Tuple) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_out, Tuple}).
 
@@ -60,7 +62,7 @@ espace_out(Inst_name, Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_in(atom(), tuple()) -> any().
+-spec espace_in(atom(), tuple()) -> {list(), tuple()}.
 espace_in(Inst_name, Pattern) ->
     espace_op(Inst_name, espace_in, Pattern).
 
@@ -70,7 +72,7 @@ espace_in(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_rd(atom(), tuple()) -> any().
+-spec espace_rd(atom(), tuple()) -> {list(), tuple()}.
 espace_rd(Inst_name, Pattern) ->
     espace_op(Inst_name, espace_rd, Pattern).
 
@@ -80,7 +82,7 @@ espace_rd(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_inp(atom(), tuple()) -> any().
+-spec espace_inp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 espace_inp(Inst_name, Pattern) ->
     espace_op(Inst_name, espace_inp, Pattern).
 
@@ -90,7 +92,7 @@ espace_inp(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_rdp(atom(), tuple()) -> any().
+-spec espace_rdp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 espace_rdp(Inst_name, Pattern) ->
     espace_op(Inst_name, espace_rdp, Pattern).
 
@@ -105,7 +107,7 @@ espace_rdp(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {'ok',#state{inst_name::atom(),workersup::atom()}}.
+-spec init(atom()) -> {ok, #state{inst_name::atom(), workersup::atom()}}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     {ok, #state{inst_name=Inst_name, workersup=espace:inst_to_name(worker_sup, Inst_name)}}.
@@ -117,7 +119,11 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call(_,_,_) -> {'reply','ok' | {'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},_}.
+-spec handle_call({atom(), tuple()}, pid(), term()) ->
+			 {reply,
+			  {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
+			  term()
+			 }.
 handle_call({espace_in, Pattern}, From, State) ->
     handle_espace_op(espace_in, Pattern, From, State);
 
@@ -138,7 +144,7 @@ handle_call({espace_rdp, Pattern}, From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec handle_cast(_,_) -> {'noreply',_} | {'stop','normal',_}.
+-spec handle_cast({atom(), tuple()}, term()) -> {noreply, term()}.
 handle_cast({espace_out, Tuple}, State) ->
     tspace_srv:add_tuple(State#state.inst_name, Tuple),
     {noreply, State};
@@ -161,7 +167,7 @@ handle_cast(_Msg={espace_eval, {Fun, Args}}, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec terminate(_,_) -> 'ok'.
+-spec terminate(atom(), term()) -> ok.
 terminate(_Reason, _State) ->
     ok.
 
@@ -175,7 +181,8 @@ terminate(_Reason, _State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_op(atom(), 'espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_) -> any().
+-spec espace_op(atom(), espace_in | espace_inp | espace_rd | espace_rdp, tuple()) ->
+		       {list(), tuple()} | nomatch.
 espace_op(Inst_name, Espace_Op, Pattern) ->
     Reply = gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {Espace_Op, Pattern}),
     case Reply of
@@ -196,7 +203,11 @@ espace_op(Inst_name, Espace_Op, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_espace_op('espace_in' | 'espace_inp' | 'espace_rd' | 'espace_rdp',_,_,_) -> {'reply',{'nomatch'} | {'match',{[any()],_}} | {'nomatch',reference()},any()}.
+-spec handle_espace_op(espace_in | espace_inp | espace_rd | espace_rdp, tuple(), pid(), term()) ->
+			      {reply,
+			       {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
+			       term()
+			      }.
 handle_espace_op(Espace_Op, Pattern, From, State) ->
     case tspace_srv:get_tuple(State#state.inst_name, Pattern) of
 	{nomatch} ->

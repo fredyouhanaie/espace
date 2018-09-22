@@ -27,8 +27,8 @@
 add_tuple(Inst_name, Tuple) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
-del_tuple(Inst_name, Tuple) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, Tuple}).
+del_tuple(Inst_name, TabKey) ->
+    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
 
 get_tuple(Inst_name, Pattern) ->
     gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).

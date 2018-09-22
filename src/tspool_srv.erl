@@ -103,9 +103,6 @@ espace_rdp(Inst_name, Pattern) ->
 %% @doc
 %% Initializes the server
 %%
-%% We create two ETS tables, the main tuple space pool, and one for
-%% patterns that do not yet exist in the TS pool.
-%%
 %% @end
 %%--------------------------------------------------------------------
 -spec init(atom()) -> {'ok',#state{inst_name::atom(),workersup::atom()}}.
@@ -132,7 +129,6 @@ handle_call({espace_rd, Pattern}, From, State) ->
 
 handle_call({espace_rdp, Pattern}, From, State) ->
     handle_espace_op(espace_rdp, Pattern, From, State).
-
 
 %%--------------------------------------------------------------------
 %% @private

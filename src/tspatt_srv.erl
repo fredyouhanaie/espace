@@ -107,7 +107,9 @@ terminate(_Reason, _State) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% check tuple agains current pattern being waited for, by in or rd
+%%
+%% check tuple against current pattern being waited for, by in or rd
+%% clients.
 %%
 %% @end
 %%--------------------------------------------------------------------

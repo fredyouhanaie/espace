@@ -60,7 +60,7 @@ start(Inst_name) ->
 %%--------------------------------------------------------------------
 -spec stop() -> ok | {error, term()}.
 stop() ->
-    application:stop(espace).
+    stop(espace).
 
 -spec stop(atom()) -> ok | {error, term()}.
 stop(Inst_name) ->
@@ -75,13 +75,11 @@ stop(Inst_name) ->
 %%--------------------------------------------------------------------
 -spec eval(tuple()) -> 'ok'.
 eval(MFA) when is_tuple(MFA) ->
-    eval(espace, MFA),
-    ok.
+    eval(espace, MFA).
 
 -spec eval(atom(), tuple()) -> 'ok'.
 eval(Inst_name, MFA) when is_tuple(MFA) ->
-    tspool_srv:espace_eval(Inst_name, MFA),
-    ok.
+    tspool_srv:espace_eval(Inst_name, MFA).
 
 %%--------------------------------------------------------------------
 %% @doc

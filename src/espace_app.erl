@@ -30,8 +30,7 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec start(_StartType, _StartArgs) -> ( {ok, pid()} | {error, any()} ).
-
-start(_StartType, Inst_name) ->
+start(normal, Inst_name) ->
     espace_sup:start_link(Inst_name).
 
 %%--------------------------------------------------------------------

@@ -41,6 +41,18 @@ eval_fun_str_test() ->
     application:ensure_all_started(espace),
     espace:eval({"fun () -> erlang:system_time() end.", []}).
 
+worker_tuple_test() ->
+    application:ensure_all_started(espace),
+    espace:worker({erlang, system_time, []}).
+
+worker_fun_test() ->
+    application:ensure_all_started(espace),
+    espace:worker({fun () -> erlang:system_time() end, []}).
+
+worker_fun_str_test() ->
+    application:ensure_all_started(espace),
+    espace:worker({"fun () -> erlang:system_time() end.", []}).
+
 out_test() ->
     application:ensure_all_started(espace),
     espace:out({test, 123, "ABC"}).
@@ -77,9 +89,19 @@ rdp_nomatch_test() ->
     application:ensure_all_started(espace),
     nomatch = espace:rdp({erlang:make_ref()}).
 
-adder1_test() ->
+adder1_eval_test() ->
     application:ensure_all_started(espace),
     espace:eval({?MODULE, test_add, []}),
+    espace:out({add, 1, 2}),
+    espace:out({add, 2, 3}),
+    espace:out({add, 3, 4}),
+    {[3], _} = espace:in({sum, 1, 2, '$3'}),
+    {[5], _} = espace:in({sum, 2, 3, '$3'}),
+    {[7], _} = espace:in({sum, 3, 4, '$3'}).
+
+adder1_worker_test() ->
+    application:ensure_all_started(espace),
+    espace:worker({?MODULE, test_add, []}),
     espace:out({add, 1, 2}),
     espace:out({add, 2, 3}),
     espace:out({add, 3, 4}),

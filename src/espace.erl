@@ -9,8 +9,8 @@
 -module(espace).
 
 %% API
--export([eval/1, in/1, inp/1, out/1, rd/1, rdp/1, infile/1, start/0, stop/0]).
--export([eval/2, in/2, inp/2, out/2, rd/2, rdp/2, infile/2, start/1, stop/1]).
+-export([eval/1, worker/1, in/1, inp/1, out/1, rd/1, rdp/1, infile/1, start/0, stop/0]).
+-export([eval/2, worker/2, in/2, inp/2, out/2, rd/2, rdp/2, infile/2, start/1, stop/1]).
 -export([inst_to_name/2]).
 
 
@@ -80,6 +80,20 @@ eval(MFA) when is_tuple(MFA) ->
 -spec eval(atom(), tuple()) -> ok.
 eval(Inst_name, MFA) when is_tuple(MFA) ->
     tspool_srv:espace_eval(Inst_name, MFA).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% start a new worker process.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec worker(tuple()) -> ok.
+worker(MFA) when is_tuple(MFA) ->
+    worker(espace, MFA).
+
+-spec worker(atom(), tuple()) -> ok.
+worker(Inst_name, MFA) when is_tuple(MFA) ->
+    tspool_srv:espace_worker(Inst_name, MFA).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -195,7 +209,7 @@ inst_to_name(Prefix, Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec do_esp(atom(), [{eval, tuple()} | {include, string()} | {out, tuple()}]) -> ok.
+-spec do_esp(atom(), [{eval, tuple()} | {worker, tuple()} | {include, string()} | {out, tuple()}]) -> ok.
 do_esp(_Inst_name, []) ->
     ok;
 
@@ -203,6 +217,8 @@ do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
     case Cmd of
 	eval ->
 	    eval(Inst_name, Arg);
+	worker ->
+	    worker(Inst_name, Arg);
 	out ->
 	    out(Inst_name, Arg);
 	include ->

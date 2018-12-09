@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, espace_eval/2, espace_out/2, espace_in/2, espace_rd/2, espace_inp/2, espace_rdp/2]).
+-export([start_link/1, espace_eval/2, espace_out/2, espace_in/2, espace_rd/2, espace_inp/2, espace_rdp/2, espace_worker/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
@@ -45,6 +45,16 @@ start_link(Inst_name) ->
 -spec espace_eval(atom(), tuple()) -> ok.
 espace_eval(Inst_name, MFA) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, MFA}).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% start a worker process.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec espace_worker(atom(), tuple()) -> ok.
+espace_worker(Inst_name, MFA) ->
+    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -154,6 +164,14 @@ handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
     {noreply, State};
 
 handle_cast(_Msg={espace_eval, {Fun, Args}}, State) ->
+    supervisor:start_child(State#state.workersup, [Fun, Args]),
+    {noreply, State};
+
+handle_cast(_Msg={espace_worker, {M, F, A}}, State) ->
+    supervisor:start_child(State#state.workersup, [M, F, A]),
+    {noreply, State};
+
+handle_cast(_Msg={espace_worker, {Fun, Args}}, State) ->
     supervisor:start_child(State#state.workersup, [Fun, Args]),
     {noreply, State}.
 

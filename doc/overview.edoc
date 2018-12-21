@@ -1,3 +1,4 @@
+%% -*- mode:html -*-
 
 @author Fred Youhanaie <fyrlang@anydata.co.uk>
 @copyright 2017 Fred Youhanaie
@@ -23,6 +24,10 @@
     Write Parallel Programs: A Guide to the Perplexed.<br />  ACM
     Computing Surveys. 21. 323-357.</p>
 </blockquote>
+
+<p><code>espace</code> allows one to implement parallel algorithms
+where tasks (worker processes) running concurrently communicate and
+coordinate through the tuple space.</p>
 
 <p>The basic idea behind tuple spaces is that an application is given
   a storage pool where tuples are added to it via the <code>out</code>

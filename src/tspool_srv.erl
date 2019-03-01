@@ -3,6 +3,30 @@
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
 %%% This is the server that manages the Tuple Space.
+%%%
+%%% It is a `gen_server' that sits between the `espace' clients and
+%%% the rest of the espace application.
+%%%
+%%% Upon receiving either of the `worker' or `eval' requests, the
+%%% worker supervisor will be triggered to start a new child
+%%% process. Currently `worker' and `eval' behave in exactly the same
+%%% way, however, in the very near future the bahaviour of `eval' will
+%%% be changed to reflect the original Linda specification.
+%%%
+%%% If you have any applcations that are using `eval' to start a
+%%% worker process, then they should be updated to use `worker'
+%%% instead.
+%%%
+%%% For the tuple space data operations, i.e. `in', `rd', `inp', `rdp'
+%%% and `out', the request is passed to the `tspace_srv' server, which
+%%% in turn will process the request.
+%%%
+%%% The patterns supplied with the input operators should be
+%%% compatible with `ets:match/2,3' match patterns. When match is
+%%% found the return results are in the form of `{List, Tuple}', where
+%%% `List' is the, possibaly empty, list of the matched `$N' pattern
+%%% variables, and `Tuple' is the entire data tuple.
+%%%
 %%% @end
 %%% Created :  9 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -38,7 +62,14 @@ start_link(Inst_name) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% perform an "eval" operation.
+%% perform an `eval' operation.
+%%
+%% A request is sent to the worker supervisor to start a new child
+%% process based on the `MFA' parameter.
+%%
+%% Please note that the behaviour of `eval' will change in an
+%% incompatible way. Any existing applications that use `eval' should
+%% be updated to use `worker' instead.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -50,6 +81,12 @@ espace_eval(Inst_name, MFA) ->
 %% @doc
 %% start a worker process.
 %%
+%% A request is sent to the worker supervisor to start a new child
+%% process based on the `MFA' parameter. `MFA' can be one of `{Mod,
+%% Func, Args}' triple, an anonymous function `{Func}' or a string
+%% represtation of an anonymous function, the latter can be used when
+%% reading espace terms from a file.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_worker(atom(), tuple()) -> ok.
@@ -58,8 +95,14 @@ espace_worker(Inst_name, MFA) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform an "out" operation.
-%% 
+%% Perform an `out' operation.
+%%
+%% Sends supplied `Tuple' to `tspace_srv' to be stored in the ETS table.
+%%
+%% `tspace_srv' will in turn trigger `tspatt_srv' to inform any
+%% `in'/`rd' clients that may be blocking on such tuple. The blocking
+%% mechanisim is implemented internally in this module, see `espace_op/3'.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_out(atom(), tuple()) -> ok.
@@ -68,7 +111,12 @@ espace_out(Inst_name, Tuple) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform an "in" operation
+%% Perform an `in' operation.
+%%
+%% The request is passed to `tspace_srv' to search for `Pattern', if
+%% found, the data is returned, otherwise we block until a matching
+%% tuple is added to the tuple space via `out'. The matched tuple will
+%% be removed from the tuple space.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -78,7 +126,10 @@ espace_in(Inst_name, Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform a "rd" operation
+%% Perform a `rd' operation.
+%%
+%% Similar to `in', except that the matched tuple remains in the tuple
+%% space.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -88,7 +139,10 @@ espace_rd(Inst_name, Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform an "inp" operation
+%% Perform an `inp' operation.
+%%
+%% Similar to `in' but does not block if no match found. In case of no
+%% match, the `nomatch' atom is returned.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -98,7 +152,9 @@ espace_inp(Inst_name, Pattern) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Perform a "rdp" operation
+%% Perform a `rdp' operation.
+%%
+%% Similar to `inp', but does not remove the matched tuple.
 %%
 %% @end
 %%--------------------------------------------------------------------

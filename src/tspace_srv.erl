@@ -2,7 +2,23 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2018, Fred Youhanaie
 %%% @doc
-%%% This is the custodian server for the tuple space ETS table
+%%% This is the custodian `gen_server' for the tuple space ETS table.
+%%%
+%%% The table is created as a `set' and in `protected' mode. All
+%%% access to the table is expected to come through this server,
+%%% although other proceses can inspect the contents for debugging
+%%% purposes.
+%%%
+%%% Each record has the form `{Ref, {Tuple}}', where `Ref' is a unique
+%%% key we generate before inserting the record, and `Tuple' is the
+%%% user supplied payload. For example if the tuple `{hello, 123}' is
+%%% added, then the inserted record will be
+%%% `{#Ref<0.3836483324.3974365186.86196>, {hello, 123}}'.
+%%%
+%%% The ETS table name used will reflect the `espace' instance
+%%% name. This will be `tspace' for the default/unnamed instance, and
+%%% `tspace_abc' for an instance named `abc'.
+%%%
 %%% @end
 %%% Created : 10 Jan 2018 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -24,21 +40,51 @@
 %%% API
 %%%===================================================================
 
+%%--------------------------------------------------------------------
+%% @doc Add a new tuple to the tuple space ETS table.
+%%
+%% The tuple is inserted with a unique key (`reference') as the key.
+%%
+%% Once the tuple is added it will trigger the `tspatt_srv' server to
+%% check for any waiting (blocking) clients whose `in'/`rd' pattern
+%% matches the newly inserted tuple.
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec add_tuple(atom(), tuple()) -> ok.
 add_tuple(Inst_name, Tuple) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
+%%--------------------------------------------------------------------
+%% @doc Remove the tuple referenced by the supplied unique key.
+%%
+%% If the record does not exist, it will b
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec del_tuple(atom(), reference()) -> ok.
 del_tuple(Inst_name, TabKey) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
 
+%%--------------------------------------------------------------------
+%% @doc Lookup a tuple pattern in the tuple space ETS table.
+%%
+%% If no match is found, `{nomatch}' is returned.
+%%
+%% If a match is found, `{match, Key, List, Tuple}' is returned, where
+%% `Key' uniquely identifies the ETS record, `List' is the list of `$N'
+%% elements referenced in the pattern, if any, and `Tuple' is the
+%% whole ETS record, except for the `Key'.
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec get_tuple(atom(), tuple()) -> {nomatch} | {match, {reference(), list(), tuple()}}.
 get_tuple(Inst_name, Pattern) ->
     gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Starts the server
+%% Starts the server.
 %%
 %% @end
 %%--------------------------------------------------------------------

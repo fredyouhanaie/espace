@@ -3,8 +3,8 @@
 
 % start the worker processes
 %
-{eval, {adder1, test_add2, []}}.	% worker one
-{eval, {adder1, test_sums, []}}.	% worker two
+{worker, {adder1, test_add2, []}}.	% worker one
+{worker, {adder1, test_sums, []}}.	% worker two
 
 % initial set of numbers
 %

@@ -108,6 +108,8 @@ $ rebar3 shell
 
 > c(matmul).
 
+> espace:start().
+
 > matmul:start("matmul-1.esp").
 [870,906,942]
 [1086,1131,1176]

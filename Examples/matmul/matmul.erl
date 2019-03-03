@@ -10,31 +10,31 @@
 
 start(InFile) ->
     % get and save the matrix sizes
-    espace:eval({matmul, matsize_bytag, [mat_a]}),
-    espace:eval({matmul, matsize_bytag, [mat_b]}),
+    espace:worker({matmul, matsize_bytag, [mat_a]}),
+    espace:worker({matmul, matsize_bytag, [mat_b]}),
 
     % split both matrices into row vectors
-    espace:eval({matmul, split_matrix_bytag, [mat_a]}),
-    espace:eval({matmul, split_matrix_bytag, [mat_b]}),
+    espace:worker({matmul, split_matrix_bytag, [mat_a]}),
+    espace:worker({matmul, split_matrix_bytag, [mat_b]}),
 
     % for the second matrix, split further into elements, then
     % reassemble as column vectors
-    espace:eval({matmul, split_row_vector_bytag, [mat_b]}),
-    espace:eval({matmul, gen_col_vectors, [mat_b]}),
+    espace:worker({matmul, split_row_vector_bytag, [mat_b]}),
+    espace:worker({matmul, gen_col_vectors, [mat_b]}),
 
     % generate the place holders for the result matrix
     % these will be consumed by the dotprod worker processes
-    espace:eval({matmul, gen_dotprodme, [mat_a, mat_b, mat_c]}),
+    espace:worker({matmul, gen_dotprodme, [mat_a, mat_b, mat_c]}),
 
     % two worker processes should be sufficient for our demo
     % each worker will take 'dotprodme' tuples and produce 'dotprod' tuples
-    espace:eval({matmul, dotprod_worker, []}),
-    espace:eval({matmul, dotprod_worker, []}),
+    espace:worker({matmul, dotprod_worker, []}),
+    espace:worker({matmul, dotprod_worker, []}),
 
     % the final results collector
-    espace:eval({matmul, gatherer, [mat_a, mat_b, mat_c]}),
+    espace:worker({matmul, gatherer, [mat_a, mat_b, mat_c]}),
 
-    % Note that none of the above evals will start operating until the
+    % Note that none of the above workers will start operating until the
     % two input matrices are dropped into the tuple space.
 
     % all we need now is the data to get things moving

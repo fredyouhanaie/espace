@@ -3,6 +3,35 @@
 %%% @copyright (C) 2018, Fred Youhanaie
 %%% @doc
 %%% Custodian for the tspatt, waiting patterns, ETS table.
+%%%
+%%% The table is created as a `set' and in `protected' mode. All
+%%% access to the table is expected to come through this server.
+%%% However, other proceses can inspect the contents of the table for
+%%% debugging purposes.
+%%%
+%%% The table keeps track of client processes that are blocked on `in'
+%%% or `rd' waiting for a tuple matching their pattern to be added to
+%%% the tuple space. In effect the ETS table is a pattern waiting
+%%% list.
+%%%
+%%% Our sole client is `tspace_srv'. Whenever an `in' or `rd'
+%%% operation does not find a match the client is given a unique key
+%%% to wait on, and that key along with the pattern and client's pid
+%%% is passed to us, via `add_pattern/4', to add to the waiting list.
+%%%
+%%% Whenever a new tuple is added to the tuple space, we will receive
+%%% a copy of the tuple, via `check_waitlist/2', to check against
+%%% waiting patterns. If we find a match, the correponding client(s)
+%%% will be notified of the new arrival.
+%%%
+%%% Communication from `tspace_srv' is unidirectional. Once it sends
+%%% us a request, it will continue with its own work. We never reply
+%%% to `tspace_srv'.
+%%%
+%%% The ETS table name used will reflect the `espace' instance
+%%% name. This will be `tspatt' for the default/unnamed instance, and
+%%% `tspatt_abc' for an instance named `abc'.
+%%%
 %%% @end
 %%% Created : 12 Jan 2018 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -24,10 +53,31 @@
 %%% API
 %%%===================================================================
 
+%%--------------------------------------------------------------------
+%% @doc Check a tuple against waiting patterns.
+%%
+%% We check the newly added tuple against the existing client patterns
+%% using `ets:test_ms/2'. If a pattern is found, the waiting client(s)
+%% will be informed, via their `Pid' and `Cli_Ref', to retry the
+%% `in' or `rd' operation.
+%%
+%% Once a client is notified, the pattern will be removed from the
+%% waiting list.
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec check_waitlist(atom(), tuple()) -> ok.
 check_waitlist(Inst_name, Tuple) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {check_tuple, Tuple}).
 
+%%--------------------------------------------------------------------
+%% @doc Add a new pattern to the waiting list.
+%%
+%% We insert the `Pattern' along with the client's pid and unique ref
+%% in the ETS table.
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec add_pattern(atom(), reference(), tuple(), pid()) -> ok.
 add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
     gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_pattern, Cli_ref, Pattern, Cli_pid}).
@@ -35,6 +85,9 @@ add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Starts the server
+%%
+%% We expect an instance name to be supplied, which will be used to
+%% uniquely identify the ETS table for the instance.
 %%
 %% @end
 %%--------------------------------------------------------------------

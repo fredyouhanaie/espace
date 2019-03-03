@@ -2,7 +2,11 @@
 %%% @author Fred Youhanaie <fyrlang@anydata,co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
 %%% @doc
-%%% Supervises the "eval" worker processes.
+%%% Supervises the worker processes.
+%%%
+%%% This is `simple_one_for_one' supervisor for all the worker
+%%% processes.
+%%%
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata,co.uk>
 %%%-------------------------------------------------------------------
@@ -26,6 +30,8 @@
 %% @doc
 %% Starts the supervisor
 %%
+%% We expect an espace instance name, which will uniquely identify all
+%% the components of the application.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -69,10 +75,25 @@ init(_Inst_name) ->
 %%% Internal functions
 %%%===================================================================
 
+%%--------------------------------------------------------------------
+%% @doc Run a child process given a `Module'/`Function'/`Args' triple.
+%%
+%% This function should only be called by the supervisor process.
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec run_child(atom(), atom(), list()) -> {ok, pid()}.
 run_child(M, F, A) ->
     {ok, spawn_link(M, F, A)}.
 
+%%--------------------------------------------------------------------
+%% @doc Run a child process given a function or a string
+%% representation of a function.
+%%
+%% This function should only be called by the supervisor process.
+%%
+%% @end
+%%--------------------------------------------------------------------
 -spec run_child(string() | function(), list()) -> {ok, pid()}.
 run_child(Fun, Args) when is_function(Fun) ->
     {ok, spawn_link(erlang, apply, [Fun, Args])};

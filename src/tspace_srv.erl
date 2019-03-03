@@ -43,11 +43,12 @@
 %%--------------------------------------------------------------------
 %% @doc Add a new tuple to the tuple space ETS table.
 %%
-%% The tuple is inserted with a unique key (`reference') as the key.
+%% The tuple is inserted with a unique `reference()' as the key.
 %%
 %% Once the tuple is added it will trigger the `tspatt_srv' server to
 %% check for any waiting (blocking) clients whose `in'/`rd' pattern
-%% matches the newly inserted tuple.
+%% matches the newly inserted tuple. We do not wait for any replies
+%% from `tspatt_srv'.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -58,7 +59,7 @@ add_tuple(Inst_name, Tuple) ->
 %%--------------------------------------------------------------------
 %% @doc Remove the tuple referenced by the supplied unique key.
 %%
-%% If the record does not exist, it will b
+%% If the record does not exist, it will be ignored.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -72,9 +73,9 @@ del_tuple(Inst_name, TabKey) ->
 %% If no match is found, `{nomatch}' is returned.
 %%
 %% If a match is found, `{match, Key, List, Tuple}' is returned, where
-%% `Key' uniquely identifies the ETS record, `List' is the list of `$N'
-%% elements referenced in the pattern, if any, and `Tuple' is the
-%% whole ETS record, except for the `Key'.
+%% `Key' uniquely identifies the ETS record, `List' is the list of the
+%% `$N' elements referenced in the pattern, if any, and `Tuple' is the
+%% second part of the ETS record.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -85,6 +86,9 @@ get_tuple(Inst_name, Pattern) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Starts the server.
+%%
+%% We expect an instance name to be supplied, which will be used to
+%% uniquely identify the ETS table for the instance.
 %%
 %% @end
 %%--------------------------------------------------------------------

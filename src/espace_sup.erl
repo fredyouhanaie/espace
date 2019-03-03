@@ -6,6 +6,9 @@
 %%% Main espace application supervisor.
 %%% It handles the main application components.
 %%%
+%%% There are four child components, three are gen_servers, and the
+%%% fourth is a supervisor. See the main overview for details.
+%%%
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -27,7 +30,10 @@
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Starts the supervisor
+%% Starts the main supervisor.
+%%
+%% We expect an espace instance name, which will uniquely identify all
+%% the components of the application.
 %%
 %% @end
 %%--------------------------------------------------------------------

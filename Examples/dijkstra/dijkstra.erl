@@ -7,11 +7,11 @@ compute_sp({Src, Src}) ->  % shortcut for the degenerate case
 
 compute_sp({Src, Dst}) ->
     %% generate the vertex_status tuples for the {Src, Dst} path
-    espace:eval({dijkstra, gen_vertex_status, [{Src, Dst}]}),
+    espace:worker({dijkstra, gen_vertex_status, [{Src, Dst}]}),
     %% initialize list of vertices to be visited, list is added to by gen_nexthop
     espace:out({visit_list, {Src, Dst}, []}),
     %% start the initial hops from the Src vertex
-    espace:eval({dijkstra, gen_nexthop, [{Src, Dst}, Src]}),
+    espace:worker({dijkstra, gen_nexthop, [{Src, Dst}, Src]}),
     wait_for_completion({Src, Dst}).
 
 

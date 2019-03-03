@@ -123,6 +123,8 @@ To try out this example, assuming the application has been built with
 ```
 $ rebar3 shell
 > cd("Examples/dijkstra").
+> c(dijkstra).
+> espace:start().
 > espace:infile("dijkstra-1.esp").
 > espace:rdp({shortest_path, {s, t}, '_', '_'}).
 ```

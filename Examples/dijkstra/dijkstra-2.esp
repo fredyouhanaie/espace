@@ -31,17 +31,16 @@
 }.
 
 % generate the individual vertex tuples for the whole graph
-{eval, {dijkstra, gen_vertex, []}}.
+{worker, {dijkstra, gen_vertex, []}}.
 
 % We need one or more workers to process the next hop tuples
 % these workers will work with any {Src,Dst} tuples.
 % this is a small graph, so one worker is sufficient
-{eval, {dijkstra, nexthop_worker, []}}.
+{worker, {dijkstra, nexthop_worker, []}}.
 
 % compute all the shortest paths from n0 to the rest of the vertices
-{eval, {dijkstra, compute_sp, [{n0,n1}]}}.
-{eval, {dijkstra, compute_sp, [{n0,n2}]}}.
-{eval, {dijkstra, compute_sp, [{n0,n3}]}}.
-{eval, {dijkstra, compute_sp, [{n0,n4}]}}.
-{eval, {dijkstra, compute_sp, [{n0,n5}]}}.
-
+{worker, {dijkstra, compute_sp, [{n0,n1}]}}.
+{worker, {dijkstra, compute_sp, [{n0,n2}]}}.
+{worker, {dijkstra, compute_sp, [{n0,n3}]}}.
+{worker, {dijkstra, compute_sp, [{n0,n4}]}}.
+{worker, {dijkstra, compute_sp, [{n0,n5}]}}.

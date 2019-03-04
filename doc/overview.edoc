@@ -40,9 +40,10 @@ coordinate through the tuple space.</p>
   block until a matching tuple is added to the pool by another worker
   using the <code>out</code> operation.</p>
 
-<p>The worker processes are started via the <code>eval</code>
-  operation. A worker can in turn start further workers via
-  the <code>eval</code> operation.</p>
+<p>The worker processes are started via
+  the <code>espace:worker/1,2</code> function. A worker can in turn
+  start further workers by further
+  calling <code>worker/1,2</code>.</p>
 
 <p>A typical application will start with a series of <code>out</code>
   and <code>eval</code> oprations. Some of the worker processes will
@@ -57,19 +58,35 @@ coordinate through the tuple space.</p>
   <code>out</code>, <code>in</code>, <code>inp</code>, <code>rd</code>
   and <code>rdp</code>.</p>
 
+<h3><i>eval</i> <u>vs</u> <i>worker</i></h3>
+
+<p>Currently we have two functions that perform
+  identically <code>espace:eval/1,2</code>
+  and <code>espace:worker/1,2</code>. Initially <code>espace:eval/1,2</code>
+  was used to start an arbitrary worker process, however, this did not
+  really implement the original <i>eval</i> operation in
+  Linda. So, <code>espace:worker/1,2</code> has been created as
+  replacement for <code>espace:eval/1,2</code>, and, in due
+  course, <code>espace:eval/1,2</code> will be changed to behave
+  similar, or as close as possible, to the Linda implementation.
+</p>
+
 <h3>Organization of the Project Modules</h3>
 
 <p><code>espace</code> has been built as an OTP
-  application, <code>espace_app</code>. Presently only one instance of
-  the application can run on a given node.</p>
+  application, <code>espace_app</code>. Multiple instances of the
+  application can run concurrently on the same node without
+  interfering with each other.</p>
 
-<p>Once the server application is started, the client applications can
-  use the <code>espace</code> module to perform any of the six
-  operations. In fact, one can kick off the whole process by calling a
-  purpose written bootstrap function, which can in turn
-  perform <code>out</code> and <code>eval</code> operations.</p>
+<p>The application server can be started
+  with <code>espace:start/1,2</code>. Once the server is running, the
+  client processes can use the <code>espace</code> module to perform
+  any of the six operations. In fact, one can kick off the whole
+  process by calling a purpose written bootstrap function, which can
+  in turn perform <code>out</code> and <code>eval</code>
+  operations.</p>
 
-<p>The top level supervisor started by the <code>espace_app</code>
+<p>The top level supervisor started by <code>espace_app</code>
   is <code>espace_sup</code>. This supervisor manages
   three <code>gen_server</code>s and one <code>supervisor</code>, as
   described below:</p>
@@ -88,11 +105,11 @@ coordinate through the tuple space.</p>
     request, the tuple is stored in the table,
     and <code>tspatt_srv</code> is notified so that it can inform all
     the blocking clients whose requested pattern matches this
-    tuple </li>
+    tuple to retry the <i>in</i>/<i>rd</i> operation.</li>
 
   <li><code>tspatt_srv</code> maintains the <code>tspatt</code> ETS
-    table, which contains the tuple patterns that worker processes are
-    blocked on. It receives two types of messages
+    table, which contains the tuple patterns that worker processes
+    (clients) are blocked on. It receives two types of messages
     from <code>tspool_srv</code>, unmatched patterns, which, along
     with the client details, are then added to the <code>tspatt</code>
     table, and newly added tuples, which are matched against the
@@ -101,8 +118,8 @@ coordinate through the tuple space.</p>
 
   <li><code>worker_sup</code> is a <code>supervisor</code> that will
     create a new child process with the <code>{M,F,A}</code> function
-    supplied with the request. Each <code>eval</code> operation, is
-    executed within a child process of
+    supplied with the request. Each <code>worker/1,2</code> request,
+    is executed within a child process of
     the <code>simple_one_for_one</code> supervisor. At present, no
     attempt is made to throttle the number of <code>eval</code>
     processes.</li>
@@ -139,4 +156,3 @@ coordinate through the tuple space.</p>
   tuple, then they will end up competing for it.</p>
 
 @end
-

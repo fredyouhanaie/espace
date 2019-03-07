@@ -52,9 +52,9 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec add_tuple(atom(), tuple()) -> ok.
+-spec add_tuple(atom(), tuple()) -> done.
 add_tuple(Inst_name, Tuple) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc Remove the tuple referenced by the supplied unique key.
@@ -63,9 +63,9 @@ add_tuple(Inst_name, Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec del_tuple(atom(), reference()) -> ok.
+-spec del_tuple(atom(), reference()) -> done.
 del_tuple(Inst_name, TabKey) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
 
 %%--------------------------------------------------------------------
 %% @doc Lookup a tuple pattern in the tuple space ETS table.
@@ -122,8 +122,13 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call({get_tuple, term()}, pid(), term()) ->
-			 {reply, {nomatch}, term()} | {reply, {match, {reference(), list(), tuple()}, term()}}.
+-spec handle_call({get_tuple, tuple()} |
+		  {add_tuple, tuple()} |
+		  {del_tuple, reference()},
+		  pid(), term()) ->
+			 {reply, {nomatch}, term()} |
+			 {reply, {match, {reference(), list(), tuple()}, term()}} |
+			 {reply, done, term()}.
 handle_call({get_tuple, Pattern}, _From, State) ->
     TabId = State#state.tspool,
     Match = ets:match(TabId, {'$0', Pattern}, 1),
@@ -134,7 +139,16 @@ handle_call({get_tuple, Pattern}, _From, State) ->
 	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
 	    Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
 	    {reply, Reply, State}
-    end.
+    end;
+
+handle_call({add_tuple, Tuple}, _From, State) ->
+    ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
+    tspatt_srv:check_waitlist(State#state.inst_name, Tuple),
+    {reply, done, State};
+
+handle_call({del_tuple, TabKey}, _From, State) ->
+    ets:delete(State#state.tspool, TabKey),
+    {reply, done, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -143,14 +157,8 @@ handle_call({get_tuple, Pattern}, _From, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_cast({add_tuple, tuple()}|{del_tuple, reference()}, term()) -> {noreply, term()}.
-handle_cast({add_tuple, Tuple}, State) ->
-    ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
-    tspatt_srv:check_waitlist(State#state.inst_name, Tuple),
-    {noreply, State};
-
-handle_cast({del_tuple, TabKey}, State) ->
-    ets:delete(State#state.tspool, TabKey),
+-spec handle_cast(term(), term()) -> {noreply, term()}.
+handle_cast(_Msg, State) ->
     {noreply, State}.
 
 

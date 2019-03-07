@@ -105,9 +105,9 @@ espace_worker(Inst_name, MFA) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_out(atom(), tuple()) -> ok.
+-spec espace_out(atom(), tuple()) -> done.
 espace_out(Inst_name, Tuple) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_out, Tuple}).
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_out, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -200,7 +200,11 @@ handle_call({espace_rd, Pattern}, From, State) ->
     handle_espace_op(espace_rd, Pattern, From, State);
 
 handle_call({espace_rdp, Pattern}, From, State) ->
-    handle_espace_op(espace_rdp, Pattern, From, State).
+    handle_espace_op(espace_rdp, Pattern, From, State);
+
+handle_call({espace_out, Tuple}, _From, State) ->
+    Reply = tspace_srv:add_tuple(State#state.inst_name, Tuple),
+    {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -211,10 +215,6 @@ handle_call({espace_rdp, Pattern}, From, State) ->
 %%--------------------------------------------------------------------
 
 -spec handle_cast({atom(), tuple()}, term()) -> {noreply, term()}.
-handle_cast({espace_out, Tuple}, State) ->
-    tspace_srv:add_tuple(State#state.inst_name, Tuple),
-    {noreply, State};
-
 handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
     supervisor:start_child(State#state.workersup, [M, F, A]),
     {noreply, State};

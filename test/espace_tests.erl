@@ -55,24 +55,24 @@ worker_fun_str_test() ->
 
 out_test() ->
     application:ensure_all_started(espace),
-    espace:out({test, 123, "ABC"}).
+    done = espace:out({test, 123, "ABC"}).
 
 in_test() ->
     application:ensure_all_started(espace),
     Ref = erlang:make_ref(),
-    espace:out({Ref}),
+    done = espace:out({Ref}),
     espace:in({Ref}).
 
 rd_test() ->
     application:ensure_all_started(espace),
     Ref = erlang:make_ref(),
-    espace:out({Ref}),
+    done = espace:out({Ref}),
     espace:rd({Ref}).
 
 inp_match_test() ->
     application:ensure_all_started(espace),
     Ref = erlang:make_ref(),
-    espace:out({Ref}),
+    done = espace:out({Ref}),
     espace:inp({Ref}).
 
 inp_nomatch_test() ->
@@ -82,7 +82,7 @@ inp_nomatch_test() ->
 rdp_match_test() ->
     application:ensure_all_started(espace),
     Ref = erlang:make_ref(),
-    espace:out({Ref}),
+    done = espace:out({Ref}),
     espace:rdp({Ref}).
 
 rdp_nomatch_test() ->
@@ -92,9 +92,9 @@ rdp_nomatch_test() ->
 adder1_eval_test() ->
     application:ensure_all_started(espace),
     espace:eval({?MODULE, test_add, []}),
-    espace:out({add, 1, 2}),
-    espace:out({add, 2, 3}),
-    espace:out({add, 3, 4}),
+    done = espace:out({add, 1, 2}),
+    done = espace:out({add, 2, 3}),
+    done = espace:out({add, 3, 4}),
     {[3], _} = espace:in({sum, 1, 2, '$3'}),
     {[5], _} = espace:in({sum, 2, 3, '$3'}),
     {[7], _} = espace:in({sum, 3, 4, '$3'}).
@@ -102,9 +102,9 @@ adder1_eval_test() ->
 adder1_worker_test() ->
     application:ensure_all_started(espace),
     espace:worker({?MODULE, test_add, []}),
-    espace:out({add, 1, 2}),
-    espace:out({add, 2, 3}),
-    espace:out({add, 3, 4}),
+    done = espace:out({add, 1, 2}),
+    done = espace:out({add, 2, 3}),
+    done = espace:out({add, 3, 4}),
     {[3], _} = espace:in({sum, 1, 2, '$3'}),
     {[5], _} = espace:in({sum, 2, 3, '$3'}),
     {[7], _} = espace:in({sum, 3, 4, '$3'}).
@@ -121,5 +121,5 @@ infile_test() ->
 
 test_add() ->
     {[A, B], _} = espace:in({add, '$1', '$2'}),
-    espace:out({sum, A, B, A+B}),
+    done = espace:out({sum, A, B, A+B}),
     test_add().

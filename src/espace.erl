@@ -224,7 +224,7 @@ inp(Inst_name, Pattern) when is_tuple(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec out(tuple()) -> ok.
+-spec out(tuple()) -> done.
 out(Tuple) when is_tuple(Tuple) ->
     out(espace, Tuple).
 
@@ -237,7 +237,7 @@ out(Tuple) when is_tuple(Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec out(atom(), tuple()) -> ok.
+-spec out(atom(), tuple()) -> done.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
     tspool_srv:espace_out(Inst_name, Tuple).
 

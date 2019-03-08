@@ -31,27 +31,33 @@ stop_test() ->
 
 eval_tuple_test() ->
     application:ensure_all_started(espace),
-    espace:eval({erlang, system_time, []}).
+    Pid = espace:eval({erlang, system_time, []}),
+    ?assert(is_pid(Pid)).
 
 eval_fun_test() ->
     application:ensure_all_started(espace),
-    espace:eval({fun () -> erlang:system_time() end, []}).
+    Pid = espace:eval({fun () -> erlang:system_time() end, []}),
+    ?assert(is_pid(Pid)).
 
 eval_fun_str_test() ->
     application:ensure_all_started(espace),
-    espace:eval({"fun () -> erlang:system_time() end.", []}).
+    Pid = espace:eval({"fun () -> erlang:system_time() end.", []}),
+    ?assert(is_pid(Pid)).
 
 worker_tuple_test() ->
     application:ensure_all_started(espace),
-    espace:worker({erlang, system_time, []}).
+    Pid = espace:worker({erlang, system_time, []}),
+    ?assert(is_pid(Pid)).
 
 worker_fun_test() ->
     application:ensure_all_started(espace),
-    espace:worker({fun () -> erlang:system_time() end, []}).
+    Pid = espace:worker({fun () -> erlang:system_time() end, []}),
+    ?assert(is_pid(Pid)).
 
 worker_fun_str_test() ->
     application:ensure_all_started(espace),
-    espace:worker({"fun () -> erlang:system_time() end.", []}).
+    Pid = espace:worker({"fun () -> erlang:system_time() end.", []}),
+    ?assert(is_pid(Pid)).
 
 out_test() ->
     application:ensure_all_started(espace),

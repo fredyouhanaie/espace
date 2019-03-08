@@ -73,9 +73,9 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_eval(atom(), tuple()) -> ok.
+-spec espace_eval(atom(), tuple()) -> pid().
 espace_eval(Inst_name, MFA) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, MFA}).
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, MFA}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -89,9 +89,9 @@ espace_eval(Inst_name, MFA) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_worker(atom(), tuple()) -> ok.
+-spec espace_worker(atom(), tuple()) -> pid().
 espace_worker(Inst_name, MFA) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -204,7 +204,23 @@ handle_call({espace_rdp, Pattern}, From, State) ->
 
 handle_call({espace_out, Tuple}, _From, State) ->
     Reply = tspace_srv:add_tuple(State#state.inst_name, Tuple),
-    {reply, Reply, State}.
+    {reply, Reply, State};
+
+handle_call(_Msg={espace_worker, {M, F, A}}, _From, State) ->
+    {ok, Pid} = supervisor:start_child(State#state.workersup, [M, F, A]),
+    {reply, Pid, State};
+
+handle_call(_Msg={espace_worker, {Fun, Args}}, _From, State) ->
+    {ok, Pid} = supervisor:start_child(State#state.workersup, [Fun, Args]),
+    {reply, Pid, State};
+
+handle_call(_Msg={espace_eval, {M, F, A}}, _From, State) ->
+    {ok, Pid} = supervisor:start_child(State#state.workersup, [M, F, A]),
+    {reply, Pid, State};
+
+handle_call(_Msg={espace_eval, {Fun, Args}}, _From, State) ->
+    {ok, Pid} = supervisor:start_child(State#state.workersup, [Fun, Args]),
+    {reply, Pid, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -213,22 +229,8 @@ handle_call({espace_out, Tuple}, _From, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-
--spec handle_cast({atom(), tuple()}, term()) -> {noreply, term()}.
-handle_cast(_Msg={espace_eval, {M, F, A}}, State) ->
-    supervisor:start_child(State#state.workersup, [M, F, A]),
-    {noreply, State};
-
-handle_cast(_Msg={espace_eval, {Fun, Args}}, State) ->
-    supervisor:start_child(State#state.workersup, [Fun, Args]),
-    {noreply, State};
-
-handle_cast(_Msg={espace_worker, {M, F, A}}, State) ->
-    supervisor:start_child(State#state.workersup, [M, F, A]),
-    {noreply, State};
-
-handle_cast(_Msg={espace_worker, {Fun, Args}}, State) ->
-    supervisor:start_child(State#state.workersup, [Fun, Args]),
+-spec handle_cast(term(), term()) -> {noreply, term()}.
+handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %%--------------------------------------------------------------------

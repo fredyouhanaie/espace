@@ -91,7 +91,7 @@ stop(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec eval(tuple()) -> ok.
+-spec eval(tuple()) -> pid().
 eval(MFA) when is_tuple(MFA) ->
     eval(espace, MFA).
 
@@ -104,7 +104,7 @@ eval(MFA) when is_tuple(MFA) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec eval(atom(), tuple()) -> ok.
+-spec eval(atom(), tuple()) -> pid().
 eval(Inst_name, MFA) when is_tuple(MFA) ->
     tspool_srv:espace_eval(Inst_name, MFA).
 
@@ -116,7 +116,7 @@ eval(Inst_name, MFA) when is_tuple(MFA) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec worker(tuple()) -> ok.
+-spec worker(tuple()) -> pid().
 worker(MFA) when is_tuple(MFA) ->
     worker(espace, MFA).
 
@@ -140,7 +140,7 @@ worker(MFA) when is_tuple(MFA) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec worker(atom(), tuple()) -> ok.
+-spec worker(atom(), tuple()) -> pid().
 worker(Inst_name, MFA) when is_tuple(MFA) ->
     tspool_srv:espace_worker(Inst_name, MFA).
 

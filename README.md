@@ -16,18 +16,28 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
-* Instead of single espace application on a node, you can now create
-  multiple, independent, named instances.
-* Added some basic Eunit tests.
+* The `worker` function now returns the pid of the child process.
+* The `out` operation is now synchronous, `out` will not return until
+  after the tuple has been inserted in the tuple space.
+* A separated
+  [examples](https://github.com/fredyouhanaie/espace-examples)
+  repository has been created to host larger examples,
+* Instead of single `espace` application on a node, you can now create
+  multiple, independent, named instances on the same node.
+* The project has been converted to a library, instead of an
+  application. One now needs to explicitly start an instance of the
+  application with `espace:start/0,1`.
 * The two ETS tables are now managed by separate servers.
 
 ## Upcoming changes
 
-* The set of examples will be expanded, and moved to a separate repo.
-* The project will be converted to a library, instead of an
-  application. One would need to explicitly start an instance of the
-  application with `espace:start/0,1`.
-
+* The `eval` operation will be changed in an *incompatible* way. The
+  already implemented `worker` operation replaces the old `eval`.
+* The new `eval` will behave like the original Linda specification,
+  i.e. it will take a tuple like `out`, however, if the tuple contains
+  any expressions, for espace they will need to be `fun` expressions,
+  those expressions will be replaced with their respective values, and
+  the resulting tuple will be inserted in the tuple space.
 
 ## Current Status
 
@@ -74,6 +84,7 @@ $ rebar3 do clean,compile
 * Start the application
 ```
 $ rebar3 shell
+> espace:start().
 ```
 * At the erlang shell prompt, if desired, bring up the Observer
 ```

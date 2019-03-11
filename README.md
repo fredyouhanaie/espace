@@ -1,5 +1,7 @@
 # espace
 
+[![Build Status](https://travis-ci.com/fredyouhanaie/espace.svg?branch=master)](https://travis-ci.com/fredyouhanaie/espace)
+
 ## Introduction
 
 `espace` is an Erlang implementation of the Tuple Spaces

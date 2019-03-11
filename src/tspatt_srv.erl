@@ -139,14 +139,11 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 -spec handle_cast({atom(), tuple()}, term()) -> {noreply, term()}.
 handle_cast({check_tuple, Tuple}, State) ->
-    TSpatt = State#state.tspatt,
-    ets:safe_fixtable(TSpatt, true), % we may be deleting records while scanning
-    check_tuple(Tuple, TSpatt, ets:first(TSpatt)),
-    ets:safe_fixtable(TSpatt, false),
+    handle_check_tuple(State#state.tspatt, Tuple),
     {noreply, State};
 
 handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
-    ets:insert(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
+    handle_add_pattern(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -188,3 +185,25 @@ check_tuple(Tuple, TabId, Key) ->
 	    ets:delete(TabId, Key)
     end,
     check_tuple(Tuple, TabId, ets:next(TabId, Key)).
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc handle the check_tuple cast.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_check_tuple(ets:tabid(), tuple()) -> true.
+handle_check_tuple(TabId, Tuple) ->
+    ets:safe_fixtable(TabId, true), % we may be deleting records while scanning
+    check_tuple(Tuple, TabId, ets:first(TabId)),
+    ets:safe_fixtable(TabId, false).
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc handle the add_pattern cast.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_add_pattern(ets:tid(), tuple()) -> true.
+handle_add_pattern(TabId, Tuple) ->
+    ets:insert(TabId, Tuple).

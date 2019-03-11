@@ -129,26 +129,18 @@ init(Inst_name) ->
 			 {reply, {nomatch}, term()} |
 			 {reply, {match, {reference(), list(), tuple()}, term()}} |
 			 {reply, done, term()}.
+
 handle_call({get_tuple, Pattern}, _From, State) ->
-    TabId = State#state.tspool,
-    Match = ets:match(TabId, {'$0', Pattern}, 1),
-    case Match of
-	'$end_of_table' ->  %% no match
-	    {reply, {nomatch}, State};
-	{[[TabKey|Fields]],_Continuation} -> %% We only want one match, and we ignore the ets:match continuation
-	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
-	    Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
-	    {reply, Reply, State}
-    end;
+    Reply = handle_get_tuple(State#state.tspool, Pattern),
+    {reply, Reply, State};
 
 handle_call({add_tuple, Tuple}, _From, State) ->
-    ets:insert(State#state.tspool, {erlang:make_ref(), Tuple}),
-    tspatt_srv:check_waitlist(State#state.inst_name, Tuple),
-    {reply, done, State};
+    Reply = handle_add_tuple(State#state.inst_name, State#state.tspool, Tuple),
+    {reply, Reply, State};
 
 handle_call({del_tuple, TabKey}, _From, State) ->
-    ets:delete(State#state.tspool, TabKey),
-    {reply, done, State}.
+    Reply = handle_del_tuple(State#state.tspool, TabKey),
+    {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -179,3 +171,44 @@ terminate(_Reason, _State) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc get_tuple handler.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_get_tuple(ets:tab(), tuple()) -> {nomatch} | {match, tuple()}.
+handle_get_tuple(TabId, Pattern) ->
+    Match = ets:match(TabId, {'$0', Pattern}, 1),
+    case Match of
+	'$end_of_table' ->  %% no match
+	    {nomatch};
+	{[[TabKey|Fields]],_Continuation} -> %% We only want one match, and we ignore the ets:match continuation
+	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
+	    Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
+	    Reply
+    end.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc add_tuple handler.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_add_tuple(atom(), ets:tid(), tuple()) -> done.
+handle_add_tuple(Inst_name, TabId, Tuple) ->
+    ets:insert(TabId, {erlang:make_ref(), Tuple}),
+    tspatt_srv:check_waitlist(Inst_name, Tuple),
+    done.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc del_tuple handler.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_del_tuple(ets:tab(), reference()) -> done.
+handle_del_tuple(TabId, TabKey) ->
+    ets:delete(TabId, TabKey),
+    done.

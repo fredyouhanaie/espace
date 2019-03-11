@@ -75,7 +75,7 @@ start_link(Inst_name) ->
 %%--------------------------------------------------------------------
 -spec espace_eval(atom(), tuple()) -> pid().
 espace_eval(Inst_name, MFA) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, MFA}).
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -207,20 +207,13 @@ handle_call({espace_out, Tuple}, _From, State) ->
     {reply, Reply, State};
 
 handle_call(_Msg={espace_worker, {M, F, A}}, _From, State) ->
-    {ok, Pid} = supervisor:start_child(State#state.workersup, [M, F, A]),
-    {reply, Pid, State};
+    Reply = handle_espace_worker(State#state.workersup, {M, F, A}),
+    {reply, Reply, State};
 
 handle_call(_Msg={espace_worker, {Fun, Args}}, _From, State) ->
-    {ok, Pid} = supervisor:start_child(State#state.workersup, [Fun, Args]),
-    {reply, Pid, State};
+    Reply = handle_espace_worker(State#state.workersup, {Fun, Args}),
+    {reply, Reply, State}.
 
-handle_call(_Msg={espace_eval, {M, F, A}}, _From, State) ->
-    {ok, Pid} = supervisor:start_child(State#state.workersup, [M, F, A]),
-    {reply, Pid, State};
-
-handle_call(_Msg={espace_eval, {Fun, Args}}, _From, State) ->
-    {ok, Pid} = supervisor:start_child(State#state.workersup, [Fun, Args]),
-    {reply, Pid, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -310,3 +303,14 @@ handle_espace_op(Espace_Op, Pattern, From, State) ->
 	    end,
 	    {reply, Reply, State}
     end.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc handle the espace_worker call
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_espace_worker(atom(), tuple()) -> pid().
+handle_espace_worker(Worker_sup, Arg) ->
+    {ok, Pid} = supervisor:start_child(Worker_sup, erlang:tuple_to_list(Arg)),
+    Pid.

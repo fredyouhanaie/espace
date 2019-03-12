@@ -1,7 +1,7 @@
 
 % start the worker process
 %
-{eval, {espace_tests, test_add, []}}.	% worker one
+{worker, {espace_tests, test_add, []}}.	% worker one
 
 % initial set of numbers
 %

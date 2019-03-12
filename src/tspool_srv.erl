@@ -74,8 +74,8 @@ start_link(Inst_name) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_eval(atom(), tuple()) -> pid().
-espace_eval(Inst_name, MFA) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
+espace_eval(Inst_name, Tuple) ->
+    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -206,11 +206,15 @@ handle_call({espace_out, Tuple}, _From, State) ->
     Reply = tspace_srv:add_tuple(State#state.inst_name, Tuple),
     {reply, Reply, State};
 
-handle_call(_Msg={espace_worker, {M, F, A}}, _From, State) ->
+handle_call({espace_eval, Tuple}, _From, State) ->
+    Reply = handle_espace_eval(State#state.inst_name, State#state.workersup, Tuple),
+    {reply, Reply, State};
+
+handle_call({espace_worker, {M, F, A}}, _From, State) ->
     Reply = handle_espace_worker(State#state.workersup, {M, F, A}),
     {reply, Reply, State};
 
-handle_call(_Msg={espace_worker, {Fun, Args}}, _From, State) ->
+handle_call({espace_worker, {Fun, Args}}, _From, State) ->
     Reply = handle_espace_worker(State#state.workersup, {Fun, Args}),
     {reply, Reply, State}.
 
@@ -306,11 +310,25 @@ handle_espace_op(Espace_Op, Pattern, From, State) ->
 
 %%--------------------------------------------------------------------
 %% @private
-%% @doc handle the espace_worker call
+%% @doc handle the espace_worker call.
 %%
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_espace_worker(atom(), tuple()) -> pid().
 handle_espace_worker(Worker_sup, Arg) ->
     {ok, Pid} = supervisor:start_child(Worker_sup, erlang:tuple_to_list(Arg)),
+    Pid.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc handle the espace_eval call.
+%%
+%% We start a worker child, and let `espace_util:eval_out' to evaluate
+%% the tuple and `out' the result.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_espace_eval(atom(), atom(), tuple()) -> pid().
+handle_espace_eval(Inst_name, Worker_sup, Tuple) ->
+    {ok, Pid} = supervisor:start_child(Worker_sup, [espace_util, eval_out, [Inst_name, Tuple]]),
     Pid.

@@ -29,20 +29,18 @@ stop_test() ->
     application:ensure_all_started(espace),
     espace:stop().
 
+eval_simple_test() ->
+    application:ensure_all_started(espace),
+    Pid = espace:eval({five, fun () -> 2+3 end}),
+    ?assert(is_pid(Pid)),
+    {[], {five, 5}} =  espace:in({five, 5}).
+
 eval_tuple_test() ->
     application:ensure_all_started(espace),
-    Pid = espace:eval({erlang, system_time, []}),
-    ?assert(is_pid(Pid)).
+    Pid = espace:eval({five, {fun (X,Y) -> X+Y end, [2, 3]}}),
+    ?assert(is_pid(Pid)),
+    {[], {five, 5}} =  espace:in({five, 5}).
 
-eval_fun_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:eval({fun () -> erlang:system_time() end, []}),
-    ?assert(is_pid(Pid)).
-
-eval_fun_str_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:eval({"fun () -> erlang:system_time() end.", []}),
-    ?assert(is_pid(Pid)).
 
 worker_tuple_test() ->
     application:ensure_all_started(espace),
@@ -97,7 +95,7 @@ rdp_nomatch_test() ->
 
 adder1_eval_test() ->
     application:ensure_all_started(espace),
-    espace:eval({?MODULE, test_add, []}),
+    espace:eval({fun () -> ?MODULE:test_add() end}),
     done = espace:out({add, 1, 2}),
     done = espace:out({add, 2, 3}),
     done = espace:out({add, 3, 4}),

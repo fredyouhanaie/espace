@@ -60,15 +60,38 @@ coordinate through the tuple space.</p>
 
 <h3><i>eval</i> <u>vs</u> <i>worker</i></h3>
 
-<p>Currently we have two functions that perform
-  identically <code>espace:eval/1,2</code>
-  and <code>espace:worker/1,2</code>. Initially <code>espace:eval/1,2</code>
-  was used to start an arbitrary worker process, however, this did not
-  really implement the original <i>eval</i> operation in
-  Linda. So, <code>espace:worker/1,2</code> has been created as
-  replacement for <code>espace:eval/1,2</code>, and, in due
-  course, <code>espace:eval/1,2</code> will be changed to behave
-  similar, or as close as possible, to the Linda implementation.
+<p>The `eval' operation, as defined in Linda, is expected to behave
+  the same way as `out', with the exception that if there are any
+  expressions in the supplied tuple, they will be replaced with their
+  respective function values before being added to the tuple space.
+</p>
+
+<p>The `espace:eval/1,2' functions in the first implementation of
+  `espace' had a different behaviour. Initially it would take a `{Mod,
+  Fun, Args}' triple or a `fun' expression and spawn a child process
+  to evaluate it. Nothing would be added to the tuple space, unless
+  explicitly included inside the function.
+</p>
+
+<p>For some time now, the `espace:worker/1,2' functions have provided
+  the functionality that the original `espace:eval/1,2' used to
+  provide.
+</p>
+
+<p>We now have a new `espace:eval/1,2' function that behaves in a
+  similar manner to the Linda definition. The current `eval' now takes
+  a tuple, and if the tuple contains any `fun' expressions, those
+  expressions are evaluated before adding the tuple to the tuple
+  space. The evaluation of the tuple elements is carried out
+  sequentially in a separate child process.
+</p>
+
+<p>Only two forms of function elements are recognized: A zero arity
+  `fun' expression, <code>fun () -> expr end</code>, and a tuple with
+  two elements, an `N' arity `fun' expression together with a list of
+  length `N',
+  <code>{fun (A, B, ...) -> expr end, [expr, expr, ...]}</code>. In
+  the second form, the arity can be zero.
 </p>
 
 <h3>Organization of the Project Modules</h3>

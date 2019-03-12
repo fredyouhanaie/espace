@@ -92,21 +92,50 @@ stop(Inst_name) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec eval(tuple()) -> pid().
-eval(MFA) when is_tuple(MFA) ->
-    eval(espace, MFA).
+eval(Tuple) when is_tuple(Tuple) ->
+    eval(espace, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc Perform an `eval' operation via a named espace server.
 %%
-%% Currently `eval' behaves similar to `worker', however this will
-%% change in the very near future. Please use the `worker/1,2'
-%% functions instead of `eval/1,2'.
+%% The input Tuple is evaluated in a worker process and the result is
+%% sent to the tuple space using `out' operation.
+%%
+%% The function returns the pid of the worker process.
+%%
+%% The elements of the output tuple correspond to those of
+%% `Tuple'. If any of the elements of `Tuple' match the function
+%% pattern, then the corresponding output element will be the value of
+%% the function.
+%%
+%% The following patterns will trigger the evaluation of the second
+%% element of the tuple:
+%%
+%% <ol>
+%%
+%% <li>Anonymous function, e.g.
+%% <code>{aa, fun () -> 2+3 end</code>, zz}.
+%% </li>
+%%
+%% <li>Tuple with function and args, e.g.
+%% <code>{aa, {fun (X,Y) -> X+Y end, [2, 3]}, zz}</code></li>
+%%
+%% </ol>
+%%
+%% Both examples above will produce `{aa, 5, zz}'
+%%
+%% In the first example we have a `fun' expression of arity zero. In
+%% the second, we have a pair (tuple) of a `fun' expression and a
+%% `list', and the arity of the `fun' matches the length of the list.
+%%
+%% Any other pattern will move the element to the output tuple
+%% untouched.
 %%
 %% @end
 %%--------------------------------------------------------------------
 -spec eval(atom(), tuple()) -> pid().
-eval(Inst_name, MFA) when is_tuple(MFA) ->
-    tspool_srv:espace_eval(Inst_name, MFA).
+eval(Inst_name, Tuple) when is_tuple(Tuple) ->
+    tspool_srv:espace_eval(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -349,14 +378,12 @@ inst_to_name(Prefix, Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec do_esp(atom(), [{eval, tuple()} | {worker, tuple()} | {include, string()} | {out, tuple()}]) -> ok.
+-spec do_esp(atom(), [{worker, tuple()} | {include, string()} | {out, tuple()}]) -> ok.
 do_esp(_Inst_name, []) ->
     ok;
 
 do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
     case Cmd of
-	eval ->
-	    eval(Inst_name, Arg);
 	worker ->
 	    worker(Inst_name, Arg);
 	out ->

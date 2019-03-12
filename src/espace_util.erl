@@ -12,11 +12,32 @@
 
 %% API
 -export([eval_out/1, eval_out/2]).
+-export([inst_to_name/2]).
 
 
 %%%===================================================================
 %%% API
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Convert an instance name to longer prefixed name.
+%%
+%% This is used for obtaining the instance specific server/table
+%% names. For example `inst_to_name(espace_sup, aaa)' will return
+%% `espace_sup_aaa'.
+%%
+%% If the instance name is `espace', then the prefix is returned
+%% without an instance name suffix. For example
+%% `inst_to_name(espace_sup, espace)' will return `espace_sup'.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec inst_to_name(atom(), atom()) -> atom().
+inst_to_name(Prefix, espace) ->
+    Prefix;
+inst_to_name(Prefix, Inst_name) ->
+    list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)).
 
 %%--------------------------------------------------------------------
 %% @doc Conditionally evaluate a tuple and `out' the result to the

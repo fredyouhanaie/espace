@@ -58,7 +58,7 @@
 			    {error, {already_started, pid()} | term()}|
 			    {ok, pid()}.
 start_link(Inst_name) ->
-    gen_server:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
+    gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -75,7 +75,7 @@ start_link(Inst_name) ->
 %%--------------------------------------------------------------------
 -spec espace_eval(atom(), tuple()) -> pid().
 espace_eval(Inst_name, Tuple) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_eval, Tuple}).
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {espace_eval, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -91,7 +91,7 @@ espace_eval(Inst_name, Tuple) ->
 %%--------------------------------------------------------------------
 -spec espace_worker(atom(), tuple()) -> pid().
 espace_worker(Inst_name, MFA) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {espace_worker, MFA}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -107,7 +107,7 @@ espace_worker(Inst_name, MFA) ->
 %%--------------------------------------------------------------------
 -spec espace_out(atom(), tuple()) -> done.
 espace_out(Inst_name, Tuple) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {espace_out, Tuple}).
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {espace_out, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -176,7 +176,7 @@ espace_rdp(Inst_name, Pattern) ->
 -spec init(atom()) -> {ok, #state{inst_name::atom(), workersup::atom()}}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
-    {ok, #state{inst_name=Inst_name, workersup=espace:inst_to_name(worker_sup, Inst_name)}}.
+    {ok, #state{inst_name=Inst_name, workersup=espace_util:inst_to_name(worker_sup, Inst_name)}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -257,7 +257,7 @@ terminate(_Reason, _State) ->
 -spec espace_op(atom(), espace_in | espace_inp | espace_rd | espace_rdp, tuple()) ->
 		       {list(), tuple()} | nomatch.
 espace_op(Inst_name, Espace_Op, Pattern) ->
-    Reply = gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {Espace_Op, Pattern}),
+    Reply = gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {Espace_Op, Pattern}),
     case Reply of
 	{match, Match} ->
 	    Match;

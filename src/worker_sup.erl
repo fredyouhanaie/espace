@@ -40,7 +40,7 @@
 			ignore |
 			{error, {already_started, pid()} | {shutdown, term()} | term()}.
 start_link(Inst_name) ->
-    supervisor:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name).
+    supervisor:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name).
 
 %%%===================================================================
 %%% Supervisor callbacks

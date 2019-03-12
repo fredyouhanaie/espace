@@ -25,7 +25,6 @@
 %% API
 -export([eval/1, worker/1, in/1, inp/1, out/1, rd/1, rdp/1, infile/1, start/0, stop/0]).
 -export([eval/2, worker/2, in/2, inp/2, out/2, rd/2, rdp/2, infile/2, start/1, stop/1]).
--export([inst_to_name/2]).
 
 
 %%%===================================================================
@@ -51,7 +50,7 @@ start() ->
 start(espace) ->
     application:start(espace);
 start(Inst_name) ->
-    Server_names = lists:map(fun (S) -> inst_to_name(S, Inst_name) end,
+    Server_names = lists:map(fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
 			     [ espace_sup, tspool_srv, tspace_srv, tspatt_srv, worker_sup ]
 			    ),
     App = {
@@ -347,26 +346,6 @@ infile(File) ->
 infile(Inst_name, File) ->
     {ok, Terms} = file:consult(File),
     do_esp(Inst_name, Terms).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Convert an instance name to longer prefixed name.
-%%
-%% This is used for obtaining the instance specific server/table
-%% names. For example `inst_to_name(espace_sup, aaa)' will return
-%% `espace_sup_aaa'.
-%%
-%% If the instance name is `espace', then the prefix is returned
-%% without an instance name suffix. For example
-%% `inst_to_name(espace_sup, espace)' will return `espace_sup'.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec inst_to_name(atom(), atom()) -> atom().
-inst_to_name(Prefix, espace) ->
-    Prefix;
-inst_to_name(Prefix, Inst_name) ->
-    list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)).
 
 %%%===================================================================
 %%% Internal functions

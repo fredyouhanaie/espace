@@ -42,7 +42,7 @@
 			ignore |
 			{error, {already_started, pid()} | {shutdown, term()} | term()}.
 start_link(Inst_name) ->
-    Server_name = espace:inst_to_name(?SERVER, Inst_name),
+    Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
     supervisor:start_link({local, Server_name}, ?MODULE, Inst_name).
 
 %%%===================================================================

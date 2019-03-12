@@ -68,7 +68,7 @@
 %%--------------------------------------------------------------------
 -spec check_waitlist(atom(), tuple()) -> ok.
 check_waitlist(Inst_name, Tuple) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {check_tuple, Tuple}).
+    gen_server:cast(espace_util:inst_to_name(?SERVER, Inst_name), {check_tuple, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc Add a new pattern to the waiting list.
@@ -80,7 +80,7 @@ check_waitlist(Inst_name, Tuple) ->
 %%--------------------------------------------------------------------
 -spec add_pattern(atom(), reference(), tuple(), pid()) -> ok.
 add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
-    gen_server:cast(espace:inst_to_name(?SERVER, Inst_name), {add_pattern, Cli_ref, Pattern, Cli_pid}).
+    gen_server:cast(espace_util:inst_to_name(?SERVER, Inst_name), {add_pattern, Cli_ref, Pattern, Cli_pid}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -95,7 +95,7 @@ add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
 			    {error, {already_started, pid()} | term()} |
 			    {ok, pid()}.
 start_link(Inst_name) ->
-    Server_name = espace:inst_to_name(?SERVER, Inst_name),
+    Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
     gen_server:start_link({local, Server_name}, ?MODULE, Inst_name, []).
 
 
@@ -113,7 +113,7 @@ start_link(Inst_name) ->
 -spec init(atom()) -> {ok, term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
-    Patt_name = espace:inst_to_name(tspatt, Inst_name),
+    Patt_name = espace_util:inst_to_name(tspatt, Inst_name),
     Patt = ets:new(Patt_name, [set, protected]),
     {ok, #state{inst_name=Inst_name, tspatt=Patt}}.
 

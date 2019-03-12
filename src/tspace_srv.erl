@@ -54,7 +54,7 @@
 %%--------------------------------------------------------------------
 -spec add_tuple(atom(), tuple()) -> done.
 add_tuple(Inst_name, Tuple) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
 %%--------------------------------------------------------------------
 %% @doc Remove the tuple referenced by the supplied unique key.
@@ -65,7 +65,7 @@ add_tuple(Inst_name, Tuple) ->
 %%--------------------------------------------------------------------
 -spec del_tuple(atom(), reference()) -> done.
 del_tuple(Inst_name, TabKey) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
 
 %%--------------------------------------------------------------------
 %% @doc Lookup a tuple pattern in the tuple space ETS table.
@@ -81,7 +81,7 @@ del_tuple(Inst_name, TabKey) ->
 %%--------------------------------------------------------------------
 -spec get_tuple(atom(), tuple()) -> {nomatch} | {match, {reference(), list(), tuple()}}.
 get_tuple(Inst_name, Pattern) ->
-    gen_server:call(espace:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -94,7 +94,7 @@ get_tuple(Inst_name, Pattern) ->
 %%--------------------------------------------------------------------
 -spec start_link(atom()) -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
 start_link(Inst_name) ->
-    gen_server:start_link({local, espace:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
+    gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -110,7 +110,7 @@ start_link(Inst_name) ->
 -spec init(atom()) -> {ok, term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
-    Pool_name = espace:inst_to_name(tspace, Inst_name),
+    Pool_name = espace_util:inst_to_name(tspace, Inst_name),
     Pool = ets:new(Pool_name, [set, protected]),
     {ok, #state{inst_name=Inst_name, tspool=Pool}}.
 

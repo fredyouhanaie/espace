@@ -18,6 +18,37 @@
 %% The tests
 %%--------------------------------------------------------------------
 
+inst_to_name_1_test() ->
+    hello = espace_util:inst_to_name(hello, espace).
+
+inst_to_name_2_test() ->
+    hello_aaa = espace_util:inst_to_name(hello, aaa).
+
+inst_to_name_3_test() ->
+    espace_aaa = espace_util:inst_to_name(espace, aaa).
+
+eval_out_1_test() ->
+    application:ensure_all_started(espace),
+    done = espace_util:eval_out({five, fun () -> 2+3 end}),
+    {[], {five, 5}} = espace:in({five, 5}).
+
+eval_out_2_test() ->
+    application:ensure_all_started(espace),
+    done = espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3]}}),
+    {[], {five, 5}} = espace:in({five, 5}).
+
+eval_out_3_test() ->
+    espace:start(aaa),
+    done = espace_util:eval_out(aaa, {five, {fun (X, Y) -> X+Y end, [2, 3]}}),
+    {[], {five, 5}} = espace:in(aaa, {five, 5}).
+
+eval_out_4_test() ->
+    application:ensure_all_started(espace),
+    done = espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3, 4]}}),
+    {[{F, L}], {five, _}} = espace:in({five, '$1'}),
+    ?assert(is_function(F, 2)),
+    L = [2, 3, 4].
+
 start_test() ->
     espace:start().
 

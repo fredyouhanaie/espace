@@ -57,7 +57,7 @@ start(Inst_name) ->
 	   application, Inst_name,
 	   [
 	    {description, "An instance of espace"},
-	    {vsn, "0.3.0"},
+	    {vsn, "0.4.0"},
 	    {registered, Server_names},
 	    {mod, { espace_app, Inst_name }}
 	   ]},

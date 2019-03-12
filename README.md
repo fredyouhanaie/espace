@@ -18,28 +18,29 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
+* `eval` now behaves like the original Linda specification, i.e. like
+  `out`, it takes a tuple and adds it to the tuple space, however, if
+  the tuple contains any expressions, for espace they are `fun`
+  expressions, those expressions are replaced with their respective
+  values before adding the tuple to the tuple space. See the module
+  documentation for `espace:eval/1,2` for details.
+* A new module has been created `espace_util`, which contains the
+  current, and future, support functions.
+
 * The `worker` function now returns the pid of the child process.
 * The `out` operation is now synchronous, `out` will not return until
   after the tuple has been inserted in the tuple space.
-* A separated
+* A separate
   [examples](https://github.com/fredyouhanaie/espace-examples)
   repository has been created to host larger examples,
 * Instead of single `espace` application on a node, you can now create
   multiple, independent, named instances on the same node.
-* The project has been converted to a library, instead of an
-  application. One now needs to explicitly start an instance of the
-  application with `espace:start/0,1`.
-* The two ETS tables are now managed by separate servers.
 
 ## Upcoming changes
 
-* The `eval` operation will be changed in an *incompatible* way. The
-  already implemented `worker` operation replaces the old `eval`.
-* The new `eval` will behave like the original Linda specification,
-  i.e. it will take a tuple like `out`, however, if the tuple contains
-  any expressions, for espace they will need to be `fun` expressions,
-  those expressions will be replaced with their respective values, and
-  the resulting tuple will be inserted in the tuple space.
+* Some work is planned for performance measurement and tracing.
+* The ETS tables will be made more resilient in case their custodian
+  servers crash and are subsequently restarted.
 
 ## Current Status
 

@@ -7,15 +7,13 @@
 %%% It is a `gen_server' that sits between the `espace' clients and
 %%% the rest of the espace application.
 %%%
-%%% Upon receiving either of the `worker' or `eval' requests, the
-%%% worker supervisor will be triggered to start a new child
-%%% process. Currently `worker' and `eval' behave in exactly the same
-%%% way, however, in the very near future the bahaviour of `eval' will
-%%% be changed to reflect the original Linda specification.
+%%% Upon receiving the `worker' request, the worker supervisor will be
+%%% triggered to start a new child process to run the supplied
+%%% function.
 %%%
-%%% If you have any applcations that are using `eval' to start a
-%%% worker process, then they should be updated to use `worker'
-%%% instead.
+%%% Upon receiving the `eval' request, the worker supervisor will be
+%%% triggered to start a new child process to evaluate the supplied
+%%% tuple.
 %%%
 %%% For the tuple space data operations, i.e. `in', `rd', `inp', `rdp'
 %%% and `out', the request is passed to the `tspace_srv' server, which
@@ -65,11 +63,7 @@ start_link(Inst_name) ->
 %% perform an `eval' operation.
 %%
 %% A request is sent to the worker supervisor to start a new child
-%% process based on the `MFA' parameter.
-%%
-%% Please note that the behaviour of `eval' will change in an
-%% incompatible way. Any existing applications that use `eval' should
-%% be updated to use `worker' instead.
+%% process, which will evaluate the elements of the supplied `Tuple'.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -83,9 +77,10 @@ espace_eval(Inst_name, Tuple) ->
 %%
 %% A request is sent to the worker supervisor to start a new child
 %% process based on the `MFA' parameter. `MFA' can be one of `{Mod,
-%% Func, Args}' triple, an anonymous function `{Func}' or a string
-%% represtation of an anonymous function, the latter can be used when
-%% reading espace terms from a file.
+%% Func, Args}' triple, or an anonymous function/args pair `{Func,
+%% Args}', where `Func' can be a `fun' expression or string
+%% represtation of a `fun' expression. The string version can be used
+%% when reading espace terms from a file.
 %%
 %% @end
 %%--------------------------------------------------------------------

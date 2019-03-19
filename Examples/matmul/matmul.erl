@@ -2,6 +2,7 @@
 
 -export([start/1, gatherer/3, matsize_bytag/1, gen_dotprodme/3, dotprod_worker/0]).
 -export([gen_col_vectors/1, split_matrix_bytag/1, split_row_vector_bytag/1]).
+-export([do_multiply/3]).
 
 % Example Matrix Multiplication demo program
 
@@ -9,40 +10,43 @@
 % two matrices.
 
 start(InFile) ->
+    %% read the matrices
+    espace:infile(InFile),
+
+    Mat_C = do_multiply(mat_a, mat_b, mat_c),
+    print_matrix(Mat_C),
+    ok.
+
+%%
+%% Given multiple matrices with Tag1 and Tag2, save the result as Tag3
+do_multiply(Tag1, Tag2, Tag3) ->
     % get and save the matrix sizes
     matsize_bytag(Tag1),
     matsize_bytag(Tag2),
 
     % split both matrices into row vectors
-    espace:worker({matmul, split_matrix_bytag, [mat_a]}),
-    espace:worker({matmul, split_matrix_bytag, [mat_b]}),
+    espace:worker({?MODULE, split_matrix_bytag, [Tag1]}),
+    espace:worker({?MODULE, split_matrix_bytag, [Tag2]}),
 
     % for the second matrix, split further into elements, then
     % reassemble as column vectors
-    espace:worker({matmul, split_row_vector_bytag, [mat_b]}),
-    espace:worker({matmul, gen_col_vectors, [mat_b]}),
+    espace:worker({?MODULE, split_row_vector_bytag, [Tag2]}),
+    espace:worker({?MODULE, gen_col_vectors, [Tag2]}),
 
     % generate the place holders for the result matrix
     % these will be consumed by the dotprod worker processes
-    espace:worker({matmul, gen_dotprodme, [mat_a, mat_b, mat_c]}),
+    espace:worker({?MODULE, gen_dotprodme, [Tag1, Tag2, Tag3]}),
 
     % two worker processes should be sufficient for our demo
     % each worker will take 'dotprodme' tuples and produce 'dotprod' tuples
-    espace:worker({matmul, dotprod_worker, []}),
-    espace:worker({matmul, dotprod_worker, []}),
+    espace:worker({?MODULE, dotprod_worker, []}),
+    espace:worker({?MODULE, dotprod_worker, []}),
 
     % the final results collector
-    espace:worker({matmul, gatherer, [mat_a, mat_b, mat_c]}),
+    espace:worker({?MODULE, gatherer, [Tag1, Tag2, Tag3]}),
 
-    % Note that none of the above workers will start operating until the
-    % two input matrices are dropped into the tuple space.
-
-    % all we need now is the data to get things moving
-    espace:infile(InFile),
-
-    % wait for the final matrix, and print it
-    {[Matrix_C], _} = espace:rd({matrix, mat_c, '$1'}),
-    print_matrix(Matrix_C),
+    % wait for the final matrix
+    {[Matrix_C], _} = espace:rd({matrix, Tag3, '$1'}),
 
     % Now clean up the Tuple Space
     Tlist = [{matrix, '_', '_'},
@@ -51,7 +55,8 @@ start(InFile) ->
 	     {col_vector, '_', '_', '_'},
 	     {dotprodme, '_', '_', '_', '_', '_'}],
     drain_tspool(Tlist),
-    ok.
+
+    Matrix_C.
 
 drain_tspool([]) ->
     ok;

@@ -10,8 +10,8 @@
 
 start(InFile) ->
     % get and save the matrix sizes
-    espace:worker({matmul, matsize_bytag, [mat_a]}),
-    espace:worker({matmul, matsize_bytag, [mat_b]}),
+    matsize_bytag(Tag1),
+    matsize_bytag(Tag2),
 
     % split both matrices into row vectors
     espace:worker({matmul, split_matrix_bytag, [mat_a]}),
@@ -46,7 +46,7 @@ start(InFile) ->
 
     % Now clean up the Tuple Space
     Tlist = [{matrix, '_', '_'},
-	     {matsize, '_', '_', '_'},
+	     {matsize, '_', '_'},
 	     {row_vector, '_', '_', '_'},
 	     {col_vector, '_', '_', '_'},
 	     {dotprodme, '_', '_', '_', '_', '_'}],
@@ -72,8 +72,8 @@ print_matrix(M) ->
 
 gatherer(Tag1, Tag2, Tag3) ->
     % we need to know how many dot product elements to expect and wait for
-    {[Nrows], _} = espace:rd({matsize, Tag1, '$1', '_'}),
-    {[Ncols], _} = espace:rd({matsize, Tag2, '_', '$2'}),
+    {[Nrows], _} = espace:rd({matsize, Tag1, {'$1', '_'}}),
+    {[Ncols], _} = espace:rd({matsize, Tag2, {'_', '$2'}}),
     ResultElements = Nrows*Ncols,
     % save the count, which will be decremented as the results come in
     espace:out({dotprod_count, ResultElements}),
@@ -110,7 +110,7 @@ make_col_vector(Tag, ColNum, Nrows) ->
     lists:map(fun (RowNum) -> element(Tag, RowNum, ColNum) end, lists:seq(1, Nrows)).
 
 gen_col_vectors(Tag) ->
-    {[Nrows, Ncols], _} = espace:rd({matsize, Tag, '$1', '$2'}),
+    {[Nrows, Ncols], _} = espace:rd({matsize, Tag, {'$1', '$2'}}),
     lists:foreach(
       fun (ColNum) -> espace:out({col_vector, Tag, ColNum, make_col_vector(Tag, ColNum, Nrows)}) end,
       lists:seq(1, Ncols)
@@ -121,18 +121,24 @@ element(Tag, RowNum, ColNum) ->
     Value.
 
 gen_dotprodme(Tag1, Tag2, Tag3) ->
-    {[Rows1, _], _} = espace:rd({matsize, Tag1, '$1', '$2'}),
-    {[_, Cols2], _} = espace:rd({matsize, Tag2, '$1', '$2'}),
+    {[Rows1, _], _} = espace:rd({matsize, Tag1, {'$1', '$2'}}),
+    {[_, Cols2], _} = espace:rd({matsize, Tag2, {'$1', '$2'}}),
     % we generate the tuples sequentially, but we can also parallelize this
     DotProd = fun ({R, C}) -> espace:out({dotprodme, Tag1, R, Tag2, C, Tag3}) end,
     lists:foreach(DotProd, [ {R,C} || R <- lists:seq(1,Rows1), C <- lists:seq(1,Cols2)]),
     ok.
 
 matsize_bytag(Tag) ->
-    {[Mat], _} = espace:rd({matrix, Tag, '$1'}),
-    Rows = length(Mat),
-    Cols = length(hd(Mat)),
-    espace:out({matsize, Tag, Rows, Cols}).
+    espace:eval({matsize,
+		 Tag,
+		 fun () ->
+			  {[Mat], _} = espace:rd({matrix, Tag, '$1'}),
+			  Rows = length(Mat),
+			  Cols = length(hd(Mat)),
+			  {Rows, Cols}
+		  end
+		}
+	       ).
 
 split_matrix_bytag(Tag) ->
     {[Matrix], _} = espace:rd({matrix, Tag, '$1'}),
@@ -145,7 +151,7 @@ split_matrix([H|T], Tag, RowNum) ->
     split_matrix(T, Tag, RowNum+1).
 
 split_row_vector_bytag(Tag) ->
-    {[Nrows], _} = espace:rd({matsize, Tag, '$1', '_'}),
+    {[Nrows], _} = espace:rd({matsize, Tag, {'$1', '_'}}),
     lists:foreach(
       fun (RowNum) ->
 	      {[RowVec],_} = espace:in({row_vector, Tag, RowNum, '$1'}),

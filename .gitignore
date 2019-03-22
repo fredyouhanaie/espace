@@ -1,5 +1,4 @@
 .rebar3
-rebar.lock
 _*
 .eunit
 *.o

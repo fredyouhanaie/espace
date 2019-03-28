@@ -50,18 +50,20 @@ start() ->
 start(espace) ->
     application:start(espace);
 start(Inst_name) ->
-    Server_names = lists:map(fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
-			     [ espace_sup, tspool_srv, tspace_srv, tspatt_srv, worker_sup ]
-			    ),
-    App = {
-	   application, Inst_name,
-	   [
-	    {description, "An instance of espace"},
-	    {vsn, "0.4.0"},
-	    {registered, Server_names},
-	    {mod, { espace_app, Inst_name }}
-	   ]},
-    application:load(App),
+    %% retrieve the main app resource file
+    {ok, [{application, espace, App_0}]} = file:consult(code:where_is_file("espace.app")),
+
+    %% add the instance name suffix to the list of application servers
+    {registered, Server_names_0} = lists:keyfind(registered, 1, App_0),
+    Server_names_1 = lists:map(
+		       fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
+		       Server_names_0),
+    App_1 = lists:keyreplace(registered, 1, App_0, {registered, Server_names_1}),
+
+    %% pass the instance name to the application as arg
+    App_2 = lists:keyreplace(mod, 1, App_1, {mod, {espace_app, Inst_name}}),
+
+    application:load({application, Inst_name, App_2}),
     application:start(Inst_name).
 
 %%--------------------------------------------------------------------

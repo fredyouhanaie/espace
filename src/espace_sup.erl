@@ -94,7 +94,14 @@ init(Inst_name) ->
 		  restart => permanent,
 		  shutdown => 5000,
 		  type => supervisor,
-		  modules => ['wkpool_srv']}
+		  modules => ['wkpool_srv']},
+
+		#{id => 'etsmgr_srv',
+		  start => {'etsmgr_srv', start_link, [Inst_name]},
+		  restart => permanent,
+		  shutdown => 5000,
+		  type => worker,
+		  modules => ['etsmgr_srv']}
 
 	       ],
 

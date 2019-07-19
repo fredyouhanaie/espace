@@ -111,10 +111,16 @@ coordinate through the tuple space.</p>
 
 <p>The top level supervisor started by <code>espace_app</code>
   is <code>espace_sup</code>. This supervisor manages
-  three <code>gen_server</code>s and one <code>supervisor</code>, as
+  four <code>gen_server</code>s and one <code>supervisor</code>, as
   described below:</p>
 
 <ul>
+
+  <li><code>etsmgr_srv</code> is a <code>gen_server</code> that adds
+  resiliency to the ETS tables, should any of their owner servers
+  restart due to some fault. See
+  the <a href="https://github.com/fredyouhanaie/etsmgr">project
+  repo</a> for details.</li>
 
   <li><code>tspool_srv</code> is a <code>gen_server</code> that
     manages the <code>out/in/rd/inp/rdp</code> requests. In turn it

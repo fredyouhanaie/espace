@@ -6,8 +6,21 @@
 %%% Main espace application supervisor.
 %%% It handles the main application components.
 %%%
-%%% There are four child components, three are gen_servers, and the
-%%% fourth is a supervisor. See the main overview for details.
+%%% There are five child components, four are gen_servers, and the
+%%% fifth is a supervisor. See the main overview for details.
+%%%
+%%% One of the gen_servers is from the `etsmgr' application. Here
+%%% `etsmgr' is used in embedded mode, i.e. there is no separate
+%%% `etsmgr' application. We also make sure that `etsmgr_srv' is the
+%%% first child to be started as the two of the others depend on this
+%%% server.
+%%%
+%%% For the child specification, we rely on the default settings of:
+%%% <pre>
+%%%   restart  => permanent,
+%%%   shutdown => 5000,
+%%%   type     => worker
+%%% </pre>
 %%%
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
@@ -68,40 +81,27 @@ init(Inst_name) ->
 		 period => 5},
 
     Children = [
+		#{id => 'etsmgr_srv',
+		  start => {'etsmgr_srv', start_link, [Inst_name]},
+		  modules => ['etsmgr_srv']},
+
 		#{id => 'tspool_srv',
 		  start => {'tspool_srv', start_link, [Inst_name]},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => worker,
 		  modules => ['tspool_srv']},
 
 		#{id => 'tspace_srv',
 		  start => {'tspace_srv', start_link, [Inst_name]},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => worker,
 		  modules => ['tspace_srv']},
 
 		#{id => 'tspatt_srv',
 		  start => {'tspatt_srv', start_link, [Inst_name]},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => worker,
 		  modules => ['tspatt_srv']},
 
 		#{id => 'worker_sup',
 		  start => {'worker_sup', start_link, [Inst_name]},
-		  restart => permanent,
-		  shutdown => 5000,
+		  shutdown => infinity,
 		  type => supervisor,
-		  modules => ['wkpool_srv']},
-
-		#{id => 'etsmgr_srv',
-		  start => {'etsmgr_srv', start_link, [Inst_name]},
-		  restart => permanent,
-		  shutdown => 5000,
-		  type => worker,
-		  modules => ['etsmgr_srv']}
+		  modules => ['wkpool_srv']}
 
 	       ],
 

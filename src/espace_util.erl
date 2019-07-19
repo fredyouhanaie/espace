@@ -12,7 +12,7 @@
 
 %% API
 -export([eval_out/1, eval_out/2]).
--export([inst_to_name/2]).
+-export([inst_to_name/2, wait4etsmgr/4]).
 
 
 %%%===================================================================
@@ -77,6 +77,36 @@ eval_out(Inst_name, Tuple_in) ->
     Tuple_out = erlang:list_to_tuple(List_out),
     espace:out(Inst_name, Tuple_out).
 
+%%--------------------------------------------------------------------
+%% @doc wait for etsmgr to (re)start, then ask it to manage our table.
+%%
+%% There are two occassions where this function is called:
+%%
+%% <ol>
+%%
+%% <li> `init' - start/restart of our gen_server that owns a table, in
+%% this case we do not have, or know of, the ETS table. So we ask
+%% `etsmgr' to create a new table using `etsmgr:new_table/4'. If
+%% `etsmgr' is already managing such a table that does not already
+%% belong to another process, then that table will be given to
+%% us.</li>
+%%
+%% <li> `recover' - recovery of the `etsmgr' server, in this case we
+%% ask `etsmgr' to start managing our ETS table.</li>
+%%
+%% </ol>
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec wait4etsmgr(atom(), init | recover, atom(), term()) -> {ok, pid(), ets:tab()} | {error, term()}.
+wait4etsmgr(Inst_name, init, Table_name, Table_opts) ->
+    etsmgr:wait4etsmgr(Inst_name),
+    etsmgr:new_table(Inst_name, Table_name, Table_name, Table_opts);
+
+wait4etsmgr(Inst_name, recover, Table_name, Table_id) ->
+    etsmgr:wait4etsmgr(Inst_name),
+    etsmgr:add_table(Inst_name, Table_name, Table_id).
+
 
 %%%===================================================================
 %%% Internal functions
@@ -94,4 +124,3 @@ do_eval({Fun, Args}) when is_list(Args) andalso is_function(Fun, length(Args)) -
     erlang:apply(Fun, Args);
 do_eval(X) ->
     X.
-

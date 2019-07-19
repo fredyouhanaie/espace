@@ -18,6 +18,14 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
+* The [`etsmgr`](https://github.com/fredyouhanaie/etsmgr) application
+  is used to ensure the tuple space and pattern data held in ETS
+  tables survive the server restarts.
+* As we have started using the `handle_continue` callback of
+  gen_server, we can only support OTP versions from 21.0 onwards.
+
+## Less resent changes
+
 * `eval` now behaves like the original Linda specification, i.e. like
   `out`, it takes a tuple and adds it to the tuple space, however, if
   the tuple contains any expressions, for espace they are `fun`
@@ -39,8 +47,6 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 ## Upcoming changes
 
 * Some work is planned for performance measurement and tracing.
-* The ETS tables will be made more resilient in case their custodian
-  servers crash and are subsequently restarted.
 
 ## Current Status
 

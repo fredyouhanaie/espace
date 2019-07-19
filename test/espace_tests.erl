@@ -150,6 +150,28 @@ infile_test() ->
     {[3], _} = espace:in({sum, 1, 2, '$3'}),
     {[7], _} = espace:in({sum, 3, 4, '$3'}).
 
+etsmgr_tspace_1_test() ->
+    application:ensure_all_started(espace),
+
+    Tuple_1 = {hello, 1},
+    espace:out(Tuple_1),
+    erlang:exit(whereis(etsmgr_srv_espace), kill),
+    timer:sleep(10),
+    {[], Tuple_1} = espace:in(Tuple_1),
+
+    application:stop(espace).
+
+etsmgr_tspace_2_test() ->
+    application:ensure_all_started(espace),
+
+    Tuple_2 = {goodbye, 2},
+    espace:out(Tuple_2),
+    erlang:exit(whereis(tspace_srv), kill),
+    timer:sleep(1000),
+    {[], Tuple_2} = espace:in(Tuple_2),
+
+    application:stop(espace).
+
 %%--------------------------------------------------------------------
 %% supporting functions for the tests
 %%--------------------------------------------------------------------

@@ -49,7 +49,7 @@ start() ->
 -spec start(atom()) -> ok | {error, term()}.
 start(espace) ->
     application:start(espace);
-start(Inst_name) ->
+start(Inst_name) when is_atom(Inst_name)->
     %% retrieve the main app resource file
     {ok, [{application, espace, App_0}]} = file:consult(code:where_is_file("espace.app")),
 

@@ -32,6 +32,10 @@
 %%% name. This will be `tspatt' for the default/unnamed instance, and
 %%% `tspatt_abc' for an instance named `abc'.
 %%%
+%%% The `etsmgr' application is used to add resiliency to the server
+%%% data, should the server restart while it is holding tuple
+%%% patterns.
+%%%
 %%% @end
 %%% Created : 12 Jan 2018 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
@@ -44,10 +48,13 @@
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
+-export([handle_continue/2, handle_info/2]).
 
 -define(SERVER, ?MODULE).
+-define(TABLE_NAME, tspatt).
+-define(TABLE_OPTS, [set, protected]).
 
--record(state, {inst_name, tspatt}).
+-record(state, {inst_name, tspatt, etsmgr_pid}).
 
 %%%===================================================================
 %%% API
@@ -110,12 +117,10 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {ok, term()}.
+-spec init(atom()) -> {ok, term(), term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
-    Patt_name = espace_util:inst_to_name(tspatt, Inst_name),
-    Patt = ets:new(Patt_name, [set, protected]),
-    {ok, #state{inst_name=Inst_name, tspatt=Patt}}.
+    {ok, #state{inst_name=Inst_name}, {continue, init}}.
 
 
 %%--------------------------------------------------------------------
@@ -146,6 +151,71 @@ handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
     handle_add_pattern(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
     {noreply, State}.
 
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling continue requests.
+%%
+%% We use `{continue, init}' in `tspatt_srv:init/1' to ensure that
+%% `etsmgr' is started and is managing our ETS table before handling
+%% the first request.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_continue(term(), term()) -> {noreply, term()} | {stop, term()}.
+handle_continue(init, State) ->
+    case handle_wait4etsmgr(init, State) of
+	{ok, State2} ->
+	    {noreply, State2};
+	{error, Error} ->
+	    {stop, Error}
+    end;
+
+handle_continue(_Continue, State) ->
+    {noreply, State}.
+
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling all non call/cast messages
+%%
+%% We can expect an `EXIT' message if the `etsmgr' server exits
+%% unexpectedly. In this case we need to wait for the new `etsmgr'
+%% server to restart and be told of our ETS table before continuing
+%% further.
+%%
+%% We can also expect `ETS-TRANSFER' messages whenever we are handed
+%% over the ETS table.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_info(Info :: timeout() | term(), State :: term()) ->
+                         {noreply, NewState :: term()} |
+                         {noreply, NewState :: term(), Timeout :: timeout()} |
+                         {noreply, NewState :: term(), hibernate} |
+                         {stop, Reason :: normal | term(), NewState :: term()}.
+handle_info({'EXIT', Pid, _Reason}, State) ->
+    case State#state.etsmgr_pid of
+	    Pid ->
+	    case handle_wait4etsmgr(recover, State) of
+		{ok, State2} ->
+		    {noreply, State2};
+		{error, Error} ->
+		    {stop, Error}
+	    end;
+	_Other_pid ->
+	    {noreply, State}
+    end;
+
+handle_info({'ETS-TRANSFER', _Table_id, _From_pid, _Gift_data}, State) ->
+    {noreply, State};
+
+handle_info(_Info, State) ->
+    {noreply, State}.
+
+
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -157,7 +227,10 @@ handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(atom(), term()) -> ok.
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    Inst_name = State#state.inst_name,
+    Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
+    etsmgr:del_table(Inst_name, Table_name),
     ok.
 
 %%%===================================================================
@@ -207,3 +280,28 @@ handle_check_tuple(TabId, Tuple) ->
 -spec handle_add_pattern(ets:tid(), tuple()) -> true.
 handle_add_pattern(TabId, Tuple) ->
     ets:insert(TabId, Tuple).
+
+%%--------------------------------------------------------------------
+%% @doc wait for etsmgr to (re)start, ensure it manages our ETS table,
+%% and update the `State' data.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_wait4etsmgr(atom(), term()) -> {ok, term()} | {error, term()}.
+handle_wait4etsmgr(Mode, State) ->
+    Inst_name = State#state.inst_name,
+    Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
+
+    Result = case Mode of
+		 init ->
+		     espace_util:wait4etsmgr(Inst_name, init, Table_name, ?TABLE_OPTS);
+		 recover ->
+		     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspatt)
+	     end,
+
+    case Result of
+	{ok, Mgr_pid, Table_id} ->
+	    {ok, State#state{etsmgr_pid=Mgr_pid, tspatt=Table_id}};
+	{error, Error} ->
+	    {error, Error}
+    end.

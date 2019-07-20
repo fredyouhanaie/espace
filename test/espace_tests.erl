@@ -167,8 +167,19 @@ etsmgr_tspace_2_test() ->
     Tuple_2 = {goodbye, 2},
     espace:out(Tuple_2),
     erlang:exit(whereis(tspace_srv), kill),
-    timer:sleep(1000),
+    timer:sleep(10),
     {[], Tuple_2} = espace:in(Tuple_2),
+
+    application:stop(espace).
+
+etsmgr_tspatt_1_test() ->
+    application:ensure_all_started(espace),
+
+    Tables1 = lists:sort( maps:keys(etsmgr:info(espace)) ),
+    erlang:exit(whereis(etsmgr_srv_espace), kill),
+    timer:sleep(1010),
+    Tables2 = lists:sort( maps:keys(etsmgr:info(espace)) ),
+    ?assert(lists:prefix(Tables1, Tables2)),
 
     application:stop(espace).
 

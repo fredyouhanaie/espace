@@ -38,6 +38,7 @@
 -export([handle_continue/2, handle_info/2]).
 
 -define(SERVER, ?MODULE).
+-define(TABLE_NAME, tspace).
 -define(TABLE_OPTS, [set, protected]).
 
 -record(state, {inst_name, tspool, etsmgr_pid}).
@@ -163,7 +164,7 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% Handling continue requests.
 %%
-%% We use `{continue, init}' from `init' to ensure we wait for
+%% We use `{continue, init}' from `tspace_srv:init/1' to ensure that
 %% `etsmgr' is started and is managing our ETS table before handling
 %% the first request.
 %%
@@ -234,7 +235,7 @@ handle_info(_Info, State) ->
 -spec terminate(term(), term()) -> ok.
 terminate(_Reason, State) ->
     Inst_name = State#state.inst_name,
-    Table_name = State#state.tspool,
+    Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
     etsmgr:del_table(Inst_name, Table_name),
     ok.
 
@@ -292,7 +293,7 @@ handle_del_tuple(TabId, TabKey) ->
 -spec handle_wait4etsmgr(atom(), term()) -> {ok, term()} | {error, term()}.
 handle_wait4etsmgr(Mode, State) ->
     Inst_name = State#state.inst_name,
-    Table_name = espace_util:inst_to_name(tspace, Inst_name),
+    Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
 
     Result = case Mode of
 		 init ->

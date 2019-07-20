@@ -232,7 +232,10 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(term(), term()) -> ok.
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    Inst_name = State#state.inst_name,
+    Table_name = State#state.tspool,
+    etsmgr:del_table(Inst_name, Table_name),
     ok.
 
 %%%===================================================================

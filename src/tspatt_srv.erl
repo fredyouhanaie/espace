@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2018, Fred Youhanaie
@@ -99,8 +100,8 @@ add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link(atom()) -> ignore |
-			    {error, {already_started, pid()} | term()} |
-			    {ok, pid()}.
+                            {error, {already_started, pid()} | term()} |
+                            {ok, pid()}.
 start_link(Inst_name) ->
     Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
     gen_server:start_link({local, Server_name}, ?MODULE, Inst_name, []).
@@ -166,10 +167,10 @@ handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
 -spec handle_continue(term(), term()) -> {noreply, term()} | {stop, term()}.
 handle_continue(init, State) ->
     case handle_wait4etsmgr(init, State) of
-	{ok, State2} ->
-	    {noreply, State2};
-	{error, Error} ->
-	    {stop, Error}
+        {ok, State2} ->
+            {noreply, State2};
+        {error, Error} ->
+            {stop, Error}
     end;
 
 handle_continue(_Continue, State) ->
@@ -198,15 +199,15 @@ handle_continue(_Continue, State) ->
                          {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info({'EXIT', Pid, _Reason}, State) ->
     case State#state.etsmgr_pid of
-	    Pid ->
-	    case handle_wait4etsmgr(recover, State) of
-		{ok, State2} ->
-		    {noreply, State2};
-		{error, Error} ->
-		    {stop, Error}
-	    end;
-	_Other_pid ->
-	    {noreply, State}
+            Pid ->
+            case handle_wait4etsmgr(recover, State) of
+                {ok, State2} ->
+                    {noreply, State2};
+                {error, Error} ->
+                    {stop, Error}
+            end;
+        _Other_pid ->
+            {noreply, State}
     end;
 
 handle_info({'ETS-TRANSFER', _Table_id, _From_pid, _Gift_data}, State) ->
@@ -251,11 +252,11 @@ check_tuple(_Tuple, _TabId, '$end_of_table') ->
 check_tuple(Tuple, TabId, Key) ->
     [{Cli_ref, Pattern, Cli_pid}] = ets:lookup(TabId, Key),
     case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
-	{ok, false} ->
-	    nomatch;
-	_ ->
-	    Cli_pid ! Cli_ref,
-	    ets:delete(TabId, Key)
+        {ok, false} ->
+            nomatch;
+        _ ->
+            Cli_pid ! Cli_ref,
+            ets:delete(TabId, Key)
     end,
     check_tuple(Tuple, TabId, ets:next(TabId, Key)).
 
@@ -293,15 +294,15 @@ handle_wait4etsmgr(Mode, State) ->
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
 
     Result = case Mode of
-		 init ->
-		     espace_util:wait4etsmgr(Inst_name, init, Table_name, ?TABLE_OPTS);
-		 recover ->
-		     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspatt)
-	     end,
+                 init ->
+                     espace_util:wait4etsmgr(Inst_name, init, Table_name, ?TABLE_OPTS);
+                 recover ->
+                     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspatt)
+             end,
 
     case Result of
-	{ok, Mgr_pid, Table_id} ->
-	    {ok, State#state{etsmgr_pid=Mgr_pid, tspatt=Table_id}};
-	{error, Error} ->
-	    {error, Error}
+        {ok, Mgr_pid, Table_id} ->
+            {ok, State#state{etsmgr_pid=Mgr_pid, tspatt=Table_id}};
+        {error, Error} ->
+            {error, Error}
     end.

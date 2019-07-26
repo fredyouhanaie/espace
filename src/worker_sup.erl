@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata,co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
@@ -36,9 +37,9 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link(atom()) ->
-			{ok, pid()} |
-			ignore |
-			{error, {already_started, pid()} | {shutdown, term()} | term()}.
+                        {ok, pid()} |
+                        ignore |
+                        {error, {already_started, pid()} | {shutdown, term()} | term()}.
 start_link(Inst_name) ->
     supervisor:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name).
 
@@ -60,14 +61,14 @@ start_link(Inst_name) ->
 init(_Inst_name) ->
 
     SupFlags = #{strategy => simple_one_for_one,
-		 intensity => 1,  %% TODO needs tuning
-		 period => 5},    %% TODO needs tuning
+                 intensity => 1,  %% TODO needs tuning
+                 period => 5},    %% TODO needs tuning
 
     AChild = #{id => tsworker,
-	       start => {?MODULE, run_child, []},
-	       restart => temporary,
-	       shutdown => brutal_kill,
-	       type => worker},
+               start => {?MODULE, run_child, []},
+               restart => temporary,
+               shutdown => brutal_kill,
+               type => worker},
 
     {ok, {SupFlags, [AChild]}}.
 

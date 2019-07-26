@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
@@ -51,9 +52,9 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link(atom()) ->
-			{ok, pid()} |
-			ignore |
-			{error, {already_started, pid()} | {shutdown, term()} | term()}.
+                        {ok, pid()} |
+                        ignore |
+                        {error, {already_started, pid()} | {shutdown, term()} | term()}.
 start_link(Inst_name) ->
     Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
     supervisor:start_link({local, Server_name}, ?MODULE, Inst_name).
@@ -77,33 +78,33 @@ start_link(Inst_name) ->
 init(Inst_name) ->
 
     SupFlags = #{strategy => one_for_one,
-		 intensity => 1,
-		 period => 5},
+                 intensity => 1,
+                 period => 5},
 
     Children = [
-		#{id => 'etsmgr_srv',
-		  start => {'etsmgr_srv', start_link, [Inst_name]},
-		  modules => ['etsmgr_srv']},
+                #{id => 'etsmgr_srv',
+                  start => {'etsmgr_srv', start_link, [Inst_name]},
+                  modules => ['etsmgr_srv']},
 
-		#{id => 'tspool_srv',
-		  start => {'tspool_srv', start_link, [Inst_name]},
-		  modules => ['tspool_srv']},
+                #{id => 'tspool_srv',
+                  start => {'tspool_srv', start_link, [Inst_name]},
+                  modules => ['tspool_srv']},
 
-		#{id => 'tspace_srv',
-		  start => {'tspace_srv', start_link, [Inst_name]},
-		  modules => ['tspace_srv']},
+                #{id => 'tspace_srv',
+                  start => {'tspace_srv', start_link, [Inst_name]},
+                  modules => ['tspace_srv']},
 
-		#{id => 'tspatt_srv',
-		  start => {'tspatt_srv', start_link, [Inst_name]},
-		  modules => ['tspatt_srv']},
+                #{id => 'tspatt_srv',
+                  start => {'tspatt_srv', start_link, [Inst_name]},
+                  modules => ['tspatt_srv']},
 
-		#{id => 'worker_sup',
-		  start => {'worker_sup', start_link, [Inst_name]},
-		  shutdown => infinity,
-		  type => supervisor,
-		  modules => ['wkpool_srv']}
+                #{id => 'worker_sup',
+                  start => {'worker_sup', start_link, [Inst_name]},
+                  shutdown => infinity,
+                  type => supervisor,
+                  modules => ['wkpool_srv']}
 
-	       ],
+               ],
 
     {ok, {SupFlags, Children}}.
 

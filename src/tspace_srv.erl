@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2018, Fred Youhanaie
@@ -129,12 +130,12 @@ init(Inst_name) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_call({get_tuple, tuple()} |
-		  {add_tuple, tuple()} |
-		  {del_tuple, reference()},
-		  pid(), term()) ->
-			 {reply, {nomatch}, term()} |
-			 {reply, {match, {reference(), list(), tuple()}, term()}} |
-			 {reply, done, term()}.
+                  {add_tuple, tuple()} |
+                  {del_tuple, reference()},
+                  pid(), term()) ->
+                         {reply, {nomatch}, term()} |
+                         {reply, {match, {reference(), list(), tuple()}, term()}} |
+                         {reply, done, term()}.
 
 handle_call({get_tuple, Pattern}, _From, State) ->
     Reply = handle_get_tuple(State#state.tspool, Pattern),
@@ -173,10 +174,10 @@ handle_cast(_Msg, State) ->
 -spec handle_continue(term(), term()) -> {noreply, term()} | {stop, term()}.
 handle_continue(init, State) ->
     case handle_wait4etsmgr(init, State) of
-	{ok, State2} ->
-	    {noreply, State2};
-	{error, Error} ->
-	    {stop, Error}
+        {ok, State2} ->
+            {noreply, State2};
+        {error, Error} ->
+            {stop, Error}
     end;
 
 handle_continue(_Continue, State) ->
@@ -205,15 +206,15 @@ handle_continue(_Continue, State) ->
                          {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info({'EXIT', Pid, _Reason}, State) ->
     case State#state.etsmgr_pid of
-	    Pid ->
-	    case handle_wait4etsmgr(recover, State) of
-		{ok, State2} ->
-		    {noreply, State2};
-		{error, Error} ->
-		    {stop, Error}
-	    end;
-	_Other_pid ->
-	    {noreply, State}
+            Pid ->
+            case handle_wait4etsmgr(recover, State) of
+                {ok, State2} ->
+                    {noreply, State2};
+                {error, Error} ->
+                    {stop, Error}
+            end;
+        _Other_pid ->
+            {noreply, State}
     end;
 
 handle_info({'ETS-TRANSFER', _Table_id, _From_pid, _Gift_data}, State) ->
@@ -253,12 +254,12 @@ terminate(_Reason, State) ->
 handle_get_tuple(TabId, Pattern) ->
     Match = ets:match(TabId, {'$0', Pattern}, 1),
     case Match of
-	'$end_of_table' ->  %% no match
-	    {nomatch};
-	{[[TabKey|Fields]],_Continuation} -> %% We only want one match, and we ignore the ets:match continuation
-	    [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
-	    Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
-	    Reply
+        '$end_of_table' ->  %% no match
+            {nomatch};
+        {[[TabKey|Fields]],_Continuation} -> %% We only want one match, and we ignore the ets:match continuation
+            [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
+            Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
+            Reply
     end.
 
 %%--------------------------------------------------------------------
@@ -296,15 +297,15 @@ handle_wait4etsmgr(Mode, State) ->
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
 
     Result = case Mode of
-		 init ->
-		     espace_util:wait4etsmgr(Inst_name, init, Table_name, ?TABLE_OPTS);
-		 recover ->
-		     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspool)
-	     end,
+                 init ->
+                     espace_util:wait4etsmgr(Inst_name, init, Table_name, ?TABLE_OPTS);
+                 recover ->
+                     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspool)
+             end,
 
     case Result of
-	{ok, Mgr_pid, Table_id} ->
-	    {ok, State#state{etsmgr_pid=Mgr_pid, tspool=Table_id}};
-	{error, Error} ->
-	    {error, Error}
+        {ok, Mgr_pid, Table_id} ->
+            {ok, State#state{etsmgr_pid=Mgr_pid, tspool=Table_id}};
+        {error, Error} ->
+            {error, Error}
     end.

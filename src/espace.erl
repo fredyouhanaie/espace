@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
@@ -49,15 +50,15 @@ start() ->
 -spec start(atom()) -> ok | {error, term()}.
 start(espace) ->
     application:start(espace);
-start(Inst_name) when is_atom(Inst_name)->
+start(Inst_name) when is_atom(Inst_name) ->
     %% retrieve the main app resource file
     {ok, [{application, espace, App_0}]} = file:consult(code:where_is_file("espace.app")),
 
     %% add the instance name suffix to the list of application servers
     {registered, Server_names_0} = lists:keyfind(registered, 1, App_0),
     Server_names_1 = lists:map(
-		       fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
-		       Server_names_0),
+                       fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
+                       Server_names_0),
     App_1 = lists:keyreplace(registered, 1, App_0, {registered, Server_names_1}),
 
     %% pass the instance name to the application as arg
@@ -365,11 +366,11 @@ do_esp(_Inst_name, []) ->
 
 do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
     case Cmd of
-	worker ->
-	    worker(Inst_name, Arg);
-	out ->
-	    out(Inst_name, Arg);
-	include ->
-	    infile(Inst_name, Arg)
+        worker ->
+            worker(Inst_name, Arg);
+        out ->
+            out(Inst_name, Arg);
+        include ->
+            infile(Inst_name, Arg)
     end,
     do_esp(Inst_name, Rest).

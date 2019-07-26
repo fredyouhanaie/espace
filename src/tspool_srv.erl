@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2017, Fred Youhanaie
@@ -53,8 +54,8 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link(atom()) -> ignore |
-			    {error, {already_started, pid()} | term()}|
-			    {ok, pid()}.
+                            {error, {already_started, pid()} | term()}|
+                            {ok, pid()}.
 start_link(Inst_name) ->
     gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
@@ -181,10 +182,10 @@ init(Inst_name) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_call({atom(), tuple()}, pid(), term()) ->
-			 {reply,
-			  {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
-			  term()
-			 }.
+                         {reply,
+                          {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
+                          term()
+                         }.
 handle_call({espace_in, Pattern}, From, State) ->
     handle_espace_op(espace_in, Pattern, From, State);
 
@@ -250,19 +251,19 @@ terminate(_Reason, _State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec espace_op(atom(), espace_in | espace_inp | espace_rd | espace_rdp, tuple()) ->
-		       {list(), tuple()} | nomatch.
+                       {list(), tuple()} | nomatch.
 espace_op(Inst_name, Espace_Op, Pattern) ->
     Reply = gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {Espace_Op, Pattern}),
     case Reply of
-	{match, Match} ->
-	    Match;
-	{nomatch} -> %% only from the inp and rdp operations
-	    nomatch;
-	{nomatch, Cli_ref} -> %% only from the in and rd operations
-	    receive
-		Cli_ref ->
-		    espace_op(Inst_name, Espace_Op, Pattern) % our tuple has arrived, try again!
-	    end
+        {match, Match} ->
+            Match;
+        {nomatch} -> %% only from the inp and rdp operations
+            nomatch;
+        {nomatch, Cli_ref} -> %% only from the in and rd operations
+            receive
+                Cli_ref ->
+                    espace_op(Inst_name, Espace_Op, Pattern) % our tuple has arrived, try again!
+            end
     end.
 
 %%--------------------------------------------------------------------
@@ -272,35 +273,35 @@ espace_op(Inst_name, Espace_Op, Pattern) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_espace_op(espace_in | espace_inp | espace_rd | espace_rdp, tuple(), pid(), term()) ->
-			      {reply,
-			       {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
-			       term()
-			      }.
+                              {reply,
+                               {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
+                               term()
+                              }.
 handle_espace_op(Espace_Op, Pattern, From, State) ->
     case tspace_srv:get_tuple(State#state.inst_name, Pattern) of
-	{nomatch} ->
-	    case Espace_Op of
-		espace_inp ->
-		    {reply, {nomatch}, State};
-		espace_rdp ->
-		    {reply, {nomatch}, State};
-		_ -> %% only "in" and "rd" should block on no match
-		    {Cli_pid, _} = From,  %% we use the pid to notify the client
-		    Cli_ref = make_ref(), %% the client should wait for this ref
-		    tspatt_srv:add_pattern(State#state.inst_name, Cli_ref, Pattern, Cli_pid),
-		    {reply, {nomatch, Cli_ref}, State}
-	    end;
-	{match, {TabKey, Fields, Tuple}} ->
-	    Reply = {match, {Fields, Tuple}},
-	    case Espace_Op of   %% "in" and "inp" should remove the tuple
-		espace_in ->
-		    tspace_srv:del_tuple(State#state.inst_name, TabKey);
-		espace_inp ->
-		    tspace_srv:del_tuple(State#state.inst_name, TabKey);
-		_ ->
-		    ok
-	    end,
-	    {reply, Reply, State}
+        {nomatch} ->
+            case Espace_Op of
+                espace_inp ->
+                    {reply, {nomatch}, State};
+                espace_rdp ->
+                    {reply, {nomatch}, State};
+                _ -> %% only "in" and "rd" should block on no match
+                    {Cli_pid, _} = From,  %% we use the pid to notify the client
+                    Cli_ref = make_ref(), %% the client should wait for this ref
+                    tspatt_srv:add_pattern(State#state.inst_name, Cli_ref, Pattern, Cli_pid),
+                    {reply, {nomatch, Cli_ref}, State}
+            end;
+        {match, {TabKey, Fields, Tuple}} ->
+            Reply = {match, {Fields, Tuple}},
+            case Espace_Op of   %% "in" and "inp" should remove the tuple
+                espace_in ->
+                    tspace_srv:del_tuple(State#state.inst_name, TabKey);
+                espace_inp ->
+                    tspace_srv:del_tuple(State#state.inst_name, TabKey);
+                _ ->
+                    ok
+            end,
+            {reply, Reply, State}
     end.
 
 %%--------------------------------------------------------------------

@@ -11,7 +11,7 @@
 %%% @end
 %%% Created : 10 Dec 2017 by Fred Youhanaie <fyrlang@anydata,co.uk>
 %%%-------------------------------------------------------------------
--module(worker_sup).
+-module(espace_worker_sup).
 
 -behaviour(supervisor).
 

@@ -1,7 +1,7 @@
 {application, espace,
  [{description, "Erlang tuple spaces (Linda)"},
   {vsn, "0.5.0"},
-  {registered, [espace_sup, tspool_srv, tspace_srv, tspatt_srv, worker_sup, etsmgr_srv] },
+  {registered, [espace_sup, espace_tspool_srv, espace_tspace_srv, espace_tspatt_srv, espace_worker_sup, etsmgr_srv] },
   {mod, { espace_app, espace}},
   {applications,
    [kernel,

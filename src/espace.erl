@@ -137,7 +137,7 @@ eval(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec eval(atom(), tuple()) -> pid().
 eval(Inst_name, Tuple) when is_tuple(Tuple) ->
-    tspool_srv:espace_eval(Inst_name, Tuple).
+    espace_tspool_srv:espace_eval(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -173,7 +173,7 @@ worker(MFA) when is_tuple(MFA) ->
 %%--------------------------------------------------------------------
 -spec worker(atom(), tuple()) -> pid().
 worker(Inst_name, MFA) when is_tuple(MFA) ->
-    tspool_srv:espace_worker(Inst_name, MFA).
+    espace_tspool_srv:espace_worker(Inst_name, MFA).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -215,7 +215,7 @@ in(Pattern) ->
 %%--------------------------------------------------------------------
 -spec in(atom(), tuple()) -> {list(), tuple()}.
 in(Inst_name, Pattern) ->
-    tspool_srv:espace_in(Inst_name, Pattern).
+    espace_tspool_srv:espace_in(Inst_name, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -245,7 +245,7 @@ inp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec inp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 inp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    tspool_srv:espace_inp(Inst_name, Pattern).
+    espace_tspool_srv:espace_inp(Inst_name, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -270,7 +270,7 @@ out(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec out(atom(), tuple()) -> done.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
-    tspool_srv:espace_out(Inst_name, Tuple).
+    espace_tspool_srv:espace_out(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -296,7 +296,7 @@ rd(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rd(atom(), tuple()) -> {list(), tuple()}.
 rd(Inst_name, Pattern) when is_tuple(Pattern) ->
-    tspool_srv:espace_rd(Inst_name, Pattern).
+    espace_tspool_srv:espace_rd(Inst_name, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -323,7 +323,7 @@ rdp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rdp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 rdp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    tspool_srv:espace_rdp(Inst_name, Pattern).
+    espace_tspool_srv:espace_rdp(Inst_name, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc

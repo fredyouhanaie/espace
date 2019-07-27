@@ -3,109 +3,107 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2018, Fred Youhanaie
 %%% @doc
-%%% Custodian for the tspatt, waiting patterns, ETS table.
+%%% This is the custodian `gen_server' for the tuple space ETS table.
 %%%
 %%% The table is created as a `set' and in `protected' mode. All
-%%% access to the table is expected to come through this server.
-%%% However, other proceses can inspect the contents of the table for
-%%% debugging purposes.
+%%% access to the table is expected to come through this server,
+%%% although other proceses can inspect the contents for debugging
+%%% purposes.
 %%%
-%%% The table keeps track of client processes that are blocked on `in'
-%%% or `rd' waiting for a tuple matching their pattern to be added to
-%%% the tuple space. In effect the ETS table is a pattern waiting
-%%% list.
-%%%
-%%% Our sole client is `tspace_srv'. Whenever an `in' or `rd'
-%%% operation does not find a match the client is given a unique key
-%%% to wait on, and that key along with the pattern and client's pid
-%%% is passed to us, via `add_pattern/4', to add to the waiting list.
-%%%
-%%% Whenever a new tuple is added to the tuple space, we will receive
-%%% a copy of the tuple, via `check_waitlist/2', to check against
-%%% waiting patterns. If we find a match, the correponding client(s)
-%%% will be notified of the new arrival.
-%%%
-%%% Communication from `tspace_srv' is unidirectional. Once it sends
-%%% us a request, it will continue with its own work. We never reply
-%%% to `tspace_srv'.
+%%% Each record has the form `{Ref, {Tuple}}', where `Ref' is a unique
+%%% key we generate before inserting the record, and `Tuple' is the
+%%% user supplied payload. For example if the tuple `{hello, 123}' is
+%%% added, then the inserted record will be
+%%% `{#Ref<0.3836483324.3974365186.86196>, {hello, 123}}'.
 %%%
 %%% The ETS table name used will reflect the `espace' instance
-%%% name. This will be `tspatt' for the default/unnamed instance, and
-%%% `tspatt_abc' for an instance named `abc'.
+%%% name. This will be `tspace' for the default/unnamed instance, and
+%%% `tspace_abc' for an instance named `abc'.
 %%%
 %%% The `etsmgr' application is used to add resiliency to the server
-%%% data, should the server restart while it is holding tuple
-%%% patterns.
+%%% data, should the server restart while it is holding tuple space
+%%% data.
 %%%
 %%% @end
-%%% Created : 12 Jan 2018 by Fred Youhanaie <fyrlang@anydata.co.uk>
+%%% Created : 10 Jan 2018 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
--module(tspatt_srv).
+-module(espace_tspace_srv).
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, check_waitlist/2, add_pattern/4]).
+-export([start_link/1, add_tuple/2, del_tuple/2, get_tuple/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
 -export([handle_continue/2, handle_info/2]).
 
 -define(SERVER, ?MODULE).
--define(TABLE_NAME, tspatt).
+-define(TABLE_NAME, espace_tspace).
 -define(TABLE_OPTS, [set, protected]).
 
--record(state, {inst_name, tspatt, etsmgr_pid}).
+-record(state, {inst_name, tspace_tabid, etsmgr_pid}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @doc Check a tuple against waiting patterns.
+%% @doc Add a new tuple to the tuple space ETS table.
 %%
-%% We check the newly added tuple against the existing client patterns
-%% using `ets:test_ms/2'. If a pattern is found, the waiting client(s)
-%% will be informed, via their `Pid' and `Cli_Ref', to retry the
-%% `in' or `rd' operation.
+%% The tuple is inserted with a unique `reference()' as the key.
 %%
-%% Once a client is notified, the pattern will be removed from the
-%% waiting list.
+%% Once the tuple is added it will trigger the `tspatt_srv' server to
+%% check for any waiting (blocking) clients whose `in'/`rd' pattern
+%% matches the newly inserted tuple. We do not wait for any replies
+%% from `tspatt_srv'.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec check_waitlist(atom(), tuple()) -> ok.
-check_waitlist(Inst_name, Tuple) ->
-    gen_server:cast(espace_util:inst_to_name(?SERVER, Inst_name), {check_tuple, Tuple}).
+-spec add_tuple(atom(), tuple()) -> done.
+add_tuple(Inst_name, Tuple) ->
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
 %%--------------------------------------------------------------------
-%% @doc Add a new pattern to the waiting list.
+%% @doc Remove the tuple referenced by the supplied unique key.
 %%
-%% We insert the `Pattern' along with the client's pid and unique ref
-%% in the ETS table.
+%% If the record does not exist, it will be ignored.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec add_pattern(atom(), reference(), tuple(), pid()) -> ok.
-add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
-    gen_server:cast(espace_util:inst_to_name(?SERVER, Inst_name), {add_pattern, Cli_ref, Pattern, Cli_pid}).
+-spec del_tuple(atom(), reference()) -> done.
+del_tuple(Inst_name, TabKey) ->
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
+
+%%--------------------------------------------------------------------
+%% @doc Lookup a tuple pattern in the tuple space ETS table.
+%%
+%% If no match is found, `{nomatch}' is returned.
+%%
+%% If a match is found, `{match, Key, List, Tuple}' is returned, where
+%% `Key' uniquely identifies the ETS record, `List' is the list of the
+%% `$N' elements referenced in the pattern, if any, and `Tuple' is the
+%% second part of the ETS record.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec get_tuple(atom(), tuple()) -> {nomatch} | {match, {reference(), list(), tuple()}}.
+get_tuple(Inst_name, Pattern) ->
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
+
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Starts the server
+%% Starts the server.
 %%
 %% We expect an instance name to be supplied, which will be used to
 %% uniquely identify the ETS table for the instance.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) -> ignore |
-                            {error, {already_started, pid()} | term()} |
-                            {ok, pid()}.
+-spec start_link(atom()) -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
 start_link(Inst_name) ->
-    Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
-    gen_server:start_link({local, Server_name}, ?MODULE, Inst_name, []).
-
+    gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -131,9 +129,24 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call(term(), pid(), term()) -> {reply, ok, term()}.
-handle_call(_Request, _From, State) ->
-    Reply = ok,
+-spec handle_call({get_tuple, tuple()} |
+                  {add_tuple, tuple()} |
+                  {del_tuple, reference()},
+                  pid(), term()) ->
+                         {reply, {nomatch}, term()} |
+                         {reply, {match, {reference(), list(), tuple()}, term()}} |
+                         {reply, done, term()}.
+
+handle_call({get_tuple, Pattern}, _From, State) ->
+    Reply = handle_get_tuple(State#state.tspace_tabid, Pattern),
+    {reply, Reply, State};
+
+handle_call({add_tuple, Tuple}, _From, State) ->
+    Reply = handle_add_tuple(State#state.inst_name, State#state.tspace_tabid, Tuple),
+    {reply, Reply, State};
+
+handle_call({del_tuple, TabKey}, _From, State) ->
+    Reply = handle_del_tuple(State#state.tspace_tabid, TabKey),
     {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
@@ -143,22 +156,16 @@ handle_call(_Request, _From, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_cast({atom(), tuple()}, term()) -> {noreply, term()}.
-handle_cast({check_tuple, Tuple}, State) ->
-    handle_check_tuple(State#state.tspatt, Tuple),
-    {noreply, State};
-
-handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
-    handle_add_pattern(State#state.tspatt, {Cli_ref, Pattern, Cli_pid}),
+-spec handle_cast(term(), term()) -> {noreply, term()}.
+handle_cast(_Msg, State) ->
     {noreply, State}.
-
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
 %% Handling continue requests.
 %%
-%% We use `{continue, init}' in `tspatt_srv:init/1' to ensure that
+%% We use `{continue, init}' from `tspace_srv:init/1' to ensure that
 %% `etsmgr' is started and is managing our ETS table before handling
 %% the first request.
 %%
@@ -199,7 +206,7 @@ handle_continue(_Continue, State) ->
                          {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info({'EXIT', Pid, _Reason}, State) ->
     case State#state.etsmgr_pid of
-            Pid ->
+        Pid ->
             case handle_wait4etsmgr(recover, State) of
                 {ok, State2} ->
                     {noreply, State2};
@@ -216,7 +223,6 @@ handle_info({'ETS-TRANSFER', _Table_id, _From_pid, _Gift_data}, State) ->
 handle_info(_Info, State) ->
     {noreply, State}.
 
-
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -227,7 +233,7 @@ handle_info(_Info, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec terminate(atom(), term()) -> ok.
+-spec terminate(term(), term()) -> ok.
 terminate(_Reason, State) ->
     Inst_name = State#state.inst_name,
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
@@ -239,48 +245,45 @@ terminate(_Reason, State) ->
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @doc
-%%
-%% check tuple against current pattern being waited for, by in or rd
-%% clients.
+%% @private
+%% @doc get_tuple handler.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec check_tuple(tuple(), ets:tid(), atom()) -> none.
-check_tuple(_Tuple, _TabId, '$end_of_table') ->
-    none;
-check_tuple(Tuple, TabId, Key) ->
-    [{Cli_ref, Pattern, Cli_pid}] = ets:lookup(TabId, Key),
-    case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
-        {ok, false} ->
-            nomatch;
-        _ ->
-            Cli_pid ! Cli_ref,
-            ets:delete(TabId, Key)
-    end,
-    check_tuple(Tuple, TabId, ets:next(TabId, Key)).
+-spec handle_get_tuple(ets:tab(), tuple()) -> {nomatch} | {match, tuple()}.
+handle_get_tuple(TabId, Pattern) ->
+    Match = ets:match(TabId, {'$0', Pattern}, 1),
+    case Match of
+        '$end_of_table' ->  %% no match
+            {nomatch};
+        {[[TabKey|Fields]],_Continuation} -> %% We only want one match, and we ignore the ets:match continuation
+            [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
+            Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
+            Reply
+    end.
 
 %%--------------------------------------------------------------------
 %% @private
-%% @doc handle the check_tuple cast.
+%% @doc add_tuple handler.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_check_tuple(ets:tabid(), tuple()) -> true.
-handle_check_tuple(TabId, Tuple) ->
-    ets:safe_fixtable(TabId, true), % we may be deleting records while scanning
-    check_tuple(Tuple, TabId, ets:first(TabId)),
-    ets:safe_fixtable(TabId, false).
+-spec handle_add_tuple(atom(), ets:tid(), tuple()) -> done.
+handle_add_tuple(Inst_name, TabId, Tuple) ->
+    ets:insert(TabId, {erlang:make_ref(), Tuple}),
+    espace_tspatt_srv:check_waitlist(Inst_name, Tuple),
+    done.
 
 %%--------------------------------------------------------------------
 %% @private
-%% @doc handle the add_pattern cast.
+%% @doc del_tuple handler.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_add_pattern(ets:tid(), tuple()) -> true.
-handle_add_pattern(TabId, Tuple) ->
-    ets:insert(TabId, Tuple).
+-spec handle_del_tuple(ets:tab(), reference()) -> done.
+handle_del_tuple(TabId, TabKey) ->
+    ets:delete(TabId, TabKey),
+    done.
 
 %%--------------------------------------------------------------------
 %% @doc wait for etsmgr to (re)start, ensure it manages our ETS table,
@@ -297,12 +300,12 @@ handle_wait4etsmgr(Mode, State) ->
                  init ->
                      espace_util:wait4etsmgr(Inst_name, init, Table_name, ?TABLE_OPTS);
                  recover ->
-                     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspatt)
+                     espace_util:wait4etsmgr(Inst_name, recover, Table_name, State#state.tspace_tabid)
              end,
 
     case Result of
         {ok, Mgr_pid, Table_id} ->
-            {ok, State#state{etsmgr_pid=Mgr_pid, tspatt=Table_id}};
+            {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id}};
         {error, Error} ->
             {error, Error}
     end.

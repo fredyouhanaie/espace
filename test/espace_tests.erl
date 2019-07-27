@@ -166,7 +166,7 @@ etsmgr_tspace_2_test() ->
 
     Tuple_2 = {goodbye, 2},
     espace:out(Tuple_2),
-    erlang:exit(whereis(tspace_srv), kill),
+    erlang:exit(whereis(espace_tspace_srv), kill),
     timer:sleep(10),
     {[], Tuple_2} = espace:in(Tuple_2),
 

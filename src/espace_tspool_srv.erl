@@ -29,7 +29,7 @@
 %%% @end
 %%% Created :  9 Dec 2017 by Fred Youhanaie <fyrlang@anydata.co.uk>
 %%%-------------------------------------------------------------------
--module(tspool_srv).
+-module(espace_tspool_srv).
 
 -behaviour(gen_server).
 
@@ -172,7 +172,7 @@ espace_rdp(Inst_name, Pattern) ->
 -spec init(atom()) -> {ok, #state{inst_name::atom(), workersup::atom()}}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
-    {ok, #state{inst_name=Inst_name, workersup=espace_util:inst_to_name(worker_sup, Inst_name)}}.
+    {ok, #state{inst_name=Inst_name, workersup=espace_util:inst_to_name(espace_worker_sup, Inst_name)}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -199,7 +199,7 @@ handle_call({espace_rdp, Pattern}, From, State) ->
     handle_espace_op(espace_rdp, Pattern, From, State);
 
 handle_call({espace_out, Tuple}, _From, State) ->
-    Reply = tspace_srv:add_tuple(State#state.inst_name, Tuple),
+    Reply = espace_tspace_srv:add_tuple(State#state.inst_name, Tuple),
     {reply, Reply, State};
 
 handle_call({espace_eval, Tuple}, _From, State) ->
@@ -278,7 +278,7 @@ espace_op(Inst_name, Espace_Op, Pattern) ->
                                term()
                               }.
 handle_espace_op(Espace_Op, Pattern, From, State) ->
-    case tspace_srv:get_tuple(State#state.inst_name, Pattern) of
+    case espace_tspace_srv:get_tuple(State#state.inst_name, Pattern) of
         {nomatch} ->
             case Espace_Op of
                 espace_inp ->
@@ -288,16 +288,16 @@ handle_espace_op(Espace_Op, Pattern, From, State) ->
                 _ -> %% only "in" and "rd" should block on no match
                     {Cli_pid, _} = From,  %% we use the pid to notify the client
                     Cli_ref = make_ref(), %% the client should wait for this ref
-                    tspatt_srv:add_pattern(State#state.inst_name, Cli_ref, Pattern, Cli_pid),
+                    espace_tspatt_srv:add_pattern(State#state.inst_name, Cli_ref, Pattern, Cli_pid),
                     {reply, {nomatch, Cli_ref}, State}
             end;
         {match, {TabKey, Fields, Tuple}} ->
             Reply = {match, {Fields, Tuple}},
             case Espace_Op of   %% "in" and "inp" should remove the tuple
                 espace_in ->
-                    tspace_srv:del_tuple(State#state.inst_name, TabKey);
+                    espace_tspace_srv:del_tuple(State#state.inst_name, TabKey);
                 espace_inp ->
-                    tspace_srv:del_tuple(State#state.inst_name, TabKey);
+                    espace_tspace_srv:del_tuple(State#state.inst_name, TabKey);
                 _ ->
                     ok
             end,

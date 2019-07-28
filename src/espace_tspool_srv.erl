@@ -17,8 +17,8 @@
 %%% tuple.
 %%%
 %%% For the tuple space data operations, i.e. `in', `rd', `inp', `rdp'
-%%% and `out', the request is passed to the `tspace_srv' server, which
-%%% in turn will process the request.
+%%% and `out', the request is passed to the `espace_tspace_srv'
+%%% server, which in turn will process the request.
 %%%
 %%% The patterns supplied with the input operators should be
 %%% compatible with `ets:match/2,3' match patterns. When match is
@@ -93,11 +93,13 @@ espace_worker(Inst_name, MFA) ->
 %% @doc
 %% Perform an `out' operation.
 %%
-%% Sends supplied `Tuple' to `tspace_srv' to be stored in the ETS table.
+%% Sends supplied `Tuple' to `espace_tspace_srv' to be stored in the
+%% ETS table.
 %%
-%% `tspace_srv' will in turn trigger `tspatt_srv' to inform any
-%% `in'/`rd' clients that may be blocking on such tuple. The blocking
-%% mechanisim is implemented internally in this module, see `espace_op/3'.
+%% `espace_tspace_srv' will in turn trigger `espace_tspatt_srv' to
+%% inform any `in'/`rd' clients that may be blocking on such
+%% tuple. The blocking mechanisim is implemented internally in this
+%% module, see `espace_op/3'.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -109,10 +111,10 @@ espace_out(Inst_name, Tuple) ->
 %% @doc
 %% Perform an `in' operation.
 %%
-%% The request is passed to `tspace_srv' to search for `Pattern', if
-%% found, the data is returned, otherwise we block until a matching
-%% tuple is added to the tuple space via `out'. The matched tuple will
-%% be removed from the tuple space.
+%% The request is passed to `espace_tspace_srv' to search for
+%% `Pattern', if found, the data is returned, otherwise we block until
+%% a matching tuple is added to the tuple space via `out'. The matched
+%% tuple will be removed from the tuple space.
 %%
 %% @end
 %%--------------------------------------------------------------------

@@ -3,7 +3,7 @@
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2018, Fred Youhanaie
 %%% @doc
-%%% Custodian for the tspatt, waiting patterns, ETS table.
+%%% Custodian for the `espace_tspatt', waiting patterns, ETS table.
 %%%
 %%% The table is created as a `set' and in `protected' mode. All
 %%% access to the table is expected to come through this server.
@@ -15,7 +15,7 @@
 %%% the tuple space. In effect the ETS table is a pattern waiting
 %%% list.
 %%%
-%%% Our sole client is `tspace_srv'. Whenever an `in' or `rd'
+%%% Our sole client is `espace_tspace_srv'. Whenever an `in' or `rd'
 %%% operation does not find a match the client is given a unique key
 %%% to wait on, and that key along with the pattern and client's pid
 %%% is passed to us, via `add_pattern/4', to add to the waiting list.
@@ -25,13 +25,13 @@
 %%% waiting patterns. If we find a match, the correponding client(s)
 %%% will be notified of the new arrival.
 %%%
-%%% Communication from `tspace_srv' is unidirectional. Once it sends
-%%% us a request, it will continue with its own work. We never reply
-%%% to `tspace_srv'.
+%%% Communication from `espace_tspace_srv' is unidirectional. Once it
+%%% sends us a request, it will continue with its own work. We never
+%%% reply to `espace_tspace_srv'.
 %%%
 %%% The ETS table name used will reflect the `espace' instance
-%%% name. This will be `tspatt' for the default/unnamed instance, and
-%%% `tspatt_abc' for an instance named `abc'.
+%%% name. This will be `espace_tspatt' for the default/unnamed instance, and
+%%% `espace_tspatt_abc' for an instance named `abc'.
 %%%
 %%% The `etsmgr' application is used to add resiliency to the server
 %%% data, should the server restart while it is holding tuple
@@ -158,7 +158,7 @@ handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
 %% @doc
 %% Handling continue requests.
 %%
-%% We use `{continue, init}' in `tspatt_srv:init/1' to ensure that
+%% We use `{continue, init}' in `espace_tspatt_srv:init/1' to ensure that
 %% `etsmgr' is started and is managing our ETS table before handling
 %% the first request.
 %%

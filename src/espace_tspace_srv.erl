@@ -17,8 +17,8 @@
 %%% `{#Ref<0.3836483324.3974365186.86196>, {hello, 123}}'.
 %%%
 %%% The ETS table name used will reflect the `espace' instance
-%%% name. This will be `tspace' for the default/unnamed instance, and
-%%% `tspace_abc' for an instance named `abc'.
+%%% name. This will be `espace_tspace' for the default/unnamed
+%%% instance, and `espace_tspace_abc' for an instance named `abc'.
 %%%
 %%% The `etsmgr' application is used to add resiliency to the server
 %%% data, should the server restart while it is holding tuple space
@@ -53,10 +53,10 @@
 %%
 %% The tuple is inserted with a unique `reference()' as the key.
 %%
-%% Once the tuple is added it will trigger the `tspatt_srv' server to
-%% check for any waiting (blocking) clients whose `in'/`rd' pattern
-%% matches the newly inserted tuple. We do not wait for any replies
-%% from `tspatt_srv'.
+%% Once the tuple is added it will trigger the `espace_tspatt_srv'
+%% server to check for any waiting (blocking) clients whose `in'/`rd'
+%% pattern matches the newly inserted tuple. We do not wait for any
+%% replies from `espace_tspatt_srv'.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -165,7 +165,7 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% Handling continue requests.
 %%
-%% We use `{continue, init}' from `tspace_srv:init/1' to ensure that
+%% We use `{continue, init}' from `espace_tspace_srv:init/1' to ensure that
 %% `etsmgr' is started and is managing our ETS table before handling
 %% the first request.
 %%

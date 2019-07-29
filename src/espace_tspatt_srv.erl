@@ -132,7 +132,9 @@ init(Inst_name) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_call(term(), pid(), term()) -> {reply, ok, term()}.
-handle_call(_Request, _From, State) ->
+handle_call(Request, From, State) ->
+    logger:warning("~p:handle_call: Unexpected request=~p, from pid=~p, ignored.",
+                   [?SERVER, Request, From]),
     Reply = ok,
     {reply, Reply, State}.
 
@@ -150,6 +152,11 @@ handle_cast({check_tuple, Tuple}, State) ->
 
 handle_cast({add_pattern, Cli_ref, Pattern, Cli_pid}, State) ->
     handle_add_pattern(State#state.tspatt_tabid, {Cli_ref, Pattern, Cli_pid}),
+    {noreply, State};
+
+handle_cast(Request, State) ->
+    logger:warning("~p:handle_cast: Unexpected request=~p, ignored.",
+                   [?SERVER, Request]),
     {noreply, State}.
 
 
@@ -173,7 +180,9 @@ handle_continue(init, State) ->
             {stop, Error}
     end;
 
-handle_continue(_Continue, State) ->
+handle_continue(Request, State) ->
+    logger:warning("~p:handle_continue: Unexpected request=~p, ignored.",
+                   [?SERVER, Request]),
     {noreply, State}.
 
 
@@ -197,24 +206,31 @@ handle_continue(_Continue, State) ->
                          {noreply, NewState :: term(), Timeout :: timeout()} |
                          {noreply, NewState :: term(), hibernate} |
                          {stop, Reason :: normal | term(), NewState :: term()}.
-handle_info({'EXIT', Pid, _Reason}, State) ->
+handle_info({'EXIT', Pid, Reason}, State) ->
     Mgr_pid = State#state.etsmgr_pid,
     case Pid of
         Mgr_pid ->
+            logger:warning("~p: etsmgr (~p) has died, reason=~p, waiting for restart.",
+                           [?SERVER, Pid, Reason]),
             case handle_wait4etsmgr(recover, State) of
                 {ok, State2} ->
+                    logger:notice("~p: etsmgr has recovered.", [?SERVER]),
                     {noreply, State2};
                 {error, Error} ->
                     {stop, Error}
             end;
         _Other_pid ->
+            logger:warning("~p: unexpected EXIT from pid=~p, reason=~p, ignored.",
+                           [?SERVER, Pid, Reason]),
             {noreply, State}
     end;
 
-handle_info({'ETS-TRANSFER', _Table_id, _From_pid, _Gift_data}, State) ->
+handle_info({'ETS-TRANSFER', Table_id, From_pid, Gift_data}, State) ->
+    logger:notice("~p:ETS-TRANSFER tabid=~p, from=~p, gift_data=~p.", [?SERVER, Table_id, From_pid, Gift_data]),
     {noreply, State};
 
-handle_info(_Info, State) ->
+handle_info(Info, State) ->
+    logger:warning("~p:handle_info: Unexpected message=~p, ignored.", [?SERVER, Info]),
     {noreply, State}.
 
 
@@ -229,7 +245,8 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(atom(), term()) -> ok.
-terminate(_Reason, State) ->
+terminate(Reason, State) ->
+    logger:notice("~p: terminating, reason=~p, state=~p.", [?SERVER, Reason, State]),
     Inst_name = State#state.inst_name,
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
     etsmgr:del_table(Inst_name, Table_name),

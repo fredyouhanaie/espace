@@ -37,7 +37,7 @@
 -export([start_link/1, espace_eval/2, espace_out/2, espace_in/2, espace_rd/2, espace_inp/2, espace_rdp/2, espace_worker/2]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
 -define(SERVER, ?MODULE).
 
@@ -214,6 +214,12 @@ handle_call({espace_worker, {M, F, A}}, _From, State) ->
 
 handle_call({espace_worker, {Fun, Args}}, _From, State) ->
     Reply = handle_espace_worker(State#state.workersup, {Fun, Args}),
+    {reply, Reply, State};
+
+handle_call(Request, From, State) ->
+    logger:warning("~p:handle_call: Unexpected request=~p, from pid=~p, ignored.",
+                   [?SERVER, Request, From]),
+    Reply = ok,
     {reply, Reply, State}.
 
 
@@ -225,8 +231,26 @@ handle_call({espace_worker, {Fun, Args}}, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_cast(term(), term()) -> {noreply, term()}.
-handle_cast(_Msg, State) ->
+handle_cast(Request, State) ->
+    logger:warning("~p:handle_cast: Unexpected request=~p, ignored.",
+                   [?SERVER, Request]),
     {noreply, State}.
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling all non call/cast messages
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec handle_info(Info :: timeout() | term(), State :: term()) ->
+                         {noreply, NewState :: term()} |
+                         {noreply, NewState :: term(), Timeout :: timeout()} |
+                         {noreply, NewState :: term(), hibernate} |
+                         {stop, Reason :: normal | term(), NewState :: term()}.
+handle_info(Info, State) ->
+    logger:warning("~p:handle_info: Unexpected message=~p, ignored.", [?SERVER, Info]),
+    {noreply, State}.
+
 
 %%--------------------------------------------------------------------
 %% @private
@@ -239,7 +263,8 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(atom(), term()) -> ok.
-terminate(_Reason, _State) ->
+terminate(Reason, State) ->
+    logger:notice("~p: terminating, reason=~p, state=~p.", [?SERVER, Reason, State]),
     ok.
 
 %%%===================================================================

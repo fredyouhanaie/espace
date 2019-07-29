@@ -85,6 +85,7 @@ init(_Inst_name) ->
 %%--------------------------------------------------------------------
 -spec run_child(atom(), atom(), list()) -> {ok, pid()}.
 run_child(M, F, A) ->
+    logger:info("~p:run_child M=~p, F=~p, A=~p.", [?SERVER, M, F, A]),
     {ok, spawn_link(M, F, A)}.
 
 %%--------------------------------------------------------------------
@@ -97,9 +98,11 @@ run_child(M, F, A) ->
 %%--------------------------------------------------------------------
 -spec run_child(string() | function(), list()) -> {ok, pid()}.
 run_child(Fun, Args) when is_function(Fun) ->
+    logger:info("~p:run_child Fun=~p, Args=~p.", [?SERVER, Fun, Args]),
     {ok, spawn_link(erlang, apply, [Fun, Args])};
 
 run_child(Fun, Args) ->
+    logger:info("~p:run_child Fun=~p, Args=~p.", [?SERVER, Fun, Args]),
     {ok, Tokens, _} = erl_scan:string(Fun),
     {ok, Parsed} = erl_parse:parse_exprs(Tokens),
     {value, F, _} = erl_eval:exprs(Parsed, []),

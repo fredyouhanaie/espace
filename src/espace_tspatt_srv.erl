@@ -198,8 +198,9 @@ handle_continue(_Continue, State) ->
                          {noreply, NewState :: term(), hibernate} |
                          {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info({'EXIT', Pid, _Reason}, State) ->
-    case State#state.etsmgr_pid of
-        Pid ->
+    Mgr_pid = State#state.etsmgr_pid,
+    case Pid of
+        Mgr_pid ->
             case handle_wait4etsmgr(recover, State) of
                 {ok, State2} ->
                     {noreply, State2};

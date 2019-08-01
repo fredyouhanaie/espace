@@ -57,12 +57,13 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {ok, {map(), [map()]}}.
+-spec init(atom()) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}} |
+                      ignore.
 init(_Inst_name) ->
 
     SupFlags = #{strategy => simple_one_for_one,
-                 intensity => 1,  %% TODO needs tuning
-                 period => 5},    %% TODO needs tuning
+                 intensity => 1,
+                 period => 5},
 
     AChild = #{id => tsworker,
                start => {?MODULE, run_child, []},

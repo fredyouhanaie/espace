@@ -183,7 +183,7 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call({atom(), tuple()}, pid(), term()) ->
+-spec handle_call({atom(), tuple()}, {pid(), term()}, term()) ->
                          {reply,
                           {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}},
                           term()
@@ -242,11 +242,10 @@ handle_cast(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_info(Info :: timeout() | term(), State :: term()) ->
-                         {noreply, NewState :: term()} |
-                         {noreply, NewState :: term(), Timeout :: timeout()} |
-                         {noreply, NewState :: term(), hibernate} |
-                         {stop, Reason :: normal | term(), NewState :: term()}.
+-spec handle_info(timeout() | term(), term()) -> {noreply, term(), hibernate} |
+                                                 {noreply, term(), timeout()} |
+                                                 {noreply, term()} |
+                                                 {stop, normal | term(), term()}.
 handle_info(Info, State) ->
     logger:warning("~p:handle_info: Unexpected message=~p, ignored.", [?SERVER, Info]),
     {noreply, State}.

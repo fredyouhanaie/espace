@@ -51,10 +51,7 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) ->
-                        {ok, pid()} |
-                        ignore |
-                        {error, {already_started, pid()} | {shutdown, term()} | term()}.
+-spec start_link(atom()) -> supervisor:startink_ret().
 start_link(Inst_name) ->
     Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
     supervisor:start_link({local, Server_name}, ?MODULE, Inst_name).
@@ -74,7 +71,9 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {ok, {map(), [map()]}}.
+-spec init(atom()) -> {ok, {supervisor:sup_flags(),
+                            [supervisor:child_spec()]}} |
+                      ignore.
 init(Inst_name) ->
 
     SupFlags = #{strategy => one_for_one,

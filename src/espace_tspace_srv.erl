@@ -101,7 +101,9 @@ get_tuple(Inst_name, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) -> {ok, pid()} | ignore | {error, {already_started, pid()} | term()}.
+-spec start_link(atom()) -> {ok, pid()} |
+                            ignore |
+                            {error, {already_started, pid()} | term()}.
 start_link(Inst_name) ->
     gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
 
@@ -116,7 +118,12 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {ok, term(), term()}.
+-spec init(atom()) -> ignore |
+                      {ok, term(), hibernate} |
+                      {ok, term(), timeout()} |
+                      {ok, term(), {continue, term()}} |
+                      {ok, term()} |
+                      {stop, term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     {ok, #state{inst_name=Inst_name}, {continue, init}}.
@@ -129,14 +136,14 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call({get_tuple, tuple()} |
-                  {add_tuple, tuple()} |
-                  {del_tuple, reference()},
-                  pid(), term()) ->
-                         {reply, {nomatch}, term()} |
-                         {reply, {match, {reference(), list(), tuple()}, term()}} |
-                         {reply, done, term()}.
-
+-spec handle_call({get_tuple, tuple()} | {add_tuple, tuple()} | {del_tuple, reference()},
+                  {pid(), term()}, term()) ->
+                         {noreply, term(), hibernate | timeout() | {continue, term()}} |
+                         {noreply, term()} |
+                         {reply, term(), term(), hibernate | timeout() | {continue, term()}} |
+                         {reply, term(), term()} |
+                         {stop, term(), term(), term()} |
+                         {stop, term(), term()}.
 handle_call({get_tuple, Pattern}, _From, State) ->
     Reply = handle_get_tuple(State#state.tspace_tabid, Pattern),
     {reply, Reply, State};
@@ -179,7 +186,11 @@ handle_cast(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_continue(term(), term()) -> {noreply, term()} | {stop, term()}.
+-spec handle_continue(term(), term()) -> {noreply, term(), hibernate} |
+                                         {noreply, term(), timeout()} |
+                                         {noreply, term(), {continue, term()}} |
+                                         {noreply, term()} |
+                                         {stop, term(), term()}.
 handle_continue(init, State) ->
     case handle_wait4etsmgr(init, State) of
         {ok, State2} ->
@@ -209,11 +220,10 @@ handle_continue(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_info(Info :: timeout() | term(), State :: term()) ->
-                         {noreply, NewState :: term()} |
-                         {noreply, NewState :: term(), Timeout :: timeout()} |
-                         {noreply, NewState :: term(), hibernate} |
-                         {stop, Reason :: normal | term(), NewState :: term()}.
+-spec handle_info(timeout() | term(), term()) -> {noreply, term(), hibernate} |
+                                                 {noreply, term(), timeout()} |
+                                                 {noreply, term()} |
+                                                 {stop, normal | term(), term()}.
 handle_info({'EXIT', Pid, Reason}, State) ->
     Mgr_pid = State#state.etsmgr_pid,
     case Pid of

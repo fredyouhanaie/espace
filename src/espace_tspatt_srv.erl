@@ -118,7 +118,12 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> {ok, term(), term()}.
+-spec init(atom()) -> ignore |
+                      {ok, term(), hibernate} |
+                      {ok, term(), timeout()} |
+                      {ok, term(), {continue, term()}} |
+                      {ok, term()} |
+                      {stop, term()}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     {ok, #state{inst_name=Inst_name}, {continue, init}}.
@@ -131,7 +136,7 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call(term(), pid(), term()) -> {reply, ok, term()}.
+-spec handle_call(term(), {pid(), term()}, term()) -> {reply, ok, term()}.
 handle_call(Request, From, State) ->
     logger:warning("~p:handle_call: Unexpected request=~p, from pid=~p, ignored.",
                    [?SERVER, Request, From]),
@@ -171,7 +176,11 @@ handle_cast(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_continue(term(), term()) -> {noreply, term()} | {stop, term()}.
+-spec handle_continue(term(), term()) -> {noreply, term(), hibernate} |
+                                         {noreply, term(), timeout()} |
+                                         {noreply, term(), {continue, term()} } |
+                                         {noreply, term()} |
+                                         {stop, term(), term()}.
 handle_continue(init, State) ->
     case handle_wait4etsmgr(init, State) of
         {ok, State2} ->
@@ -201,11 +210,10 @@ handle_continue(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_info(Info :: timeout() | term(), State :: term()) ->
-                         {noreply, NewState :: term()} |
-                         {noreply, NewState :: term(), Timeout :: timeout()} |
-                         {noreply, NewState :: term(), hibernate} |
-                         {stop, Reason :: normal | term(), NewState :: term()}.
+-spec handle_info(timeout() | term(), term()) -> {noreply, term()} |
+                                                 {noreply, term(), hibernate} |
+                                                 {noreply, term(), timeout()} |
+                                                 {stop, normal | term(), term()}.
 handle_info({'EXIT', Pid, Reason}, State) ->
     Mgr_pid = State#state.etsmgr_pid,
     case Pid of

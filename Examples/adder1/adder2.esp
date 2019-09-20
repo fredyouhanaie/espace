@@ -1,0 +1,19 @@
+
+%% this is the adder example for Elixir
+
+%% The erlang terms syntax should be used here
+
+% start the worker processes
+% note the use of 'Elixir.' prefix for the module name
+{worker, {'Elixir.Adder2', add, []}}.	% worker one
+{worker, {'Elixir.Adder2', sum, []}}.	% worker two
+
+% initial set of numbers
+%
+{out, {add, 1, 2}}.
+{out, {add, 2, 3}}.
+{out, {add, 3, 5}}.
+
+% read more numbers to be added together.
+%
+{include, "adder1a.esp"}.

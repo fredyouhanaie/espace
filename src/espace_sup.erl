@@ -85,10 +85,6 @@ init(Inst_name) ->
                   start => {'etsmgr_srv', start_link, [Inst_name]},
                   modules => ['etsmgr_srv']},
 
-                #{id => 'espace_tspool_srv',
-                  start => {'espace_tspool_srv', start_link, [Inst_name]},
-                  modules => ['espace_tspool_srv']},
-
                 #{id => 'espace_tspace_srv',
                   start => {'espace_tspace_srv', start_link, [Inst_name]},
                   modules => ['espace_tspace_srv']},

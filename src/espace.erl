@@ -226,7 +226,7 @@ in(Pattern) ->
 %%--------------------------------------------------------------------
 -spec in(atom(), tuple()) -> {list(), tuple()}.
 in(Inst_name, Pattern) ->
-    espace_tspool_srv:espace_in(Inst_name, Pattern).
+    espace_op(Inst_name, in, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -256,7 +256,7 @@ inp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec inp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 inp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_tspool_srv:espace_inp(Inst_name, Pattern).
+    espace_op(Inst_name, inp, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -281,7 +281,7 @@ out(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec out(atom(), tuple()) -> done.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
-    espace_tspool_srv:espace_out(Inst_name, Tuple).
+    espace_tspace_srv:add_tuple(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -307,7 +307,7 @@ rd(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rd(atom(), tuple()) -> {list(), tuple()}.
 rd(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_tspool_srv:espace_rd(Inst_name, Pattern).
+    espace_op(Inst_name, rd, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -334,7 +334,7 @@ rdp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rdp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 rdp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_tspool_srv:espace_rdp(Inst_name, Pattern).
+    espace_op(Inst_name, rdp, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -415,3 +415,34 @@ run_child(Fun, Args) ->
     {ok, Parsed} = erl_parse:parse_exprs(Tokens),
     {value, F, _} = erl_eval:exprs(Parsed, []),
     {ok, spawn(erlang, apply, [F, Args])}.
+
+
+%%--------------------------------------------------------------------
+%% @doc Perform one of the input ops, in/rd/inp/rdp.
+%%
+%% If a match is found we return the matched data.
+%%
+%% If a match is not found we expect to the `{nomatch, Cli_Ref}'
+%% return value from the `tspace' server. For the blocking operations,
+%% `in' and `rd', in which case we will wait indefinitely for the
+%% `Cli_ref' message. Once we receive the message we try the operation
+%% again.
+%%
+%% For the non-blocking operations, `inp' and `rdp', we just return
+%% `nomatch' to the client.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec espace_op(atom(), in|rd|inp|rdp, tuple()) -> nomatch | {list(), tuple()}.
+espace_op(Inst_name, Espace_op, Pattern) ->
+    case espace_tspace_srv:get_tuple(Inst_name, Espace_op, Pattern) of
+        {nomatch} ->
+            nomatch;
+        {nomatch, Cli_ref} ->
+            receive
+                Cli_ref ->
+                    espace_op(Inst_name, Espace_op, Pattern)
+            end;
+        {match, {Fields, Tuple}} ->
+            {Fields, Tuple}
+    end.

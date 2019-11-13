@@ -32,7 +32,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, add_tuple/2, del_tuple/2, get_tuple/2]).
+-export([start_link/1, add_tuple/2, del_tuple/2, get_tuple/3]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
@@ -87,9 +87,9 @@ del_tuple(Inst_name, TabKey) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec get_tuple(atom(), tuple()) -> {nomatch} | {match, {reference(), list(), tuple()}}.
-get_tuple(Inst_name, Pattern) ->
-    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Pattern}).
+-spec get_tuple(atom(), in|rd|inp|rdp, tuple()) -> {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
+get_tuple(Inst_name, Espace_op, Pattern) ->
+    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Espace_op, Pattern}).
 
 
 %%--------------------------------------------------------------------
@@ -144,8 +144,8 @@ init(Inst_name) ->
                          {reply, term(), term()} |
                          {stop, term(), term(), term()} |
                          {stop, term(), term()}.
-handle_call({get_tuple, Pattern}, _From, State) ->
-    Reply = handle_get_tuple(State#state.tspace_tabid, Pattern),
+handle_call({get_tuple, Espace_op, Pattern}, _From={Cli_pid,_}, State) ->
+    Reply = handle_get_tuple(State, Espace_op, Pattern, Cli_pid),
     {reply, Reply, State};
 
 handle_call({add_tuple, Tuple}, _From, State) ->
@@ -279,17 +279,39 @@ terminate(Reason, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_get_tuple(ets:tab(), tuple()) -> {nomatch} | {match, tuple()}.
-handle_get_tuple(TabId, Pattern) ->
+-spec handle_get_tuple(term(), in|rd|inp|rdp, tuple(), pid()) ->
+                              {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
+handle_get_tuple(State, Espace_op, Pattern, Cli_pid) ->
+    TabId = State#state.tspace_tabid,
     Match = ets:match(TabId, {'$0', Pattern}, 1),
     case Match of
         '$end_of_table' ->  %% no match
-            {nomatch};
+            case Espace_op of
+                inp ->
+                    {nomatch};
+                rdp ->
+                    {nomatch};
+                _ -> %% only "in" and "rd" should block on no match
+                    Cli_ref = make_ref(), %% the client should wait for this ref
+                    Inst_name = State#state.inst_name,
+                    espace_tspatt_srv:add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid),
+                    {nomatch, Cli_ref}
+            end;
+
         {[[TabKey|Fields]],_Continuation} -> %% We only want one match, and we ignore the ets:match continuation
             [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
-            Reply = {match, {TabKey, Fields, Tuple}}, %% Fields may contain data, if Pattern had '$N'
-            Reply
+            case Espace_op of   %% "in" and "inp" should remove the tuple
+                in ->
+                    handle_del_tuple(TabId, TabKey);
+                inp ->
+                    handle_del_tuple(TabId, TabKey);
+                _ ->
+                    ok
+            end,
+            {match, {Fields, Tuple}} %% Fields may contain data, if Pattern had '$N'
+
     end.
+
 
 %%--------------------------------------------------------------------
 %% @private

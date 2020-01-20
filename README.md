@@ -32,11 +32,16 @@ application. It will be merged with the master branch in due course.
   two gen_servers, plus `etsmgr`. However, the use of `etsmgr` will be
   provided as a startup option in future.
 
+* microbenchmarks have been added for the various `espace`
+  operations. The benchmark modules are kept in the `bench/`
+  directory. They can be produced with `rebar3 bench -d bench`.
+
 ## Less resent changes
 
 * The [`etsmgr`](https://github.com/fredyouhanaie/etsmgr) application
   is used to ensure the tuple space and pattern data held in ETS
   tables survive the server restarts.
+
 * As we have started using the `handle_continue` callback of
   gen_server, we can only support OTP versions from 21.0 onwards.
 
@@ -48,15 +53,6 @@ application. It will be merged with the master branch in due course.
   documentation for `espace:eval/1,2` for details.
 * A new module has been created `espace_util`, which contains the
   current, and future, support functions.
-
-* The `worker` function now returns the pid of the child process.
-* The `out` operation is now synchronous, `out` will not return until
-  after the tuple has been inserted in the tuple space.
-* A separate
-  [examples](https://github.com/fredyouhanaie/espace-examples)
-  repository has been created to host larger examples,
-* Instead of single `espace` application on a node, you can now create
-  multiple, independent, named instances on the same node.
 
 ## Upcoming changes
 
@@ -94,6 +90,10 @@ rebar3 dialyzer
 * To generate the documentation:
 ```
 rebar3 edoc
+```
+* To produce the microbenchmarks:
+```
+rebar3 bench -d bench
 ```
 
 ## To try out the application

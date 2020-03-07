@@ -32,7 +32,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, add_tuple/2, del_tuple/2, get_tuple/3]).
+-export([start_link/1, add_tuple/2, get_tuple/3]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, terminate/2]).
@@ -64,16 +64,6 @@
 add_tuple(Inst_name, Tuple) ->
     gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
-%%--------------------------------------------------------------------
-%% @doc Remove the tuple referenced by the supplied unique key.
-%%
-%% If the record does not exist, it will be ignored.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec del_tuple(atom(), reference()) -> done.
-del_tuple(Inst_name, TabKey) ->
-    gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {del_tuple, TabKey}).
 
 %%--------------------------------------------------------------------
 %% @doc Lookup a tuple pattern in the tuple space ETS table.
@@ -136,7 +126,7 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call({get_tuple, tuple()} | {add_tuple, tuple()} | {del_tuple, reference()},
+-spec handle_call({get_tuple, tuple()} | {add_tuple, tuple()},
                   {pid(), term()}, term()) ->
                          {noreply, term(), hibernate | timeout() | {continue, term()}} |
                          {noreply, term()} |
@@ -152,9 +142,6 @@ handle_call({add_tuple, Tuple}, _From, State) ->
     Reply = handle_add_tuple(State#state.inst_name, State#state.tspace_tabid, Tuple),
     {reply, Reply, State};
 
-handle_call({del_tuple, TabKey}, _From, State) ->
-    Reply = handle_del_tuple(State#state.tspace_tabid, TabKey),
-    {reply, Reply, State};
 
 handle_call(Request, From, State) ->
     logger:warning("~p:handle_call: Unexpected request=~p, from pid=~p, ignored.",
@@ -302,9 +289,9 @@ handle_get_tuple(State, Espace_op, Pattern, Cli_pid) ->
             [{TabKey, Tuple}] = ets:lookup(TabId, TabKey), %% we always also return the whole tuple
             case Espace_op of   %% "in" and "inp" should remove the tuple
                 in ->
-                    handle_del_tuple(TabId, TabKey);
+                    ets:delete(TabId, TabKey);
                 inp ->
-                    handle_del_tuple(TabId, TabKey);
+                    ets:delete(TabId, TabKey);
                 _ ->
                     ok
             end,
@@ -325,16 +312,6 @@ handle_add_tuple(Inst_name, TabId, Tuple) ->
     espace_tspatt_srv:check_waitlist(Inst_name, Tuple),
     done.
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc del_tuple handler.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec handle_del_tuple(ets:tab(), reference()) -> done.
-handle_del_tuple(TabId, TabKey) ->
-    ets:delete(TabId, TabKey),
-    done.
 
 %%--------------------------------------------------------------------
 %% @doc wait for etsmgr to (re)start, ensure it manages our ETS table,

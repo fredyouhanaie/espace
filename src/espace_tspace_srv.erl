@@ -40,9 +40,9 @@
 
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, espace_tspace).
--define(TABLE_OPTS, [set, protected]).
+-define(TABLE_OPTS, [ordered_set, protected]).
 
--record(state, {inst_name, tspace_tabid, etsmgr_pid}).
+-record(state, {inst_name, tspace_tabid, etsmgr_pid, next_key=1}).
 
 %%%===================================================================
 %%% API
@@ -51,7 +51,8 @@
 %%--------------------------------------------------------------------
 %% @doc Add a new tuple to the tuple space ETS table.
 %%
-%% The tuple is inserted with a unique `reference()' as the key.
+%% The tuple is inserted with a unique `integer()' as the key, the key
+%% is incremented with every insert.
 %%
 %% Once the tuple is added it will trigger the `espace_tspatt_srv'
 %% server to check for any waiting (blocking) clients whose `in'/`rd'
@@ -139,9 +140,8 @@ handle_call({get_tuple, Espace_op, Pattern}, _From={Cli_pid,_}, State) ->
     {reply, Reply, State};
 
 handle_call({add_tuple, Tuple}, _From, State) ->
-    Reply = handle_add_tuple(State#state.inst_name, State#state.tspace_tabid, Tuple),
-    {reply, Reply, State};
-
+    {Reply, State2} = handle_add_tuple(Tuple, State),
+    {reply, Reply, State2};
 
 handle_call(Request, From, State) ->
     logger:warning("~p:handle_call: Unexpected request=~p, from pid=~p, ignored.",
@@ -306,11 +306,15 @@ handle_get_tuple(State, Espace_op, Pattern, Cli_pid) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_add_tuple(atom(), ets:tid(), tuple()) -> done.
-handle_add_tuple(Inst_name, TabId, Tuple) ->
-    ets:insert(TabId, {erlang:make_ref(), Tuple}),
+-spec handle_add_tuple(tuple(), term()) -> term().
+handle_add_tuple(Tuple, State) ->
+    Inst_name = State#state.inst_name,
+    Tab_id = State#state.tspace_tabid,
+    Tab_key = State#state.next_key,
+    ets:insert(Tab_id, {Tab_key, Tuple}),
+    State2 = State#state{next_key=Tab_key+1},
     espace_tspatt_srv:check_waitlist(Inst_name, Tuple),
-    done.
+    {done, State2}.
 
 
 %%--------------------------------------------------------------------
@@ -333,7 +337,25 @@ handle_wait4etsmgr(Mode, State) ->
 
     case Result of
         {ok, Mgr_pid, Table_id} ->
-            {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id}};
+            Next_key = get_next_key(Table_id),
+            {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id, next_key=Next_key}};
         {error, Error} ->
             {error, Error}
+    end.
+
+%%--------------------------------------------------------------------
+%% @doc Returns the last key used in a table.
+%%
+%% This is only needed during the application startup, and when the
+%% server has restarted by the supervisor following a crash.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec get_next_key(ets:tid()) -> integer().
+get_next_key(Tab_id) ->
+    case ets:select(Tab_id, [{ {'$1', {'_'}}, [], ['$$'] }]) of
+        [] ->
+            1;
+        Keys ->
+            1+lists:max(lists:flatten(Keys))
     end.

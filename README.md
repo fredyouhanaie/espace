@@ -18,6 +18,20 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
+Please note that this is the `espace_lite` branch of the
+application. It will be merged with the master branch in due course.
+
+* The `worker_sup` supervisor and `tspool_srv` gen server have been
+  removed.
+
+* All the processes that used to be started by the `eval` and `worker`
+  operations are now started from within the client API, and are no
+  longer run under a supervisor.
+
+* The entire application has now been reduced to one supervisor and
+  two gen_servers, plus `etsmgr`. However, the use of `etsmgr` will be
+  provided as a startup option in future.
+
 * microbenchmarks have been added for the various `espace`
   operations. The benchmark modules are kept in the `bench/`
   directory. They can be produced with `rebar3 bench -d bench`.
@@ -30,6 +44,7 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 * As we have started using the `handle_continue` callback of
   gen_server, we can only support OTP versions from 21.0 onwards.
+
 * `eval` now behaves like the original Linda specification, i.e. like
   `out`, it takes a tuple and adds it to the tuple space, however, if
   the tuple contains any expressions, for espace they are `fun`

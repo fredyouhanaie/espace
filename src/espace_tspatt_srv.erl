@@ -53,7 +53,7 @@
 
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, espace_tspatt).
--define(TABLE_OPTS, [set, protected]).
+-define(TABLE_OPTS, [ordered_set, protected]).
 
 -record(state, {inst_name, tspatt_tabid, etsmgr_pid}).
 

@@ -85,23 +85,13 @@ init(Inst_name) ->
                   start => {'etsmgr_srv', start_link, [Inst_name]},
                   modules => ['etsmgr_srv']},
 
-                #{id => 'espace_tspool_srv',
-                  start => {'espace_tspool_srv', start_link, [Inst_name]},
-                  modules => ['espace_tspool_srv']},
-
                 #{id => 'espace_tspace_srv',
                   start => {'espace_tspace_srv', start_link, [Inst_name]},
                   modules => ['espace_tspace_srv']},
 
                 #{id => 'espace_tspatt_srv',
                   start => {'espace_tspatt_srv', start_link, [Inst_name]},
-                  modules => ['espace_tspatt_srv']},
-
-                #{id => 'espace_worker_sup',
-                  start => {'espace_worker_sup', start_link, [Inst_name]},
-                  shutdown => infinity,
-                  type => supervisor,
-                  modules => ['espace_wkpool_srv']}
+                  modules => ['espace_tspatt_srv']}
 
                ],
 

@@ -137,7 +137,9 @@ eval(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec eval(atom(), tuple()) -> pid().
 eval(Inst_name, Tuple) when is_tuple(Tuple) ->
-    espace_tspool_srv:espace_eval(Inst_name, Tuple).
+    {ok, Pid} = run_child(espace_util, eval_out, [Inst_name, Tuple]),
+    Pid.
+
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -150,6 +152,7 @@ eval(Inst_name, Tuple) when is_tuple(Tuple) ->
 -spec worker(tuple()) -> pid().
 worker(MFA) when is_tuple(MFA) ->
     worker(espace, MFA).
+
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -172,8 +175,16 @@ worker(MFA) when is_tuple(MFA) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec worker(atom(), tuple()) -> pid().
-worker(Inst_name, MFA) when is_tuple(MFA) ->
-    espace_tspool_srv:espace_worker(Inst_name, MFA).
+worker(Inst_name, {M, F, A}) ->
+    logger:info("~p/worker: run_child M=~p, F=~p, A=~p.", [Inst_name, M, F, A]),
+    {ok, Pid} = run_child(M, F, A),
+    Pid;
+
+worker(Inst_name, {Fun, Args}) ->
+    logger:info("~p/worker: run_child, Fun=~p, Args=~p.", [Inst_name, Fun, Args]),
+    {ok, Pid} = run_child(Fun, Args),
+    Pid.
+
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -215,7 +226,7 @@ in(Pattern) ->
 %%--------------------------------------------------------------------
 -spec in(atom(), tuple()) -> {list(), tuple()}.
 in(Inst_name, Pattern) ->
-    espace_tspool_srv:espace_in(Inst_name, Pattern).
+    espace_op(Inst_name, in, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -245,7 +256,7 @@ inp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec inp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 inp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_tspool_srv:espace_inp(Inst_name, Pattern).
+    espace_op(Inst_name, inp, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -270,7 +281,7 @@ out(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec out(atom(), tuple()) -> done.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
-    espace_tspool_srv:espace_out(Inst_name, Tuple).
+    espace_tspace_srv:add_tuple(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -296,7 +307,7 @@ rd(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rd(atom(), tuple()) -> {list(), tuple()}.
 rd(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_tspool_srv:espace_rd(Inst_name, Pattern).
+    espace_op(Inst_name, rd, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -323,7 +334,7 @@ rdp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rdp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 rdp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_tspool_srv:espace_rdp(Inst_name, Pattern).
+    espace_op(Inst_name, rdp, Pattern).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -374,3 +385,64 @@ do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
             infile(Inst_name, Arg)
     end,
     do_esp(Inst_name, Rest).
+
+
+%%--------------------------------------------------------------------
+%% @doc Spawn a child process given a `Module'/`Function'/`Args' triple.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec run_child(atom(), atom(), list()) -> {ok, pid()}.
+run_child(M, F, A) ->
+    logger:info("run_child M=~p, F=~p, A=~p.", [M, F, A]),
+    {ok, spawn(M, F, A)}.
+
+
+%%--------------------------------------------------------------------
+%% @doc Run a child process given a function, or a string
+%% representation of a function.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec run_child(string() | function(), list()) -> {ok, pid()}.
+run_child(Fun, Args) when is_function(Fun) ->
+    logger:info("run_child Fun=~p, Args=~p.", [Fun, Args]),
+    {ok, spawn(erlang, apply, [Fun, Args])};
+
+run_child(Fun, Args) ->
+    logger:info("run_child Fun=~p, Args=~p.", [Fun, Args]),
+    {ok, Tokens, _} = erl_scan:string(Fun),
+    {ok, Parsed} = erl_parse:parse_exprs(Tokens),
+    {value, F, _} = erl_eval:exprs(Parsed, []),
+    {ok, spawn(erlang, apply, [F, Args])}.
+
+
+%%--------------------------------------------------------------------
+%% @doc Perform one of the input ops, in/rd/inp/rdp.
+%%
+%% If a match is found we return the matched data.
+%%
+%% If a match is not found we expect to the `{nomatch, Cli_Ref}'
+%% return value from the `tspace' server. For the blocking operations,
+%% `in' and `rd', in which case we will wait indefinitely for the
+%% `Cli_ref' message. Once we receive the message we try the operation
+%% again.
+%%
+%% For the non-blocking operations, `inp' and `rdp', we just return
+%% `nomatch' to the client.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec espace_op(atom(), in|rd|inp|rdp, tuple()) -> nomatch | {list(), tuple()}.
+espace_op(Inst_name, Espace_op, Pattern) ->
+    case espace_tspace_srv:get_tuple(Inst_name, Espace_op, Pattern) of
+        {nomatch} ->
+            nomatch;
+        {nomatch, Cli_ref} ->
+            receive
+                Cli_ref ->
+                    espace_op(Inst_name, Espace_op, Pattern)
+            end;
+        {match, {Fields, Tuple}} ->
+            {Fields, Tuple}
+    end.

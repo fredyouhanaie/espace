@@ -18,8 +18,8 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
-Please note that this is the `espace_lite` branch of the
-application. It will be merged with the master branch in due course.
+The `espace_lite` branch has now been merged into the `master`
+branch. Going forward all changes will be on the master branch.
 
 * The `worker_sup` supervisor and `tspool_srv` gen server have been
   removed.

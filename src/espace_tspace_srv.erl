@@ -5,16 +5,16 @@
 %%% @doc
 %%% This is the custodian `gen_server' for the tuple space ETS table.
 %%%
-%%% The table is created as a `set' and in `protected' mode. All
-%%% access to the table is expected to come through this server,
-%%% although other proceses can inspect the contents for debugging
-%%% purposes.
+%%% The table is created as an `ordered_set' and in `protected'
+%%% mode. All access to the table is expected to come through this
+%%% server, although other proceses can inspect the contents for
+%%% debugging purposes.
 %%%
-%%% Each record has the form `{Ref, {Tuple}}', where `Ref' is a unique
-%%% key we generate before inserting the record, and `Tuple' is the
-%%% user supplied payload. For example if the tuple `{hello, 123}' is
-%%% added, then the inserted record will be
-%%% `{#Ref<0.3836483324.3974365186.86196>, {hello, 123}}'.
+%%% Each record has the form `{Num, {Tuple}}', where `Num' is a unique
+%%% integer key that we initialized to 1 and increment after inserting
+%%% the record, and `Tuple' is the user supplied payload. For example
+%%% if the tuple `{hello, 123}' is the first to be added, then the
+%%% inserted record will be `{1, {hello, 123}}'.
 %%%
 %%% The ETS table name used will reflect the `espace' instance
 %%% name. This will be `espace_tspace' for the default/unnamed

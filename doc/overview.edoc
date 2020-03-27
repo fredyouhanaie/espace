@@ -1,8 +1,8 @@
 %% -*- mode:html -*-
 
 @author Fred Youhanaie <fyrlang@anydata.co.uk>
-@copyright 2017 Fred Youhanaie
-@version 0.2.0
+@copyright 2017-2020 Fred Youhanaie
+@version 0.6.0
 
 @doc
 
@@ -62,8 +62,9 @@ coordinate through the tuple space.</p>
 
 <p>The `eval' operation, as defined in Linda, is expected to behave
   the same way as `out', with the exception that if there are any
-  expressions in the supplied tuple, they will be replaced with their
-  respective function values before being added to the tuple space.
+  `fun' expressions in the supplied tuple, they will be replaced with
+  their respective function values before being added to the tuple
+  space.
 </p>
 
 <p>The `espace:eval/1,2' functions in the first implementation of
@@ -91,8 +92,8 @@ coordinate through the tuple space.</p>
   two elements, an `N' arity `fun' expression together with a list of
   length `N',
   <code>{fun (A, B, ...) -> expr end, [expr, expr, ...]}</code>. In
-  the second form, the arity can be zero.
-</p>
+  the second form, the arity can be zero, however, an empty arg list,
+  `[]', must accompany the function.</p>
 
 <h3>Organization of the Project Modules</h3>
 
@@ -110,21 +111,17 @@ coordinate through the tuple space.</p>
   operations.</p>
 
 <p>The top level supervisor started by <code>espace_app</code>
-  is <code>espace_sup</code>. This supervisor manages
-  four <code>gen_server</code>s and one <code>supervisor</code>, as
-  described below:</p>
+  is <code>espace_sup</code>. This supervisor manages the
+  three <code>gen_server</code>s, as described below:</p>
 
 <ul>
 
   <li><code>etsmgr_srv</code> is a <code>gen_server</code> that adds
   resiliency to the ETS tables, should any of their owner servers
-  restart due to some fault. See
+  restart due to some fault. A single instance of `etsmgr_srv' is used
+  for managing both ETS tables. See
   the <a href="https://github.com/fredyouhanaie/etsmgr">project
   repo</a> for details.</li>
-
-  <li><code>espace_tspool_srv</code> is a <code>gen_server</code> that
-    manages the <code>out/in/rd/inp/rdp</code> requests. In turn it
-    passes the requests to <code>espace_tspool_srv</code></li>
 
   <li><code>espace_tspace_srv</code> maintains
     the <code>espace_tspace</code> ETS table, the main tuple space
@@ -140,19 +137,11 @@ coordinate through the tuple space.</p>
     the <code>espace_tspatt</code> ETS table, which contains the tuple
     patterns that worker processes (clients) are blocked on. It
     receives two types of messages
-    from <code>espace_tspool_srv</code>, unmatched patterns, which,
+    from <code>espace_tspace_srv</code>, unmatched patterns, which,
     along with the client details, are then added to
     the <code>espace_tspatt</code> table, and newly added tuples,
     which are matched against the existing patterns in the table and,
     if matched, blocked clients are notified.</li>
-
-  <li><code>espace_worker_sup</code> is a <code>supervisor</code> that
-    will create a new child process with the <code>{M,F,A}</code>
-    function supplied with the request. Each <code>worker/1,2</code>
-    request, is executed within a child process of
-    the <code>simple_one_for_one</code> supervisor. At present, no
-    attempt is made to throttle the number of <code>eval</code>
-    processes.</li>
 
 </ul>
 
@@ -160,29 +149,32 @@ coordinate through the tuple space.</p>
 
 <p>The tuples are kept in a pair of ETS tables.</p>
 
-<p>The first table, <code>espace_tspace</code> has two columns, a
-  unique ref, and the tuple itself. A
-  single <code>gen_server</code>, <code>espace_tspace_srv</code>,
-  handles all accesses to this table.</p>
+<p>The first table, <code>espace_tspace</code> has two columns, an
+  integer, and the tuple itself. All access to the table is handled by
+  a single server, <code>espace_tspace_srv</code>.</p>
 
 <p>For the cases where no matching tuple is found for a given pattern,
   a second ETS table <code>espace_tspatt</code> is used to remember
   the pattern, the client PID and a unique reference for this specific
   request. The unique reference will be used by the
-  <code>espace_tspool_srv</code> client side function to block on a
-  receive for that reference.</p>
+  <code>espace</code> client side function to block on a receive for
+  that reference.</p>
 
 <p>Each <code>out</code> operation, after inserting the new tuple,
   will notify <code>espace_tspatt_srv</code> of the new
-  tuple. <code>espace_tspatt_srv</code> which will then scan the
-  blocking clients whose pattern matches the newly added tuple. If a
-  match is found, the waiting client is notified and the client entry
-  is removed from the table.</p>
+  tuple. <code>espace_tspatt_srv</code> will then scan the blocking
+  clients whose pattern matches the newly added tuple. If a match is
+  found, the waiting client is notified and the client entry is
+  removed from the table.</p>
 
 <p>Once the waiting client receives the notification, it will attempt
   the <code>rd</code> or <code>in</code> operation again. Note that
   the client is not handed the tuple, but notified to request it
-  again. If more than one client have waiting patterns that match the
-  tuple, then they will end up competing for it.</p>
+  again. This waiting and the subsequent notification occurs inside
+  the espace client code. If more than one client have waiting
+  patterns that match the new tuple, then they may end up competing
+  for it. However, since the ETS table is an <code>ordered_set</code>,
+  the notification will be performed in a first come (blocked) first
+  served (notified) manner.</p>
 
 @end

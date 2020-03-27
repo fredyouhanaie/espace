@@ -13,7 +13,7 @@
 %%% One of the gen_servers is from the `etsmgr' application. Here
 %%% `etsmgr' is used in embedded mode, i.e. there is no separate
 %%% `etsmgr' application. We also make sure that `etsmgr_srv' is the
-%%% first child to be started as the two of the others depend on this
+%%% first child to be started as the other two servers depend on this
 %%% server.
 %%%
 %%% For the child specification, we rely on the default settings of:

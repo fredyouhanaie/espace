@@ -194,7 +194,7 @@ worker(Inst_name, {Fun, Args}) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec in(tuple()) -> {list(), tuple()}.
+-spec in(tuple()) -> {list(), tuple()} | quit.
 in(Pattern) ->
     in(espace, Pattern).
 
@@ -207,8 +207,9 @@ in(Pattern) ->
 %% expressions, or it may contain `$N' pattern variables, where N>0.
 %%
 %% If the pattern does not match a tuple in the tuple space, then the
-%% call will block until such a pattern is added to the tuple
-%% space.
+%% call will block until such a pattern is added to the tuple space.
+%% If the espace server terminates while the client is in blocking
+%% state the atom `quit' will be returned.
 %%
 %% If a match is found, the tuple is returned as a pair `{List,
 %% Tuple}', where `Tuple' is the whole tuple, and `List' is a,
@@ -224,7 +225,7 @@ in(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec in(atom(), tuple()) -> {list(), tuple()}.
+-spec in(atom(), tuple()) -> {list(), tuple()} | quit.
 in(Inst_name, Pattern) ->
     espace_op(Inst_name, in, Pattern).
 
@@ -291,7 +292,7 @@ out(Inst_name, Tuple) when is_tuple(Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec rd(tuple()) -> {list(), tuple()}.
+-spec rd(tuple()) -> {list(), tuple()} | quit.
 rd(Pattern) when is_tuple(Pattern) ->
     rd(espace, Pattern).
 
@@ -305,7 +306,7 @@ rd(Pattern) when is_tuple(Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec rd(atom(), tuple()) -> {list(), tuple()}.
+-spec rd(atom(), tuple()) -> {list(), tuple()} | quit.
 rd(Inst_name, Pattern) when is_tuple(Pattern) ->
     espace_op(Inst_name, rd, Pattern).
 
@@ -428,19 +429,25 @@ run_child(Fun, Args) ->
 %% `Cli_ref' message. Once we receive the message we try the operation
 %% again.
 %%
+%% If the client is blocking on `rd' or `in' and the espace server is
+%% terminating, a `quit' message will be received from the server, and
+%% the atom `quit' will be returned to the caller.
+%%
 %% For the non-blocking operations, `inp' and `rdp', we just return
 %% `nomatch' to the client.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec espace_op(atom(), in|rd|inp|rdp, tuple()) -> nomatch | {list(), tuple()}.
+-spec espace_op(atom(), in|rd|inp|rdp, tuple()) -> nomatch | {list(), tuple()} | quit.
 espace_op(Inst_name, Espace_op, Pattern) ->
     case espace_tspace_srv:get_tuple(Inst_name, Espace_op, Pattern) of
         {nomatch} ->
             nomatch;
         {nomatch, Cli_ref} ->
             receive
-                Cli_ref ->
+                {Cli_ref, quit} ->
+                    quit;
+                {Cli_ref, retry} ->
                     espace_op(Inst_name, Espace_op, Pattern)
             end;
         {match, {Fields, Tuple}} ->

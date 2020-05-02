@@ -250,12 +250,22 @@ handle_info(Info, State) ->
 %% necessary cleaning up. When it returns, the gen_server terminates
 %% with Reason. The return value is ignored.
 %%
+%% Before terminating, a `quit' message is sent to all clients blocked
+%% in a `in' or `rd'.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(atom(), term()) -> ok.
 terminate(Reason, State) ->
     logger:notice("~p: terminating, reason=~p, state=~p.", [?SERVER, Reason, State]),
     Inst_name = State#state.inst_name,
+
+    Send_quit = fun ({Cli_ref, _Pattern, Cli_pid}, Acc) ->
+                        Cli_pid ! {Cli_ref, quit},
+                        Acc
+                end,
+    ets:foldl(Send_quit, 0, State#state.tspatt_tabid),
+
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
     etsmgr:del_table(Inst_name, Table_name),
     ok.
@@ -281,7 +291,7 @@ check_tuple(Tuple, TabId, Key) ->
         {ok, false} ->
             nomatch;
         _ ->
-            Cli_pid ! Cli_ref,
+            Cli_pid ! {Cli_ref, retry},
             ets:delete(TabId, Key)
     end,
     check_tuple(Tuple, TabId, ets:next(TabId, Key)).

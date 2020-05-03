@@ -40,7 +40,7 @@
 
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, espace_tspace).
--define(TABLE_OPTS, [ordered_set, protected]).
+-define(TABLE_OPTS, [ordered_set, protected, named_table]).
 
 -record(state, {inst_name, tspace_tabid, etsmgr_pid, next_key=1}).
 
@@ -76,9 +76,21 @@ add_tuple(Inst_name, Tuple) ->
 %% `$N' elements referenced in the pattern, if any, and `Tuple' is the
 %% second part of the ETS record.
 %%
+%% This function runs within the client process. Since for `rd' and
+%% `rdp' we do not require write access to the table, we can skip
+%% calling the gen_server and read from the ETS table directly.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec get_tuple(atom(), in|rd|inp|rdp, tuple()) -> {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
+get_tuple(Inst_name, rdp, Pattern) ->
+    Tab_name = espace_util:inst_to_name(espace_tspace, Inst_name),
+    handle_get_tuple(#state{tspace_tabid=Tab_name}, rdp, Pattern, self());
+
+get_tuple(Inst_name, rd, Pattern) ->
+    Tab_name = espace_util:inst_to_name(espace_tspace, Inst_name),
+    handle_get_tuple(#state{tspace_tabid=Tab_name}, rd, Pattern, self());
+
 get_tuple(Inst_name, Espace_op, Pattern) ->
     gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Espace_op, Pattern}).
 

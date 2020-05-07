@@ -80,16 +80,23 @@ add_tuple(Inst_name, Tuple) ->
 %% `rdp' we do not require write access to the table, we can skip
 %% calling the gen_server and read from the ETS table directly.
 %%
+%% For `rd' and `rdp', although we are bypassing the gen_server, we
+%% still need to provide some of the `State' data to the handler. For
+%% now, this is created manually, but it will be fixed more elegantly
+%% in future.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec get_tuple(atom(), in|rd|inp|rdp, tuple()) -> {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
 get_tuple(Inst_name, rdp, Pattern) ->
     Tab_name = espace_util:inst_to_name(espace_tspace, Inst_name),
-    handle_get_tuple(#state{tspace_tabid=Tab_name}, rdp, Pattern, self());
+    State = #state{inst_name=Inst_name, tspace_tabid=Tab_name},
+    handle_get_tuple(State, rdp, Pattern, self());
 
 get_tuple(Inst_name, rd, Pattern) ->
     Tab_name = espace_util:inst_to_name(espace_tspace, Inst_name),
-    handle_get_tuple(#state{tspace_tabid=Tab_name}, rd, Pattern, self());
+    State = #state{inst_name=Inst_name, tspace_tabid=Tab_name},
+    handle_get_tuple(State, rd, Pattern, self());
 
 get_tuple(Inst_name, Espace_op, Pattern) ->
     gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Espace_op, Pattern}).

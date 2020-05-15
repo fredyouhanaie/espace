@@ -52,20 +52,26 @@ start(espace) ->
     application:start(espace);
 start(Inst_name) when is_atom(Inst_name) ->
     %% retrieve the main app resource file
-    {ok, [{application, espace, App_0}]} = file:consult(code:where_is_file("espace.app")),
 
-    %% add the instance name suffix to the list of application servers
-    {registered, Server_names_0} = lists:keyfind(registered, 1, App_0),
-    Server_names_1 = lists:map(
-                       fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
-                       Server_names_0),
-    App_1 = lists:keyreplace(registered, 1, App_0, {registered, Server_names_1}),
+    case application:load(espace) of
+        AL when AL == ok orelse AL == {error,{already_loaded,espace}} ->
+            {ok, App_0} = application:get_all_key(espace),
+            %% add the instance name suffix to the list of application servers
+            {registered, Server_names_0} = lists:keyfind(registered, 1, App_0),
+            Server_names_1 = lists:map(
+                               fun (S) -> espace_util:inst_to_name(S, Inst_name) end,
+                               Server_names_0),
+            App_1 = lists:keyreplace(registered, 1, App_0, {registered, Server_names_1}),
 
-    %% pass the instance name to the application as arg
-    App_2 = lists:keyreplace(mod, 1, App_1, {mod, {espace_app, Inst_name}}),
+            %% pass the instance name to the application as arg
+            App_2 = lists:keyreplace(mod, 1, App_1, {mod, {espace_app, Inst_name}}),
 
-    application:load({application, Inst_name, App_2}),
-    application:start(Inst_name).
+            application:load({application, Inst_name, App_2}),
+            application:start(Inst_name);
+        Error ->
+            Error
+    end.
+
 
 %%--------------------------------------------------------------------
 %% @doc Stop the unnamed instance of espace.

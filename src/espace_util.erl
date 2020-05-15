@@ -38,7 +38,15 @@
 inst_to_name(Prefix, espace) ->
     Prefix;
 inst_to_name(Prefix, Inst_name) ->
-    list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)).
+    K = {espace, Prefix, Inst_name},
+    case erlang:get(K) of
+        undefined ->
+            V = list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)),
+            erlang:put(K, V),
+            V;
+        V ->
+            V
+    end.
 
 %%--------------------------------------------------------------------
 %% @doc Conditionally evaluate a tuple and `out' the result to the

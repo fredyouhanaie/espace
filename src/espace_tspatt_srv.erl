@@ -222,7 +222,7 @@ handle_info({'EXIT', Pid, Reason}, State) ->
                            [?SERVER, Pid, Reason]),
             case handle_wait4etsmgr(recover, State) of
                 {ok, State2} ->
-                    logger:notice("~p: etsmgr has recovered.", [?SERVER]),
+                    logger:info("~p: etsmgr has recovered.", [?SERVER]),
                     {noreply, State2};
                 {error, Error} ->
                     {stop, Error}
@@ -234,7 +234,7 @@ handle_info({'EXIT', Pid, Reason}, State) ->
     end;
 
 handle_info({'ETS-TRANSFER', Table_id, From_pid, Gift_data}, State) ->
-    logger:notice("~p:ETS-TRANSFER tabid=~p, from=~p, gift_data=~p.", [?SERVER, Table_id, From_pid, Gift_data]),
+    logger:info("~p:ETS-TRANSFER tabid=~p, from=~p, gift_data=~p.", [?SERVER, Table_id, From_pid, Gift_data]),
     {noreply, State};
 
 handle_info(Info, State) ->
@@ -257,7 +257,7 @@ handle_info(Info, State) ->
 %%--------------------------------------------------------------------
 -spec terminate(atom(), term()) -> ok.
 terminate(Reason, State) ->
-    logger:notice("~p: terminating, reason=~p, state=~p.", [?SERVER, Reason, State]),
+    logger:info("~p: terminating, reason=~p, state=~p.", [?SERVER, Reason, State]),
     Inst_name = State#state.inst_name,
 
     Send_quit = fun ({Cli_ref, _Pattern, Cli_pid}, Acc) ->

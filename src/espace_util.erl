@@ -32,6 +32,15 @@
 %% without an instance name suffix. For example
 %% `inst_to_name(espace_sup, espace)' will return `espace_sup'.
 %%
+%% Instead of generating the full name each time this function is
+%% called, we perform the conversion once and cache the result as an
+%% entry in the `persistent_term' store. Each entry has the key
+%% `{espace, Prefix, Inst_name}', e.g. `{espace, espace_sup, aaa}',
+%% and the full name as value, e.g. `espace_sup_aaa'.
+%%
+%% The use of `persistent_term' store will help speed up all named
+%% instances, including the short lived `eval/2' processes.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec inst_to_name(atom(), atom()) -> atom().
@@ -39,14 +48,15 @@ inst_to_name(Prefix, espace) ->
     Prefix;
 inst_to_name(Prefix, Inst_name) ->
     K = {espace, Prefix, Inst_name},
-    case erlang:get(K) of
+    case persistent_term:get(K, undefined) of
         undefined ->
             V = list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)),
-            erlang:put(K, V),
+            persistent_term:put(K, V),
             V;
         V ->
             V
     end.
+
 
 %%--------------------------------------------------------------------
 %% @doc Conditionally evaluate a tuple and `out' the result to the

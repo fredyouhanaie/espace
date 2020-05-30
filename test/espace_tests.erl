@@ -60,6 +60,18 @@ stop_test() ->
     application:ensure_all_started(espace),
     espace:stop().
 
+stop_test_named_test() ->
+    Terms_1 = lists:sort(persistent_term:get()),
+
+    espace:start(aaa),
+    Terms_2 = lists:sort(persistent_term:get()),
+    ?assert(Terms_1 /= Terms_2),
+
+    espace:stop(aaa),
+    Terms_3 = lists:sort(persistent_term:get()),
+    ?assert(Terms_1 == Terms_3),
+    ok.
+
 eval_simple_test() ->
     application:ensure_all_started(espace),
     Pid = espace:eval({five, fun () -> 2+3 end}),

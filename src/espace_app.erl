@@ -33,6 +33,8 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
+-include_lib("kernel/include/logger.hrl").
+
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
@@ -63,10 +65,38 @@ start(normal, Inst_name) ->
 %% is intended to be the opposite of Module:start/2 and should do
 %% any necessary cleaning up. The return value is ignored.
 %%
+%% When named instances are started, a number of instance specific
+%% `persistent_term' entries created. We ensure these are removed on
+%% exist.
+%%
+%% The `persistent_term' entries are expected to have the following
+%% format: `{espace, Prefix, Inst_name}', where, `Prefix' identifies
+%% the particular `espace' item prefix, such as server name to ETS
+%% table name, and `Inst_name' is the espace instance name, which is
+%% the same as the application name.
+%%
+%% No entries are created for the unnamed instance, whose application
+%% name is `espace'.
+%%
 %% @end
 %%--------------------------------------------------------------------
 -spec stop(term()) -> ok.
 stop(_State) ->
+    case application:get_application() of
+        {ok, espace} ->
+            ok;
+        {ok, App_name} -> %% this is in fact Inst_name
+            My_term = fun ({{espace, _, Inst_name}, _V})
+                            when Inst_name == App_name ->
+                              true;
+                          (_) ->
+                              false
+                      end,
+            App_terms = lists:filter(My_term, persistent_term:get()),
+            lists:foreach(fun ({K, _V}) -> persistent_term:erase(K) end, App_terms);
+        undefined ->
+            ?LOG_WARNING("~p: stop called in non-application context.", [?MODULE])
+        end,
     ok.
 
 %%%===================================================================

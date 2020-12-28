@@ -90,9 +90,19 @@ worker_tuple_test() ->
     Pid = espace:worker({erlang, system_time, []}),
     ?assert(is_pid(Pid)).
 
-worker_fun_test() ->
+worker_fun_1_test() ->
     application:ensure_all_started(espace),
     Pid = espace:worker({fun () -> erlang:system_time() end, []}),
+    ?assert(is_pid(Pid)).
+
+worker_fun_2_test() ->
+    application:ensure_all_started(espace),
+    Pid = espace:worker({fun () -> erlang:system_time() end}),
+    ?assert(is_pid(Pid)).
+
+worker_fun_3_test() ->
+    application:ensure_all_started(espace),
+    Pid = espace:worker({fun erlang:system_time/0}),
     ?assert(is_pid(Pid)).
 
 worker_fun_str_test() ->

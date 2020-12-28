@@ -165,13 +165,18 @@ worker(MFA) when is_tuple(MFA) ->
 %% start a new worker process via a named espace server.
 %%
 %% The function expects a single tuple as argument, which can have one
-%% of three forms:
+%% of the following forms:
 %%
 %% <ul>
 %%
 %% <li>A `{Mod, Fun, Args}' triple, e.g. `{adder1, test_add2, []}'.</li>
 %%
-%% <li>A single fun, e.g. `{fun () -> adder1:test_add2() end}'.</li>
+%% <li>A single fun without args, e.g. `{fun () -> adder1:test_add2()
+%% end}', or `{fun adder1:test_add2/0}'.</li>
+%%
+%% <li>A single fun with args, e.g. `{fun (A,B) ->
+%% adder1:test_add2(A,B) end}', or `{fun adder1:test_add2/2,
+%% [A,B]}'.</li>
 %%
 %% <li>A string containing a fun, e.g. `"fun () -> adder1:test_add2()
 %% end."'. This is mainly for use in espace input files.</li>
@@ -184,6 +189,11 @@ worker(MFA) when is_tuple(MFA) ->
 worker(Inst_name, {M, F, A}) ->
     logger:info("~p/worker: run_child M=~p, F=~p, A=~p.", [Inst_name, M, F, A]),
     {ok, Pid} = run_child(M, F, A),
+    Pid;
+
+worker(Inst_name, {Fun}) ->
+    logger:info("~p/worker: run_child, Fun=~p.", [Inst_name, Fun]),
+    {ok, Pid} = run_child(Fun, []),
     Pid;
 
 worker(Inst_name, {Fun, Args}) ->

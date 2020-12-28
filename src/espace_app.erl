@@ -66,11 +66,11 @@ start(normal, Inst_name) ->
 %% any necessary cleaning up. The return value is ignored.
 %%
 %% When named instances are started, a number of instance specific
-%% `persistent_term' entries created. We ensure these are removed on
-%% exist.
+%% `persistent_term' entries are created. We ensure these are removed
+%% on exit.
 %%
 %% The `persistent_term' entries are expected to have the following
-%% format: `{espace, Prefix, Inst_name}', where, `Prefix' identifies
+%% format: `{espace, Inst_name, Prefix}', where, `Prefix' identifies
 %% the particular `espace' item prefix, such as server name to ETS
 %% table name, and `Inst_name' is the espace instance name, which is
 %% the same as the application name.
@@ -86,7 +86,7 @@ stop(_State) ->
         {ok, espace} ->
             ok;
         {ok, App_name} -> %% this is in fact Inst_name
-            My_term = fun ({{espace, _, Inst_name}, _V})
+            My_term = fun ({{espace, Inst_name, _}, _V})
                             when Inst_name == App_name ->
                               true;
                           (_) ->

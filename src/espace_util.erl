@@ -35,7 +35,7 @@
 %% Instead of generating the full name each time this function is
 %% called, we perform the conversion once and cache the result as an
 %% entry in the `persistent_term' store. Each entry has the key
-%% `{espace, Prefix, Inst_name}', e.g. `{espace, espace_sup, aaa}',
+%% `{espace, Inst_name, Prefix}', e.g. `{espace, aaa, espace_sup}',
 %% and the full name as value, e.g. `espace_sup_aaa'.
 %%
 %% The use of `persistent_term' store will help speed up all named
@@ -47,7 +47,7 @@
 inst_to_name(Prefix, espace) ->
     Prefix;
 inst_to_name(Prefix, Inst_name) ->
-    K = {espace, Prefix, Inst_name},
+    K = {espace, Inst_name, Prefix},
     case persistent_term:get(K, undefined) of
         undefined ->
             V = list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)),
@@ -95,6 +95,7 @@ eval_out(Inst_name, Tuple_in) ->
     List_out = lists:map(fun (X) -> do_eval(X) end, List_in),
     Tuple_out = erlang:list_to_tuple(List_out),
     espace:out(Inst_name, Tuple_out).
+
 
 %%--------------------------------------------------------------------
 %% @doc wait for etsmgr to (re)start, then ask it to manage our table.

@@ -1,3 +1,4 @@
+% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2018, Fred Youhanaie
@@ -18,198 +19,251 @@
 %% The tests
 %%--------------------------------------------------------------------
 
-inst_to_name_1_test() ->
-    hello = espace_util:inst_to_name(hello, espace).
+%% setup/cleanup funcions used by the rest of the tests
 
-inst_to_name_2_test() ->
-    hello_aaa = espace_util:inst_to_name(hello, aaa).
+setup() ->
+    espace:start(),
+    logger:set_primary_config(#{level => error}).
 
-inst_to_name_3_test() ->
-    espace_aaa = espace_util:inst_to_name(espace, aaa).
-
-eval_out_1_test() ->
-    application:ensure_all_started(espace),
-    done = espace_util:eval_out({five, fun () -> 2+3 end}),
-    {[], {five, 5}} = espace:in({five, 5}).
-
-eval_out_2_test() ->
-    application:ensure_all_started(espace),
-    done = espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3]}}),
-    {[], {five, 5}} = espace:in({five, 5}).
-
-eval_out_3_test() ->
-    espace:start(aaa),
-    done = espace_util:eval_out(aaa, {five, {fun (X, Y) -> X+Y end, [2, 3]}}),
-    {[], {five, 5}} = espace:in(aaa, {five, 5}).
-
-eval_out_4_test() ->
-    application:ensure_all_started(espace),
-    done = espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3, 4]}}),
-    {[{F, L}], {five, _}} = espace:in({five, '$1'}),
-    ?assert(is_function(F, 2)),
-    L = [2, 3, 4].
-
-start_test() ->
-    espace:start().
-
-start_named_test() ->
-    espace:start(aaa),
-    espace:stop(aaa).
-
-stop_test() ->
-    application:ensure_all_started(espace),
+cleanup(_) ->
     espace:stop().
 
-stop_test_named_test() ->
-    Terms_1 = lists:sort(persistent_term:get()),
+%%--------------------------------------------------------------------
 
-    espace:start(aaa),
-    Terms_2 = lists:sort(persistent_term:get()),
-    ?assert(Terms_1 /= Terms_2),
+start_stop_test_() ->
+    {inorder,
 
-    espace:stop(aaa),
-    Terms_3 = lists:sort(persistent_term:get()),
-    ?assert(Terms_1 == Terms_3),
-    ok.
+     [ {"unnamed start", ?_assertEqual(ok, espace:start())},
+       {"unnamed start again", ?_assertEqual({error, {already_started, espace}}, espace:start())},
 
-eval_simple_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:eval({five, fun () -> 2+3 end}),
-    ?assert(is_pid(Pid)),
-    {[], {five, 5}} =  espace:in({five, 5}).
+       {"unnamed stop", ?_assertEqual(ok, espace:stop())},
+       {"unnamed stop again", ?_assertEqual({error, {not_started, espace}}, espace:stop())},
 
-eval_tuple_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:eval({five, {fun (X,Y) -> X+Y end, [2, 3]}}),
-    ?assert(is_pid(Pid)),
-    {[], {five, 5}} =  espace:in({five, 5}).
+       {"named start", ?_assertEqual(ok, espace:start(aaa))},
+       {"named start again", ?_assertEqual({error, {already_started, aaa}}, espace:start(aaa))},
 
+       {"named stop", ?_assertEqual(ok, espace:stop(aaa))},
+       {"named stop again", ?_assertEqual({error, {not_started, aaa}}, espace:stop(aaa))}
 
-worker_tuple_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:worker({erlang, system_time, []}),
-    ?assert(is_pid(Pid)).
+     ]}.
 
-worker_fun_1_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:worker({fun () -> erlang:system_time() end, []}),
-    ?assert(is_pid(Pid)).
+%%--------------------------------------------------------------------
 
-worker_fun_2_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:worker({fun () -> erlang:system_time() end}),
-    ?assert(is_pid(Pid)).
+eval_test_() ->
+    {setup, fun setup/0, fun cleanup/1,
 
-worker_fun_3_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:worker({fun erlang:system_time/0}),
-    ?assert(is_pid(Pid)).
+     [ {"eval simple fun",
+        [ {"run eval", ?_assertMatch(Pid when is_pid(Pid), espace:eval({five, fun () -> 2+3 end}))},
+          {"check eval output", ?_assertEqual({[], {five, 5}}, espace:in({five, 5}))}
+        ]},
 
-worker_fun_str_test() ->
-    application:ensure_all_started(espace),
-    Pid = espace:worker({"fun () -> erlang:system_time() end.", []}),
-    ?assert(is_pid(Pid)).
+       {"eval fun tuple",
+        [ {"run eval", ?_assertMatch(Pid when is_pid(Pid), espace:eval({five, {fun (X,Y) -> X+Y end, [2, 3]}}))},
+          {"check eval output", ?_assertEqual({[], {five, 5}}, espace:in({five, 5}))}
+        ]}
 
-out_test() ->
-    application:ensure_all_started(espace),
-    done = espace:out({test, 123, "ABC"}).
+     ]}.
+      
+%%--------------------------------------------------------------------
 
-in_test() ->
-    application:ensure_all_started(espace),
+worker_test_() ->
+    [
+     {setup, fun setup/0, fun cleanup/1,
+
+      [ {"worker as tuple",
+         ?_assertMatch(Pid when is_pid(Pid), espace:worker({erlang, system_time, []}))},
+
+        {"worker as fun tuple with args",
+         ?_assertMatch(Pid when is_pid(Pid), espace:worker({fun () -> erlang:system_time() end, []}))},
+
+        {"worker as fun no args",
+         ?_assertMatch(Pid when is_pid(Pid), espace:worker({fun () -> erlang:system_time() end}))},
+
+        {"worker as fun expr",
+         ?_assertMatch(Pid when is_pid(Pid), espace:worker({fun erlang:system_time/0}))},
+
+        {"worker as fun string",
+         ?_assertMatch(Pid when is_pid(Pid), espace:worker({"fun () -> erlang:system_time() end.", []}))}
+
+      ]}
+    ].
+
+%%--------------------------------------------------------------------
+
+out_ref() ->
     Ref = erlang:make_ref(),
     done = espace:out({Ref}),
-    espace:in({Ref}).
+    Ref.
 
-rd_test() ->
-    application:ensure_all_started(espace),
-    Ref = erlang:make_ref(),
-    done = espace:out({Ref}),
-    espace:rd({Ref}).
+tuple_ops_test_() ->
+    {foreach, fun setup/0, fun cleanup/1,
+     [ {"out",
+        ?_assertEqual(done, espace:out({test, 123, "ABC"}))},
 
-inp_match_test() ->
-    application:ensure_all_started(espace),
-    Ref = erlang:make_ref(),
-    done = espace:out({Ref}),
-    espace:inp({Ref}).
+       {"in with match",
+        ?_assertMatch({[], {R}} when is_reference(R), espace:in({out_ref()}))},
 
-inp_nomatch_test() ->
-    application:ensure_all_started(espace),
-    nomatch = espace:inp({erlang:make_ref()}).
+       {"in no match",
+        {inorder, [?_assertMatch({ok, _}, timer:apply_after(50, espace, stop, [])),
+                   ?_assertEqual(quit, espace:in({erlang:make_ref()}))]}},
 
-rdp_match_test() ->
-    application:ensure_all_started(espace),
-    Ref = erlang:make_ref(),
-    done = espace:out({Ref}),
-    espace:rdp({Ref}).
+       {"rd with match",
+        ?_assertMatch({[], {R}} when is_reference(R), espace:rd({out_ref()}))},
 
-rdp_nomatch_test() ->
-    application:ensure_all_started(espace),
-    nomatch = espace:rdp({erlang:make_ref()}).
+       {"rd no match",
+        {inorder, [?_assertMatch({ok, _}, timer:apply_after(50, espace, stop, [])),
+                   ?_assertEqual(quit, espace:rd({erlang:make_ref()}))]}},
 
-adder1_eval_test() ->
-    application:ensure_all_started(espace),
-    espace:eval({fun () -> ?MODULE:test_add() end}),
-    done = espace:out({add, 1, 2}),
-    done = espace:out({add, 2, 3}),
-    done = espace:out({add, 3, 4}),
-    {[3], _} = espace:in({sum, 1, 2, '$3'}),
-    {[5], _} = espace:in({sum, 2, 3, '$3'}),
-    {[7], _} = espace:in({sum, 3, 4, '$3'}).
+       {"inp with match",
+        ?_assertMatch({[], {R}} when is_reference(R), espace:inp({out_ref()}))},
 
-adder1_worker_test() ->
-    application:ensure_all_started(espace),
-    espace:worker({?MODULE, test_add, []}),
-    done = espace:out({add, 1, 2}),
-    done = espace:out({add, 2, 3}),
-    done = espace:out({add, 3, 4}),
-    {[3], _} = espace:in({sum, 1, 2, '$3'}),
-    {[5], _} = espace:in({sum, 2, 3, '$3'}),
-    {[7], _} = espace:in({sum, 3, 4, '$3'}).
+       {"inp no match",
+        ?_assertEqual(nomatch, espace:inp({erlang:make_ref()}))},
 
-infile_test() ->
-    application:ensure_all_started(espace),
-    espace:infile(?Test_file1),
-    {[3], _} = espace:in({sum, 1, 2, '$3'}),
-    {[7], _} = espace:in({sum, 3, 4, '$3'}).
+       {"rdp with match",
+        ?_assertMatch({[], {R}} when is_reference(R), espace:rdp({out_ref()}))},
 
-etsmgr_tspace_1_test() ->
-    application:ensure_all_started(espace),
+       {"rdp no match",
+        ?_assertEqual(nomatch, espace:rdp({erlang:make_ref()}))}
 
-    Tuple_1 = {hello, 1},
-    espace:out(Tuple_1),
-    erlang:exit(whereis(etsmgr_srv_espace), kill),
-    timer:sleep(10),
-    {[], Tuple_1} = espace:in(Tuple_1),
+     ]}.
 
-    application:stop(espace).
+%%--------------------------------------------------------------------
 
-etsmgr_tspace_2_test() ->
-    application:ensure_all_started(espace),
+adder1_eval_test_() ->
+    {setup, fun setup/0, fun cleanup/1,
+     {inorder,
+      [ {"start adder via eval/1",
+         ?_assertMatch(Pid when is_pid(Pid), espace:eval({fun () -> ?MODULE:test_add() end}))},
 
-    Tuple_2 = {goodbye, 2},
-    espace:out(Tuple_2),
-    erlang:exit(whereis(espace_tspace_srv), kill),
-    timer:sleep(10),
-    {[], Tuple_2} = espace:in(Tuple_2),
+        {"out some tuples",
+         [?_assertEqual(done, espace:out({add, 1, 2})),
+          ?_assertEqual(done, espace:out({add, 2, 3})),
+          ?_assertEqual(done, espace:out({add, 3, 4}))]},
 
-    application:stop(espace).
+        {"check the results",
+         [?_assertMatch({[3], _}, espace:in({sum, 1, 2, '$3'})),
+          ?_assertMatch({[5], _}, espace:in({sum, 2, 3, '$3'})),
+          ?_assertMatch({[7], _}, espace:in({sum, 3, 4, '$3'}))]}
 
-etsmgr_tspatt_1_test() ->
-    application:ensure_all_started(espace),
+      ]}}.
 
+adder1_worker_test_() ->
+    {setup, fun setup/0, fun cleanup/1,
+
+     {inorder,
+      [ {"start adder via worker/1",
+         ?_assertMatch(Pid when is_pid(Pid), espace:worker({?MODULE, test_add, []}))},
+
+        {"out some tuples",
+         [?_assertEqual(done, espace:out({add, 1, 2})),
+          ?_assertEqual(done, espace:out({add, 2, 3})),
+          ?_assertEqual(done, espace:out({add, 3, 4}))]},
+
+        {"check the results",
+         [?_assertMatch({[3], _}, espace:in({sum, 1, 2, '$3'})),
+          ?_assertMatch({[5], _}, espace:in({sum, 2, 3, '$3'})),
+          ?_assertMatch({[7], _}, espace:in({sum, 3, 4, '$3'}))]}
+
+      ]}}.
+
+%%--------------------------------------------------------------------
+
+infile_test_() ->
+    {setup, fun setup/0, fun cleanup/1,
+
+     {inorder,
+      [ {"process the file",
+         ?_assertEqual(ok, espace:infile(?Test_file1))},
+
+        {"check the results",
+         [?_assertMatch({[3], _}, espace:in({sum, 1, 2, '$3'})),
+          ?_assertMatch({[7], _}, espace:in({sum, 3, 4, '$3'}))
+         ]}
+
+      ]}}.
+
+%%--------------------------------------------------------------------
+
+etsmgr_recover() ->
     Tables1 = lists:sort( maps:keys(etsmgr:info(espace)) ),
     erlang:exit(whereis(etsmgr_srv_espace), kill),
     timer:sleep(1010),
     Tables2 = lists:sort( maps:keys(etsmgr:info(espace)) ),
-    ?assert(lists:prefix(Tables1, Tables2)),
+    lists:prefix(Tables1, Tables2).
 
-    application:stop(espace).
+etsmgr_test_() ->
+    {foreach, fun setup/0, fun cleanup/1,
+
+     [ {"etsmgr kill/recover",
+        ?_assert(etsmgr_recover())},
+
+       {"etsmgr kill/restart",
+        {inorder,
+         [ {"drop a control tuple",
+            ?_assertEqual(done, espace:out({hello, 1}))},
+
+           {"find/kill the etsmgr server",
+            ?_assert(erlang:exit(whereis(etsmgr_srv_espace), kill))},
+
+           {"wait a bit",
+            ?_assertEqual(ok, timer:sleep(10))},
+
+           {"ensure the tuple still present",
+            ?_assertMatch({[], {hello, 1}}, espace:in({hello, 1}))}
+
+         ]}},
+
+       {"tspace kill/restart",
+        [ {"drop a control tuple",
+           ?_assertEqual(done, espace:out({goodbye, 2}))},
+
+          {"find/kill the tspace server",
+           ?_assert(erlang:exit(whereis(espace_tspace_srv), kill))},
+
+          {"wait a bit",
+           ?_assertEqual(ok, timer:sleep(10))},
+
+          {"ensure the tuple still present",
+           ?_assertMatch({[], {goodbye, 2}}, espace:in({goodbye, 2}))}
+        ]}
+
+     ]}.
+
+tspatt_recovery_test_() ->
+    {setup, fun setup/0, fun cleanup/1,
+
+     [ {"launch an eval to increment count",
+        ?_assertMatch(Pid when is_pid(Pid),
+                               espace:eval({count,
+                                            fun () ->
+                                                    {[Count], _} = espace:in({count, '$1'}),
+                                                    Count+1
+                                            end}))},
+
+       {"find/kill tspatt server",
+        ?_assert(erlang:exit(whereis(espace_tspatt_srv), kill))},
+
+       {"wait for recovery",
+        ?_assertEqual(ok, timer:sleep(10))},
+
+       {"drop the count into TS",
+        ?_assertEqual(done, espace:out({count, 1}))},
+
+       {"check eval has recovered",
+        ?_assertEqual({[], {count, 2}}, espace:in({count, 2}))}
+
+     ]}.
 
 %%--------------------------------------------------------------------
 %% supporting functions for the tests
 %%--------------------------------------------------------------------
 
 test_add() ->
-    {[A, B], _} = espace:in({add, '$1', '$2'}),
-    done = espace:out({sum, A, B, A+B}),
-    test_add().
+    case espace:in({add, '$1', '$2'}) of
+        quit ->
+            ok;
+        {[A, B], _} ->
+            done = espace:out({sum, A, B, A+B}),
+            test_add()
+    end.

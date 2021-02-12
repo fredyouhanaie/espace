@@ -31,14 +31,14 @@ coordinate through the tuple space.</p>
 
 <p>The basic idea behind tuple spaces is that an application is given
   a storage pool where tuples are added to it via the <code>out</code>
-  operation, or taken from the pool via the <code>in/inp</code>
-  or <code>rd/rdp</code> operations.</p>
+  and <code>eval</code> operations, or taken from the pool via
+  the <code>in/inp</code> and <code>rd/rdp</code> operations.</p>
 
 <p>An application created to use this system will have many
   concurrently active worker processes that look, and optionally, wait
   for tuples that match a desired pattern. The waiting workers will
   block until a matching tuple is added to the pool by another worker
-  using the <code>out</code> operation.</p>
+  using the <code>out/eval</code> operations.</p>
 
 <p>The worker processes are started via
   the <code>espace:worker/1,2</code> function. A worker can in turn

@@ -25,7 +25,7 @@ pterm_erase_test_() ->
              ok = espace_util:pterm_put(inst_erase, beta, beta_123)
      end,
      fun (_) -> ok end,
-     [ {"erase inst keys 1", ?_assertEqual(espace_util:pterm_erase(inst_erase),
+     [ {"erase inst keys 1", ?_assertEqual(lists:sort(espace_util:pterm_erase(inst_erase)),
                                            [{{espace, inst_erase, alpha}, alpha_123},
                                             {{espace, inst_erase, beta}, beta_123}]) },
        {"erase inst keys 2", ?_assertEqual(espace_util:pterm_erase(inst_erase), []) }

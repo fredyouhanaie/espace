@@ -4,7 +4,19 @@
 %%% @copyright (C) 2019, Fred Youhanaie
 %%% @doc
 %%%
-%%% A set of utility function to support the rest of the espace modules.
+%%% A set of utility functions to support the rest of the espace
+%%% modules.
+%%%
+%%% When `espace' instances are started, a number of instance specific
+%%% `persistent_term' entries are created. The `pterm_*' functions are
+%%% used for handling these terms.
+%%%
+%%% The `persistent_term' entries are expected to have the following
+%%% format: `{espace, Inst_name, Key}', where, `Key' identifies the
+%%% particular `espace' item, such as server name to ETS table name,
+%%% and `Inst_name' is the espace instance name, which is the same as
+%%% the application name. For the unnamed instance the `Inst_name' is
+%%% `espace'.
 %%%
 %%% @end
 %%% Created : 11 Mar 2019 by Fred Youhanaie <fyrlang@anydata.co.uk>
@@ -14,7 +26,17 @@
 %% API
 -export([eval_out/1, eval_out/2]).
 -export([inst_to_name/2, wait4etsmgr/4]).
+-export([pterm_erase/1, pterm_get/2, pterm_put/3]).
 
+%%--------------------------------------------------------------------
+
+-type(pt_key() :: {espace, atom(), atom()}).
+
+%% used for locating all keys
+-define(PTerm_key(Inst_name), {espace, Inst_name, _}).
+
+%% used for locating specific keys
+-define(PTerm_key(Inst_name, Key), {espace, Inst_name, Key}).
 
 %%%===================================================================
 %%% API
@@ -44,18 +66,67 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec inst_to_name(atom(), atom()) -> atom().
-inst_to_name(Prefix, espace) ->
-    Prefix;
 inst_to_name(Prefix, Inst_name) ->
-    K = {espace, Inst_name, Prefix},
-    case persistent_term:get(K, undefined) of
+    case pterm_get(Inst_name, Prefix) of
         undefined ->
-            V = list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name)),
-            persistent_term:put(K, V),
+            V = case Inst_name of
+                    espace ->
+                        Prefix;
+                    _ ->
+                        list_to_atom(atom_to_list(Prefix) ++ "_" ++ atom_to_list(Inst_name))
+                end,
+            pterm_put(Inst_name, Prefix, V),
             V;
         V ->
             V
     end.
+
+
+%%--------------------------------------------------------------------
+%% @doc Lookup the instance `Key' for `Inst_name'.
+%%
+%% If the persistence term does not exist, `undefined' is returned.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec pterm_get(atom(), atom()) -> undefined | term().
+pterm_get(Inst_name, Key) ->
+    PT_key = ?PTerm_key(Inst_name, Key),
+    persistent_term:get(PT_key, undefined).
+
+
+%%--------------------------------------------------------------------
+%% @doc Create an `espace' persistent term.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec pterm_put(atom(), atom(), term()) -> ok.
+pterm_put(Inst_name, Key, Term) ->
+    PT_key = ?PTerm_key(Inst_name, Key),
+    persistent_term:put(PT_key, Term).
+
+
+%%--------------------------------------------------------------------
+%% @doc Remove all the persistent terms for a given `espace' instance.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec pterm_erase(atom()) -> [] | [{pt_key(), term()}].
+pterm_erase(Inst_name) ->
+    Erase_term = fun ({K = ?PTerm_key(Inst), V})
+                       when Inst == Inst_name ->
+                         case persistent_term:erase(K) of
+                             true ->
+                                 {true, {K, V}};
+                             false ->
+                                 false
+                         end;
+                     (_) ->
+                         false
+                 end,
+
+    Pterms = persistent_term:get(),
+    lists:filtermap(Erase_term, Pterms).
 
 
 %%--------------------------------------------------------------------

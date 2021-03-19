@@ -69,15 +69,6 @@ start(normal, Inst_name) ->
 %% `persistent_term' entries are created. We ensure these are removed
 %% on exit.
 %%
-%% The `persistent_term' entries are expected to have the following
-%% format: `{espace, Inst_name, Prefix}', where, `Prefix' identifies
-%% the particular `espace' item prefix, such as server name to ETS
-%% table name, and `Inst_name' is the espace instance name, which is
-%% the same as the application name.
-%%
-%% No entries are created for the unnamed instance, whose application
-%% name is `espace'.
-%%
 %% @end
 %%--------------------------------------------------------------------
 -spec stop(term()) -> ok.
@@ -86,17 +77,10 @@ stop(_State) ->
         {ok, espace} ->
             ok;
         {ok, App_name} -> %% this is in fact Inst_name
-            My_term = fun ({{espace, Inst_name, _}, _V})
-                            when Inst_name == App_name ->
-                              true;
-                          (_) ->
-                              false
-                      end,
-            App_terms = lists:filter(My_term, persistent_term:get()),
-            lists:foreach(fun ({K, _V}) -> persistent_term:erase(K) end, App_terms);
+            espace_util:pterm_erase(App_name);
         undefined ->
             ?LOG_WARNING("~p: stop called in non-application context.", [?MODULE])
-        end,
+    end,
     ok.
 
 %%%===================================================================

@@ -1,4 +1,3 @@
-% -*- indent-tabs-mode:nil; -*-
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
 %%% @copyright (C) 2021, Fred Youhanaie
@@ -13,6 +12,34 @@
 
 %%--------------------------------------------------------------------
 %% The tests
+%%--------------------------------------------------------------------
+
+pterm_put() ->
+    ok = espace_util:pterm_put(inst_put, hello, hello_world),
+    hello_world == persistent_term:get({espace, inst_put, hello}).
+
+pterm_erase_test_() ->
+    {setup,
+     fun () ->
+             ok = espace_util:pterm_put(inst_erase, alpha, alpha_123),
+             ok = espace_util:pterm_put(inst_erase, beta, beta_123)
+     end,
+     fun (_) -> ok end,
+     [ {"erase inst keys 1", ?_assertEqual(espace_util:pterm_erase(inst_erase),
+                                           [{{espace, inst_erase, alpha}, alpha_123},
+                                            {{espace, inst_erase, beta}, beta_123}]) },
+       {"erase inst keys 2", ?_assertEqual(espace_util:pterm_erase(inst_erase), []) }
+     ]}.
+
+pterm_test_() ->
+    {foreach,
+     fun () -> espace_util:pterm_put(aaa, bbb, hello) end,
+     fun (_) -> ok end,
+     [ {"get item 1 (new)", ?_assertEqual(espace_util:pterm_get(aaa, bbb), espace_util:pterm_get(aaa, bbb)) },
+       {"get item 2 (old)", ?_assertEqual(persistent_term:get(aaa, bbb), bbb) },
+       {"put item 1", ?_assert(pterm_put())}
+     ]}.
+
 %%--------------------------------------------------------------------
 
 inst_to_name_test_() ->

@@ -105,3 +105,39 @@ eval_out_named_test_() ->
     }.
 
 %%--------------------------------------------------------------------
+
+opcounter_test_() ->
+    [{"no counter ref pterm before start",
+      ?_assertEqual(undefined,
+                    espace_util:pterm_get(espace, opcounters)
+                   )},
+
+     {setup,
+      fun () -> espace_util:opcount_new() end,
+      fun (_) -> espace_util:pterm_erase(espace) end,
+      [{"counter ref pterm exists after start",
+        ?_assertNotEqual(undefined, espace_util:pterm_get(espace, opcounters) )},
+
+       {"intial counts are zero",
+        ?_assert(lists:all(fun (X) -> X==0 end,
+                           maps:values(espace_util:opcount_counts())) )},
+
+       {"increment, check counts",
+        ?_assertEqual(incr_list([in, rd, rd, inp, inp, inp, eval]),
+                      #{in=>1, rd=>2, inp=>3, rdp=>0, out=>0, eval=>1} )}
+      ]},
+
+     {"no counter ref pterm after stop",
+      ?_assertEqual(undefined, espace_util:pterm_get(espace, opcounters))}
+    ].
+
+%% given a list of counter names, increment each one in turn, then
+%% return the counts
+incr_list([]) ->
+    espace_util:opcount_counts();
+
+incr_list([C|Rest]) ->
+    espace_util:opcount_incr(C),
+    incr_list(Rest).
+
+%%--------------------------------------------------------------------

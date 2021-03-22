@@ -39,7 +39,8 @@
 
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, espace_tspace).
--define(TABLE_OPTS, [ordered_set, protected, named_table]).
+-define(TABLE_OPTS, [ordered_set, protected]).
+-define(TABLE_IDKEY, tspace_tabid).
 
 -record(state, {inst_name, tspace_tabid, etsmgr_pid, next_key=1}).
 
@@ -88,13 +89,13 @@ add_tuple(Inst_name, Tuple) ->
 %%--------------------------------------------------------------------
 -spec get_tuple(atom(), in|rd|inp|rdp, tuple()) -> {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
 get_tuple(Inst_name, rdp, Pattern) ->
-    Tab_name = espace_util:inst_to_name(espace_tspace, Inst_name),
-    State = #state{inst_name=Inst_name, tspace_tabid=Tab_name},
+    Tab_id = espace_util:pterm_get(Inst_name, ?TABLE_IDKEY),
+    State = #state{inst_name=Inst_name, tspace_tabid=Tab_id},
     handle_get_tuple(State, rdp, Pattern, self());
 
 get_tuple(Inst_name, rd, Pattern) ->
-    Tab_name = espace_util:inst_to_name(espace_tspace, Inst_name),
-    State = #state{inst_name=Inst_name, tspace_tabid=Tab_name},
+    Tab_id = espace_util:pterm_get(Inst_name, ?TABLE_IDKEY),
+    State = #state{inst_name=Inst_name, tspace_tabid=Tab_id},
     handle_get_tuple(State, rd, Pattern, self());
 
 get_tuple(Inst_name, Espace_op, Pattern) ->
@@ -356,6 +357,7 @@ handle_wait4etsmgr(Mode, State) ->
     case Result of
         {ok, Mgr_pid, Table_id} ->
             Next_key = get_next_key(Table_id),
+            espace_util:pterm_put(Inst_name, ?TABLE_IDKEY, Table_id),
             {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id, next_key=Next_key}};
         {error, Error} ->
             {error, Error}

@@ -53,6 +53,7 @@
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, espace_tspatt).
 -define(TABLE_OPTS, [ordered_set, protected]).
+-define(TABLE_IDKEY, tspatt_tabid).
 
 -record(state, {inst_name, tspatt_tabid, etsmgr_pid}).
 
@@ -337,6 +338,7 @@ handle_wait4etsmgr(Mode, State) ->
 
     case Result of
         {ok, Mgr_pid, Table_id} ->
+            espace_util:pterm_put(Inst_name, ?TABLE_IDKEY, Table_id),
             {ok, State#state{etsmgr_pid=Mgr_pid, tspatt_tabid=Table_id}};
         {error, Error} ->
             {error, Error}

@@ -54,6 +54,7 @@
                    {ok, pid()} |
                    {error, {already_started, pid()} | {shutdown, term()} | term()}.
 start(normal, Inst_name) ->
+    espace_util:opcount_new(Inst_name),
     espace_sup:start_link(Inst_name).
 
 %%--------------------------------------------------------------------

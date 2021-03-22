@@ -61,17 +61,17 @@ eval_out_test_() ->
     {foreach, fun setup/0, fun cleanup/1,
 
      [ {"fun with no args",
-	[ ?_assertEqual(done, espace_util:eval_out({five, fun () -> 2+3 end})),
-	  ?_assertEqual({[], {five, 5}}, espace:in({five, 5})) ]},
+        [ ?_assertEqual(done, espace_util:eval_out({five, fun () -> 2+3 end})),
+          ?_assertEqual({[], {five, 5}}, espace:in({five, 5})) ]},
 
        {"fun with args",
-	[ ?_assertEqual(done, espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3]}})),
-	  ?_assertEqual({[], {five, 5}}, espace:in({five, 5})) ]},
+        [ ?_assertEqual(done, espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3]}})),
+          ?_assertEqual({[], {five, 5}}, espace:in({five, 5})) ]},
 
        {"fun with incompatible fun/args pair",
-	[ ?_assertEqual(done, espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3, 4]}})),
-	  ?_assertMatch({[{F, [2, 3, 4]}], {five, _}} when is_function(F, 2), espace:in({five, '$1'}))
-	] }
+        [ ?_assertEqual(done, espace_util:eval_out({five, {fun (X, Y) -> X+Y end, [2, 3, 4]}})),
+          ?_assertMatch({[{F, [2, 3, 4]}], {five, _}} when is_function(F, 2), espace:in({five, '$1'}))
+        ] }
 
      ]}.
 
@@ -90,17 +90,17 @@ eval_out_named_test_() ->
     {foreach, fun setup_named/0, fun cleanup_named/1,
 
      [ {"fun with no args",
-	[ ?_assertEqual(done, espace_util:eval_out(?Inst_name, {five, fun () -> 2+3 end})),
-	  ?_assertEqual({[], {five, 5}}, espace:in(?Inst_name, {five, 5})) ]},
+        [ ?_assertEqual(done, espace_util:eval_out(?Inst_name, {five, fun () -> 2+3 end})),
+          ?_assertEqual({[], {five, 5}}, espace:in(?Inst_name, {five, 5})) ]},
 
        {"fun with args",
-	[ ?_assertEqual(done, espace_util:eval_out(?Inst_name, {five, {fun (X, Y) -> X+Y end, [2, 3]}})),
-	  ?_assertEqual({[], {five, 5}}, espace:in(?Inst_name, {five, 5})) ]},
+        [ ?_assertEqual(done, espace_util:eval_out(?Inst_name, {five, {fun (X, Y) -> X+Y end, [2, 3]}})),
+          ?_assertEqual({[], {five, 5}}, espace:in(?Inst_name, {five, 5})) ]},
 
        {"fun with incompatible fun/args pair",
-	[ ?_assertEqual(done, espace_util:eval_out(?Inst_name, {five, {fun (X, Y) -> X+Y end, [2, 3, 4]}})),
-	  ?_assertMatch({[{F, [2, 3, 4]}], {five, _}} when is_function(F, 2), espace:in(?Inst_name, {five, '$1'}))
-	] }
+        [ ?_assertEqual(done, espace_util:eval_out(?Inst_name, {five, {fun (X, Y) -> X+Y end, [2, 3, 4]}})),
+          ?_assertMatch({[{F, [2, 3, 4]}], {five, _}} when is_function(F, 2), espace:in(?Inst_name, {five, '$1'}))
+        ] }
      ]
     }.
 

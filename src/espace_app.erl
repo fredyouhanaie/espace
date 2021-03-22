@@ -73,8 +73,6 @@ start(normal, Inst_name) ->
 -spec stop(term()) -> ok.
 stop(_State) ->
     case application:get_application() of
-        {ok, espace} ->
-            ok;
         {ok, App_name} -> %% this is in fact Inst_name
             espace_util:pterm_erase(App_name);
         undefined ->

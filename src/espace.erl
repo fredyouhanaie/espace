@@ -26,11 +26,18 @@
 -export([eval/1, worker/1, in/1, inp/1, out/1, rd/1, rdp/1, infile/1, start/0, stop/0]).
 -export([eval/2, worker/2, in/2, inp/2, out/2, rd/2, rdp/2, infile/2, start/1, stop/1]).
 
+%%--------------------------------------------------------------------
+
+-include_lib("kernel/include/logger.hrl").
+
+-define(Log_base, #{fun_name=>?FUNCTION_NAME}).
+-define(Log_info(Log_map), ?LOG_INFO(maps:merge(?Log_base, Log_map))).
+
+%%--------------------------------------------------------------------
 
 %%%===================================================================
 %%% API
 %%%===================================================================
-
 
 %%--------------------------------------------------------------------
 %% @doc Start a new unnamed instance of espace.
@@ -187,17 +194,17 @@ worker(MFA) when is_tuple(MFA) ->
 %%--------------------------------------------------------------------
 -spec worker(atom(), tuple()) -> pid().
 worker(Inst_name, {M, F, A}) ->
-    logger:info("~p/worker: run_child M=~p, F=~p, A=~p.", [Inst_name, M, F, A]),
+    ?Log_info(#{text=>"run_child", inst_name=>Inst_name, mfa=>{M, F, A}}),
     {ok, Pid} = run_child(M, F, A),
     Pid;
 
 worker(Inst_name, {Fun}) ->
-    logger:info("~p/worker: run_child, Fun=~p.", [Inst_name, Fun]),
+    ?Log_info(#{text=>"run_child", inst_name=>Inst_name, func=>Fun}),
     {ok, Pid} = run_child(Fun, []),
     Pid;
 
 worker(Inst_name, {Fun, Args}) ->
-    logger:info("~p/worker: run_child, Fun=~p, Args=~p.", [Inst_name, Fun, Args]),
+    ?Log_info(#{text=>"run_child", inst_name=>Inst_name, func=>Fun, args=>Args}),
     {ok, Pid} = run_child(Fun, Args),
     Pid.
 
@@ -416,7 +423,7 @@ do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
 %%--------------------------------------------------------------------
 -spec run_child(atom(), atom(), list()) -> {ok, pid()}.
 run_child(M, F, A) ->
-    logger:info("run_child M=~p, F=~p, A=~p.", [M, F, A]),
+    ?Log_info(#{mfa=>{M, F, A}}),
     {ok, spawn(M, F, A)}.
 
 
@@ -428,11 +435,11 @@ run_child(M, F, A) ->
 %%--------------------------------------------------------------------
 -spec run_child(string() | function(), list()) -> {ok, pid()}.
 run_child(Fun, Args) when is_function(Fun) ->
-    logger:info("run_child Fun=~p, Args=~p.", [Fun, Args]),
+    ?Log_info(#{func=>Fun, args=>Args}),
     {ok, spawn(erlang, apply, [Fun, Args])};
 
 run_child(Fun, Args) ->
-    logger:info("run_child Fun=~p, Args=~p.", [Fun, Args]),
+    ?Log_info(#{func=>Fun, args=>Args}),
     {ok, Tokens, _} = erl_scan:string(Fun),
     {ok, Parsed} = erl_parse:parse_exprs(Tokens),
     {value, F, _} = erl_eval:exprs(Parsed, []),

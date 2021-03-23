@@ -44,6 +44,16 @@
 
 -record(state, {inst_name, tspace_tabid, etsmgr_pid, next_key=1}).
 
+%%--------------------------------------------------------------------
+
+-include_lib("kernel/include/logger.hrl").
+
+-define(Log_base, #{fun_name=>?FUNCTION_NAME}).
+-define(Log_info(Log_map), ?LOG_INFO(maps:merge(?Log_base, Log_map))).
+-define(Log_warning(Log_map), ?LOG_WARNING(maps:merge(?Log_base, Log_map))).
+
+%%--------------------------------------------------------------------
+
 %%%===================================================================
 %%% API
 %%%===================================================================
@@ -163,8 +173,8 @@ handle_call({add_tuple, Tuple}, _From, State) ->
     {reply, Reply, State2};
 
 handle_call(Request, From, State) ->
-    logger:warning("~p:handle_call: Unexpected request=~p, from pid=~p, ignored.",
-                   [?SERVER, Request, From]),
+    ?Log_warning(#{text=>"Unexpected request=~p, from pid=~p, ignored.",
+                   server=>?SERVER, request=>Request, from=>From}),
     Reply = ok,
     {reply, Reply, State}.
 
@@ -177,8 +187,8 @@ handle_call(Request, From, State) ->
 %%--------------------------------------------------------------------
 -spec handle_cast(term(), term()) -> {noreply, term()}.
 handle_cast(Request, State) ->
-    logger:warning("~p:handle_cast: Unexpected request=~p, ignored.",
-                   [?SERVER, Request]),
+    ?Log_warning(#{text=>"Unexpected request - ignored",
+                   server=>?SERVER, request=>Request}),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -206,8 +216,8 @@ handle_continue(init, State) ->
     end;
 
 handle_continue(Request, State) ->
-    logger:warning("~p:handle_continue: Unexpected request=~p, ignored.",
-                   [?SERVER, Request]),
+    ?Log_warning(#{text=>"Unexpected request - ignored.",
+                   server=>?SERVER, request=>Request}),
     {noreply, State}.
 
 
@@ -234,27 +244,30 @@ handle_info({'EXIT', Pid, Reason}, State) ->
     Mgr_pid = State#state.etsmgr_pid,
     case Pid of
         Mgr_pid ->
-            logger:warning("~p: etsmgr (~p) has died, reason=~p, waiting for restart.",
-                           [?SERVER, Pid, Reason]),
+            ?Log_warning(#{text=>"etsmgr has died - waiting for restart.",
+                           server=>?SERVER, pid=>Pid, reason=>Reason}),
             case handle_wait4etsmgr(recover, State) of
                 {ok, State2} ->
-                    logger:info("~p: etsmgr has recovered.", [?SERVER]),
+                    ?Log_info(#{text=>"etsmgr has recovered.",
+                                server=>?SERVER}),
                     {noreply, State2};
                 {error, Error} ->
                     {stop, Error}
             end;
         _Other_pid ->
-            logger:warning("~p: unexpected EXIT from pid=~p, reason=~p, ignored.",
-                           [?SERVER, Pid, Reason]),
+            ?Log_warning(#{text=>"unexpected EXIT - ignored",
+                           server=>?SERVER, pid=>Pid, reason=>Reason}),
             {noreply, State}
     end;
 
 handle_info({'ETS-TRANSFER', Table_id, From_pid, Gift_data}, State) ->
-    logger:info("~p:ETS-TRANSFER tabid=~p, from=~p, gift_data=~p.", [?SERVER, Table_id, From_pid, Gift_data]),
+    ?Log_info(#{text=>"ETS-TRANSFER", server=>?SERVER, tabid=>Table_id,
+                from=>From_pid, gift=>Gift_data}),
     {noreply, State};
 
 handle_info(Info, State) ->
-    logger:warning("~p:handle_info: Unexpected message=~p, ignored.", [?SERVER, Info]),
+    ?Log_warning(#{text=>"Unexpected message - ignored.",
+                   server=>?SERVER, info=>Info}),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -269,7 +282,8 @@ handle_info(Info, State) ->
 %%--------------------------------------------------------------------
 -spec terminate(term(), term()) -> ok.
 terminate(Reason, State) ->
-    logger:info("~p: terminating, reason=~p, state=~p.", [?SERVER, Reason, State]),
+    ?Log_info(#{text=>"terminating", server=>?SERVER, reasone=>Reason,
+                state=>State}),
     Inst_name = State#state.inst_name,
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
     etsmgr:del_table(Inst_name, Table_name),

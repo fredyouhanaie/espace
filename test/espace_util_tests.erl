@@ -119,8 +119,8 @@ opcounter_test_() ->
         ?_assertNotEqual(undefined, espace_util:pterm_get(espace, opcounters) )},
 
        {"intial counts are zero",
-        ?_assert(lists:all(fun (X) -> X==0 end,
-                           maps:values(espace_util:opcount_counts())) )},
+        ?_assertEqual([0, 0, 0, 0, 0, 0],
+                      maps:values(espace_util:opcount_counts()) )},
 
        {"increment, check counts",
         ?_assertEqual(incr_list([in, rd, rd, inp, inp, inp, eval]),

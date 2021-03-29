@@ -27,8 +27,8 @@
 -export([inst_to_name/2, wait4etsmgr/4]).
 -export([pterm_erase/1, pterm_get/2, pterm_put/3]).
 
--export([opcount_new/0, opcount_incr/1, opcount_counts/0]).
--export([opcount_new/1, opcount_incr/2, opcount_counts/1]).
+-export([opcount_new/0, opcount_incr/1, opcount_counts/0, opcount_reset/0]).
+-export([opcount_new/1, opcount_incr/2, opcount_counts/1, opcount_reset/1]).
 
 %%--------------------------------------------------------------------
 
@@ -292,6 +292,31 @@ opcount_counts(Inst_name) ->
     C = ?Opctr_ref,
     Counts = [ counters:get(C, Idx) || Idx <- lists:seq(2, ?Opctr_size) ],
     maps:from_list(lists:zip(?Opctr_names, Counts)).
+
+%%--------------------------------------------------------------------
+%% @doc Reset all the op counters of the unnamed instance.
+%%
+%% See `opcount_reset/1' for details.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec opcount_reset() -> ok.
+opcount_reset() ->
+    opcount_reset(espace).
+
+
+%%--------------------------------------------------------------------
+%% @doc Reset all the op counters of a named instance.
+%%
+%% This function has been provided for investigating an application.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec opcount_reset(atom()) -> ok.
+opcount_reset(Inst_name) ->
+    C = ?Opctr_ref,
+    [ counters:put(C, Idx, 0) || Idx <- lists:seq(2, ?Opctr_size) ],
+    ok.
 
 
 %%%===================================================================

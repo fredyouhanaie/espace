@@ -124,7 +124,15 @@ opcounter_test_() ->
 
        {"increment, check counts",
         ?_assertEqual(incr_list([in, rd, rd, inp, inp, inp, eval]),
-                      #{in=>1, rd=>2, inp=>3, rdp=>0, out=>0, eval=>1} )}
+                      #{in=>1, rd=>2, inp=>3, rdp=>0, out=>0, eval=>1} )},
+
+       {"reset the previous counts",
+        ?_assertEqual([0,0,0,0,0,0],
+                      maps:values(begin
+                                      espace_util:opcount_reset(),
+                                      espace_util:opcount_counts()
+                                  end) )}
+
       ]},
 
      {"no counter ref pterm after stop",

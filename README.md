@@ -16,56 +16,48 @@ Another good source that describes the paradigm well is the following paper:
 
 Further details can be found on the [wiki pages](https://github.com/fredyouhanaie/espace/wiki).
 
+
 ## Recent changes
 
-The `espace_lite` branch has now been merged into the `master`
-branch. Going forward all changes will be on the master branch.
+* We have a plugin for `observer_cli`, see the module
+  `src/espace_observer.erl`. You can find details further below
 
-* The `worker_sup` supervisor and `tspool_srv` gen server have been
-  removed.
+* The `rebar3_bench` scripts have been removed, and will be made
+  available as a separate project.
 
-* All the processes that used to be started by the `eval` and `worker`
-  operations are now started from within the client API, and are no
-  longer run under a supervisor.
+* When an `espace` server terminates, all the waiting clients, i.e
+  those that have called `in/1,2` or `rd/1,2`, will be returned the
+  `quit` atom, instead of blocking indefinitely. This may break
+  applications that are expecting a return of type `{list(),
+  tuple()}`, or those that assume a return implies that the tuple
+  is/was present in the TS.
 
-* The entire application has now been reduced to one supervisor and
-  two gen_servers, plus `etsmgr`. However, the use of `etsmgr` will be
-  provided as a startup option in future.
+* Some performance improvements when mapping instance names to actual
+  server objects (`espace_util:inst_to_name/2`).
 
-* microbenchmarks have been added for the various `espace`
-  operations. The benchmark modules are kept in the `bench/`
-  directory. They can be produced with `rebar3 bench -d bench`.
+* A set of op counters is maintained for each active instance. The
+  counters are autoincremented for each espace operation. The counts
+  can be accessed via the `espace_util:opcount_counts/0,1`
+  functions. You can find details in the module docs.
 
-## Less resent changes
+* For each instance there is a set of `persistent_term` records, that
+  can be used for various diagnostic tools. You can find details in
+  the `espace_util` module docs, look for the `pterm_*` functions.
 
-* The [`etsmgr`](https://github.com/fredyouhanaie/etsmgr) application
-  is used to ensure the tuple space and pattern data held in ETS
-  tables survive the server restarts.
-
-* As we have started using the `handle_continue` callback of
-  gen_server, we can only support OTP versions from 21.0 onwards.
-
-* `eval` now behaves like the original Linda specification, i.e. like
-  `out`, it takes a tuple and adds it to the tuple space, however, if
-  the tuple contains any expressions, for espace they are `fun`
-  expressions, those expressions are replaced with their respective
-  values before adding the tuple to the tuple space. See the module
-  documentation for `espace:eval/1,2` for details.
-* A new module has been created `espace_util`, which contains the
-  current, and future, support functions.
-
-## Upcoming changes
-
-* Some work is planned for performance measurement and tracing.
 
 ## Current Status
 
 * The project has been developed and tested on a *Linux* system. Using
-  Erlang/OTP 20 and 21, and rebar3.
-* Tests are carried out using a set of basic Eunit tests, via `rebar3 eunit`.
-* General documentation can be found on the [wiki pages](https://github.com/fredyouhanaie/espace/wiki).
-* Documentation for the source code can be generated via `rebar3 docs`.
-* There are some example programs in the `Examples/` directory.
+  Erlang/OTP 21.3 and later, and rebar3.
+* The software is under constant development, and SHOULD NOT be
+  considered fit for production use.
+* Tests are carried out using a set of basic Eunit tests, via `rebar3
+  eunit`.
+* General documentation can be found on the [wiki
+  pages](https://github.com/fredyouhanaie/espace/wiki).
+* Documentation for the source code can be generated via `rebar3
+  edoc`.
+
 
 ## Build and testing
 
@@ -91,20 +83,18 @@ rebar3 dialyzer
 ```
 rebar3 edoc
 ```
-* To produce the microbenchmarks:
-```
-rebar3 bench -d bench
-```
+
 
 ## To try out the application
 
 * Change to the top level directory of the project
-* ensure that you have the erlang binaries and rebar3 in your shell path
-* build the application
+* Ensure that you have the erlang binaries and rebar3 in your shell
+  path
+* Build the application
 ```
 $ rebar3 do clean,compile
 ```
-* Start the application
+* Start the application via the shell
 ```
 $ rebar3 shell
 > espace:start().
@@ -135,11 +125,65 @@ $ rebar3 shell
 ```
 > espace:out({add, 42, 43}).
 ```
-* There will always be two patterns in the `tspace_patt` table, `{add,
+* There will always be two patterns in the `espace_tspatt` table, `{add,
   '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`. You can check that the
   waiting pattern pids match the child process pids of `worker_sup` on
   the Applcation tab.
 
+
+## Using the `observer_cli` plugin
+
+[observer\_cli](https://github.com/zhongwencool/observer_cli) is a
+command line based (i.e non-GUI) application that can be used to
+visualise various performance metrics of an erlang node. It can be
+extended with user supplied plugins, which is what we have here.
+
+The espace plugin, `espace_observer.erl`, will list display a single
+row for each active instance of espace. Each row will display the
+instance name, the number of tuples in the TS, the number of waiting
+(blocked) clients, and the counters for the six operations.
+
+The CUI/TUI can be started with the shell as shown below:
+
+```
+$ rebar3 shell
+> espace:start().
+> %% start your espace application
+> observer_cli:start().
+```
+
+In the observer_cli screen press `P<return>` to display the espace screen.
+
+You can also run `observer_cli` as a standalone command, see the notes
+in the [escriptize
+section](https://github.com/zhongwencool/observer_cli#escriptize).
+
+Before running the observer_cli escript, start the target node is up
+and running, e.g.
+
+```
+$ rebar3 shell --name espace@localhost
+```
+
+In a separate terminal window:
+
+```
+observer_cli espace@localhost
+```
+
+Back in the espace shell, try starting a couple of instances:
+
+```
+> espace:start().
+> espace:start(aaa).
+> espace:out({five, 2+3}).
+> espace:eval(aaa, {five, fun () -> 2+3 end})
+```
+
+The above sequence will result in two rows in the observer_cli plugin
+screen, `espace` and `aaa`. Each will show 1 tuple and one `out`. The
+`aaa` instance will also show a count of 1 for `eval`. Note that each
+`eval` increments the `eval` and `out` counts.
 
 Enjoy!
 

@@ -1,8 +1,8 @@
 %% -*- mode:html -*-
 
 @author Fred Youhanaie <fyrlang@anydata.co.uk>
-@copyright 2017-2020 Fred Youhanaie
-@version 0.6.0
+@copyright 2017-2021 Fred Youhanaie
+@version 0.7.0
 
 @doc
 
@@ -26,8 +26,8 @@
 </blockquote>
 
 <p><code>espace</code> allows one to implement parallel algorithms
-where tasks (worker processes) running concurrently communicate and
-coordinate through the tuple space.</p>
+  where tasks (worker processes) running concurrently communicate and
+  coordinate through the tuple space.</p>
 
 <p>The basic idea behind tuple spaces is that an application is given
   a storage pool where tuples are added to it via the <code>out</code>
@@ -176,5 +176,53 @@ coordinate through the tuple space.</p>
   for it. However, since the ETS table is an <code>ordered_set</code>,
   the notification will be performed in a first come (blocked) first
   served (notified) manner.</p>
+
+<h4>The Operation Counters</h4>
+
+<p>For each running instance of `espace' a set of counters are
+  maintained. Each set consists of six counters, one for each `espace'
+  operation. The counters are increments whenever the operation is
+  requested. Note that each `eval' will increment two counters, `eval'
+  and `out'.</p>
+
+<p>The functions for the operation counters can be found in the
+  `espace_util' module and have the prefix `opcount_'. However, only
+  two of them are meant for general use, `opcount_counts/0,1' and
+  `opcount_reset/0,1'. The former will return a map of the
+  operation/count pairs, while the latter will reset the counts to
+  zero.</p>
+
+<h4>The persistent term records</h4>
+
+<p>In order to provide better visibility of the internal workings of
+  an `espace' instance, as well as simplifying some of the code, a set
+  of `persistent_term' records are maintained for each active
+  instance.</p>
+
+<p>The functions for manipulating the terms can be found in the
+  `espace_util' module and are prefixed `pterm_'. The terms are
+  created during the instance startup, and removed during the instance
+  shutdown.</p>
+
+<p>The keys are of the form `{espace, Inst :: atom(), Key :: atom()}',
+  where `Inst' is the instance name, and `Key' specifies the
+  particular term. The current keys are listed below:
+
+<ol>
+
+<li>`espace_sup', `espace_tspace_srv', `espace_tspatt_srv' and
+  `etsmgr_srv' identify the registered server names.</li>
+
+<li>`tspace_tabid' and `tspatt_tabid' contain the ETS table ids.</li>
+
+<li>`opcounters' identifies the reference for the `counters'
+  module.</li>
+
+<li>`espace_tspace' and `espace_tspatt' identify the table names for
+  the `etsmgr' instance.</li>
+
+</ol>
+
+</p>
 
 @end

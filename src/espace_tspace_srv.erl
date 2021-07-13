@@ -103,11 +103,6 @@ get_tuple(Inst_name, rdp, Pattern) ->
     State = #state{inst_name=Inst_name, tspace_tabid=Tab_id},
     handle_get_tuple(State, rdp, Pattern, self());
 
-get_tuple(Inst_name, rd, Pattern) ->
-    Tab_id = espace_util:pterm_get(Inst_name, ?TABLE_IDKEY),
-    State = #state{inst_name=Inst_name, tspace_tabid=Tab_id},
-    handle_get_tuple(State, rd, Pattern, self());
-
 get_tuple(Inst_name, Espace_op, Pattern) ->
     gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Espace_op, Pattern}).
 

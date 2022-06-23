@@ -1,6 +1,6 @@
 # espace
 
-[![Build Status](https://travis-ci.com/fredyouhanaie/espace.svg?branch=master)](https://travis-ci.com/fredyouhanaie/espace)
+[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml)
 
 ## Introduction
 

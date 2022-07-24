@@ -97,7 +97,6 @@ $ rebar3 do clean,compile
 * Start the application via the shell
 ```
 $ rebar3 shell
-> espace:start().
 ```
 * At the erlang shell prompt, if desired, bring up the Observer
 ```
@@ -126,9 +125,7 @@ $ rebar3 shell
 > espace:out({add, 42, 43}).
 ```
 * There will always be two patterns in the `espace_tspatt` table, `{add,
-  '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`. You can check that the
-  waiting pattern pids match the child process pids of `worker_sup` on
-  the Applcation tab.
+  '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`.
 
 
 ## Using the `observer_cli` plugin
@@ -138,7 +135,7 @@ command line based (i.e non-GUI) application that can be used to
 visualise various performance metrics of an erlang node. It can be
 extended with user supplied plugins, which is what we have here.
 
-The espace plugin, `espace_observer.erl`, will list display a single
+The espace plugin, `espace_observer.erl`, will display a single
 row for each active instance of espace. Each row will display the
 instance name, the number of tuples in the TS, the number of waiting
 (blocked) clients, and the counters for the six operations.
@@ -183,7 +180,7 @@ Back in the espace shell, try starting a couple of instances:
 The above sequence will result in two rows in the observer_cli plugin
 screen, `espace` and `aaa`. Each will show 1 tuple and one `out`. The
 `aaa` instance will also show a count of 1 for `eval`. Note that each
-`eval` increments the `eval` and `out` counts.
+`eval` op increments the `eval` and `out` counts.
 
 Enjoy!
 

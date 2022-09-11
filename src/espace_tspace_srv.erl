@@ -10,8 +10,8 @@
 %%% debugging purposes.
 %%%
 %%% Each record has the form `{Num, {Tuple}}', where `Num' is a unique
-%%% integer key that we initialized to 1 and increment after inserting
-%%% the record, and `Tuple' is the user supplied payload. For example
+%%% integer key that we initialize to 0 and increment before inserting
+%%% the next record, and `Tuple' is the user supplied payload. For example
 %%% if the tuple `{hello, 123}' is the first to be added, then the
 %%% inserted record will be `{1, {hello, 123}}'.
 %%%
@@ -42,7 +42,9 @@
 -define(TABLE_OPTS, [ordered_set, protected]).
 -define(TABLE_IDKEY, tspace_tabid).
 
--record(state, {inst_name, tspace_tabid, etsmgr_pid, next_key=1}).
+-define(NEXT_KEY_NAME, next_key).
+
+-record(state, {inst_name, tspace_tabid, etsmgr_pid}).
 
 %%--------------------------------------------------------------------
 
@@ -338,11 +340,10 @@ handle_get_tuple(State, Espace_op, Pattern, Cli_pid) ->
 handle_add_tuple(Tuple, State) ->
     Inst_name = State#state.inst_name,
     Tab_id = State#state.tspace_tabid,
-    Tab_key = State#state.next_key,
+    Tab_key = get_next_key(Tab_id),
     ets:insert(Tab_id, {Tab_key, Tuple}),
-    State2 = State#state{next_key=Tab_key+1},
     espace_tspatt_srv:check_waitlist(Inst_name, Tuple),
-    {done, State2}.
+    {done, State}.
 
 
 %%--------------------------------------------------------------------
@@ -365,9 +366,9 @@ handle_wait4etsmgr(Mode, State) ->
 
     case Result of
         {ok, Mgr_pid, Table_id} ->
-            Next_key = get_next_key(Table_id),
+            Next_key = get_last_key(Table_id),
             espace_util:pterm_put(Inst_name, ?TABLE_IDKEY, Table_id),
-            {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id, next_key=Next_key}};
+            {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id}};
         {error, Error} ->
             {error, Error}
     end.
@@ -375,16 +376,23 @@ handle_wait4etsmgr(Mode, State) ->
 %%--------------------------------------------------------------------
 %% @doc Returns the last key used in a table.
 %%
-%% This is only needed during the application startup, and when the
-%% server has restarted by the supervisor following a crash.
+%% If the entry does not exist, a zero-valued entry is inserted.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec get_last_key(ets:tid()) -> integer().
+get_last_key(Tab_id) ->
+    ets:update_counter(Tab_id, ?NEXT_KEY_NAME, 0, {?NEXT_KEY_NAME, 0}).
+
+%%--------------------------------------------------------------------
+%% @doc Increment and return the next key for inserting new tuple.
+%%
+%% If the key does not exist, it is initialized to 1 and that value is returned.
 %%
 %% @end
 %%--------------------------------------------------------------------
 -spec get_next_key(ets:tid()) -> integer().
 get_next_key(Tab_id) ->
-    case ets:select(Tab_id, [{ {'$1', {'_'}}, [], ['$$'] }]) of
-        [] ->
-            1;
-        Keys ->
-            1+lists:max(lists:flatten(Keys))
-    end.
+    ets:update_counter(Tab_id, ?NEXT_KEY_NAME, 1, {?NEXT_KEY_NAME, 1}).
+
+%%--------------------------------------------------------------------

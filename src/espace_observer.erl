@@ -147,7 +147,7 @@ inst_counts(Inst_name) ->
 -spec inst_tuples(atom()) -> integer().
 inst_tuples(Inst_name) ->
     Tab_id = espace_util:pterm_get(Inst_name, tspace_tabid),
-    ets:info(Tab_id, size).
+    ets:info(Tab_id, size)-1. %% we discount the entry for the key counter
 
 
 %%--------------------------------------------------------------------

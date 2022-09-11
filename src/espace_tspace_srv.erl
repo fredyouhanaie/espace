@@ -366,23 +366,11 @@ handle_wait4etsmgr(Mode, State) ->
 
     case Result of
         {ok, Mgr_pid, Table_id} ->
-            Next_key = get_last_key(Table_id),
             espace_util:pterm_put(Inst_name, ?TABLE_IDKEY, Table_id),
             {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id}};
         {error, Error} ->
             {error, Error}
     end.
-
-%%--------------------------------------------------------------------
-%% @doc Returns the last key used in a table.
-%%
-%% If the entry does not exist, a zero-valued entry is inserted.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec get_last_key(ets:tid()) -> integer().
-get_last_key(Tab_id) ->
-    ets:update_counter(Tab_id, ?NEXT_KEY_NAME, 0, {?NEXT_KEY_NAME, 0}).
 
 %%--------------------------------------------------------------------
 %% @doc Increment and return the next key for inserting new tuple.
@@ -393,6 +381,6 @@ get_last_key(Tab_id) ->
 %%--------------------------------------------------------------------
 -spec get_next_key(ets:tid()) -> integer().
 get_next_key(Tab_id) ->
-    ets:update_counter(Tab_id, ?NEXT_KEY_NAME, 1, {?NEXT_KEY_NAME, 1}).
+    ets:update_counter(Tab_id, ?NEXT_KEY_NAME, 1, {?NEXT_KEY_NAME, 0}).
 
 %%--------------------------------------------------------------------

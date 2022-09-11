@@ -140,15 +140,17 @@ inst_counts(Inst_name) ->
 
 
 %%--------------------------------------------------------------------
-%% @doc Return the number of tuple in the TS.
+%% @doc Return the number of tuples in the TS.
 %%
 %% @end
 %%--------------------------------------------------------------------
 -spec inst_tuples(atom()) -> integer().
 inst_tuples(Inst_name) ->
     Tab_id = espace_util:pterm_get(Inst_name, tspace_tabid),
-    ets:info(Tab_id, size)-1. %% we discount the entry for the key counter
-
+    case ets:info(Tab_id, size) of
+        0 -> 0;
+        N -> N-1 %% discount the entry for the key counter
+    end.
 
 %%--------------------------------------------------------------------
 %% @doc Return the list of blocking clients.

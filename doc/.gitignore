@@ -1,4 +1,5 @@
 *.css
+*.html
+chunks/
 edoc-info
 erlang.png
-*.html

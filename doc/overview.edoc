@@ -60,40 +60,41 @@
 
 <h3><i>eval</i> <u>vs</u> <i>worker</i></h3>
 
-<p>The `eval' operation, as defined in Linda, is expected to behave
-  the same way as `out', with the exception that if there are any
-  `fun' expressions in the supplied tuple, they will be replaced with
-  their respective function values before being added to the tuple
-  space.
-</p>
+<p>The `eval' operation behaves in the same way as `out', with the exception
+  that if there are any `fun' expressions in the supplied tuple, they will be
+  replaced with their respective function values before being added to the tuple
+  space. The evaluation of the `fun' expression will be carried out in a
+  separate process. Which makes `eval' the main method of starting concurrent
+  processes.</p>
 
-<p>The `espace:eval/1,2' functions in the first implementation of
-  `espace' had a different behaviour. Initially it would take a `{Mod,
-  Fun, Args}' triple or a `fun' expression and spawn a child process
-  to evaluate it. Nothing would be added to the tuple space, unless
-  explicitly included inside the function.
-</p>
+<p>Two forms of function elements are recognized: A zero arity `fun'
+  expression,
+  <code>eval({..., fun () -> expr end, ...})</code>
+  or
+  <code>eval({..., fun Fun_name/0, ...})</code>,
+  and a tuple with two elements, an `N' arity `fun' expression together with a
+  list of length `N',
+  <code>eval({..., {fun (A, B, ...) -> expr end, [expr, expr, ...]}, ...})</code>
+  or
+  <code>eval({..., {fun Fun_name/N, [expr, expr, ...]}, ...})</code>.
+  In the second form, the arity can be zero, however, an empty arg list, `[]',
+  must accompany the function.</p>
 
-<p>For some time now, the `espace:worker/1,2' functions have provided
-  the functionality that the original `espace:eval/1,2' used to
-  provide.
-</p>
+<p>For example, <code>eval({sum, 2, 5, fun () 2+5 end})</code> will result in
+  the tuple <code>{sum, 2, 5, 7}</code>. This has the same effect
+  as <code>eval({sum, 2, 5, 2+5})</code>, however, the main difference is that
+  in the former a new process will be created to evaluate the sum. The advantage
+  of using `eval` is where the function(s) perform complex tasks, and we prefer
+  to let the main client to continue its work while the computation is being
+  carried out in the background.</p>
 
-<p>We now have a new `espace:eval/1,2' function that behaves in a
-  similar manner to the Linda definition. The current `eval' now takes
-  a tuple, and if the tuple contains any `fun' expressions, those
-  expressions are evaluated before adding the tuple to the tuple
-  space. The evaluation of the tuple elements is carried out
-  sequentially in a separate child process.
-</p>
+<p>The `worker/1,2' function is a convenient function to spawn new processes in
+  the background. The return value of the function is discarded. Typically this
+  is useful for long running processes that repeatedly wait for a tuple, process
+  it and produce some output.</p>
 
-<p>Only two forms of function elements are recognized: A zero arity
-  `fun' expression, <code>fun () -> expr end</code>, and a tuple with
-  two elements, an `N' arity `fun' expression together with a list of
-  length `N',
-  <code>{fun (A, B, ...) -> expr end, [expr, expr, ...]}</code>. In
-  the second form, the arity can be zero, however, an empty arg list,
-  `[]', must accompany the function.</p>
+<p>The `worker/1,2' function takes a tuple that is of the form `{Mod, Fun,
+  [Args]}' or `fun' expression like those accepted by `eval/1,2'.
 
 <h3>Organization of the Project Modules</h3>
 

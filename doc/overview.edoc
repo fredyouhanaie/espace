@@ -179,18 +179,16 @@
 
 <h4>The Operation Counters</h4>
 
-<p>For each running instance of `espace' a set of counters are
-  maintained. Each set consists of six counters, one for each `espace'
-  operation. The counters are increments whenever the operation is
-  requested. Note that each `eval' will increment two counters, `eval'
-  and `out'.</p>
+<p>For each running instance of `espace' a set of counters are maintained. Each
+  set consists of six counters, one for each `espace' operation. The counters
+  are incremented whenever the operation is requested. Note that each `eval'
+  will increment two counters, `eval' and `out'.</p>
 
-<p>The functions for the operation counters can be found in the
-  `espace_util' module and have the prefix `opcount_'. However, only
-  two of them are meant for general use, `opcount_counts/0,1' and
-  `opcount_reset/0,1'. The former will return a map of the
-  operation/count pairs, while the latter will reset the counts to
-  zero.</p>
+<p>The functions for the operation of the counters are in the `espace_util'
+  module and have the prefix `opcount_'. However, only two of them are meant for
+  general use, `opcount_counts/0,1' and `opcount_reset/0,1'. The former will
+  return a map of the operation/count pairs, while the latter will reset the
+  counts to zero.</p>
 
 <h4>The persistent term records</h4>
 

@@ -14,34 +14,6 @@
 %% The tests
 %%--------------------------------------------------------------------
 
-pterm_put() ->
-    ok = espace_util:pterm_put(inst_put, hello, hello_world),
-    hello_world == persistent_term:get({espace, inst_put, hello}).
-
-pterm_erase_test_() ->
-    {setup,
-     fun () ->
-             ok = espace_util:pterm_put(inst_erase, alpha, alpha_123),
-             ok = espace_util:pterm_put(inst_erase, beta, beta_123)
-     end,
-     fun (_) -> ok end,
-     [ {"erase inst keys 1", ?_assertEqual(lists:sort(espace_util:pterm_erase(inst_erase)),
-                                           [{{espace, inst_erase, alpha}, alpha_123},
-                                            {{espace, inst_erase, beta}, beta_123}]) },
-       {"erase inst keys 2", ?_assertEqual(espace_util:pterm_erase(inst_erase), []) }
-     ]}.
-
-pterm_test_() ->
-    {foreach,
-     fun () -> espace_util:pterm_put(aaa, bbb, hello) end,
-     fun (_) -> ok end,
-     [ {"get item 1 (new)", ?_assertEqual(espace_util:pterm_get(aaa, bbb), espace_util:pterm_get(aaa, bbb)) },
-       {"get item 2 (old)", ?_assertEqual(persistent_term:get(aaa, bbb), bbb) },
-       {"put item 1", ?_assert(pterm_put())}
-     ]}.
-
-%%--------------------------------------------------------------------
-
 inst_to_name_test_() ->
     [ { "any prefix, espace instance", ?_assertEqual(hello, espace_util:inst_to_name(hello, espace)) },
       { "any prefix, any instance", ?_assertEqual(hello_aaa, espace_util:inst_to_name(hello, aaa)) },
@@ -109,14 +81,14 @@ eval_out_named_test_() ->
 opcounter_test_() ->
     [{"no counter ref pterm before start",
       ?_assertEqual(undefined,
-                    espace_util:pterm_get(espace, opcounters)
+                    espace_pterm:get(espace, opcounters)
                    )},
 
      {setup,
       fun () -> espace_util:opcount_new() end,
-      fun (_) -> espace_util:pterm_erase(espace) end,
+      fun (_) -> espace_pterm:erase(espace) end,
       [{"counter ref pterm exists after start",
-        ?_assertNotEqual(undefined, espace_util:pterm_get(espace, opcounters) )},
+        ?_assertNotEqual(undefined, espace_pterm:get(espace, opcounters) )},
 
        {"intial counts are zero",
         ?_assertEqual([0, 0, 0, 0, 0, 0],
@@ -136,7 +108,7 @@ opcounter_test_() ->
       ]},
 
      {"no counter ref pterm after stop",
-      ?_assertEqual(undefined, espace_util:pterm_get(espace, opcounters))}
+      ?_assertEqual(undefined, espace_pterm:get(espace, opcounters))}
     ].
 
 %% given a list of counter names, increment each one in turn, then

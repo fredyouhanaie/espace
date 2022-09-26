@@ -101,7 +101,7 @@ add_tuple(Inst_name, Tuple) ->
 %%--------------------------------------------------------------------
 -spec get_tuple(atom(), in|rd|inp|rdp, tuple()) -> {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
 get_tuple(Inst_name, rdp, Pattern) ->
-    Tab_id = espace_util:pterm_get(Inst_name, ?TABLE_IDKEY),
+    Tab_id = espace_pterm:get(Inst_name, ?TABLE_IDKEY),
     State = #state{inst_name=Inst_name, tspace_tabid=Tab_id},
     handle_get_tuple(State, rdp, Pattern, self());
 
@@ -366,7 +366,7 @@ handle_wait4etsmgr(Mode, State) ->
 
     case Result of
         {ok, Mgr_pid, Table_id} ->
-            espace_util:pterm_put(Inst_name, ?TABLE_IDKEY, Table_id),
+            espace_pterm:put(Inst_name, ?TABLE_IDKEY, Table_id),
             {ok, State#state{etsmgr_pid=Mgr_pid, tspace_tabid=Table_id}};
         {error, Error} ->
             {error, Error}

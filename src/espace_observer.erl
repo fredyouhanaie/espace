@@ -146,7 +146,7 @@ inst_counts(Inst_name) ->
 %%--------------------------------------------------------------------
 -spec inst_tuples(atom()) -> integer().
 inst_tuples(Inst_name) ->
-    Tab_id = espace_util:pterm_get(Inst_name, tspace_tabid),
+    Tab_id = espace_pterm:get(Inst_name, tspace_tabid),
     case ets:info(Tab_id, size) of
         0 -> 0;
         N -> N-1 %% discount the entry for the key counter
@@ -161,7 +161,7 @@ inst_tuples(Inst_name) ->
 %%--------------------------------------------------------------------
 -spec inst_waiting(atom()) -> integer().
 inst_waiting(Inst_name) ->
-    Tab_id = espace_util:pterm_get(Inst_name, tspatt_tabid),
+    Tab_id = espace_pterm:get(Inst_name, tspatt_tabid),
     ets:info(Tab_id, size).
 
 %%-------------------------------------------------------------------

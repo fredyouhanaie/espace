@@ -75,7 +75,7 @@ start(normal, Inst_name) ->
 stop(_State) ->
     case application:get_application() of
         {ok, App_name} -> %% this is in fact Inst_name
-            espace_util:pterm_erase(App_name);
+            espace_pterm:erase(App_name);
         undefined ->
             ?LOG_WARNING(#{text=>"stop called in non-application context.",
                            module=>?MODULE, fun_name=>?FUNCTION_NAME})

@@ -46,7 +46,7 @@
   worker can in turn start further workers by calling `worker/1,2'.</p>
 
 <p>A typical application will start with a series of <code>out</code>
-  and <code>eval</code> oprations. Some of the worker processes will then, using
+  and <code>eval</code> operations. Some of the worker processes will then, using
   the <code>in</code> or <code>rd</code> operations, pick the tuples added via
   the <code>out</code> operations, process them, then <code>out</code> the
   results. Other worker processes can then pick the results and process them
@@ -94,7 +94,7 @@
   it and produce some output.</p>
 
 <p>The `worker/1,2' function takes a tuple that is of the form `{Mod, Fun,
-  [Args]}' or `fun' expression like those accepted by `eval/1,2'.
+  [Args]}' or `fun' expression like those accepted by `eval/1,2'.</p>
 
 <h3>Organization of the Project Modules</h3>
 
@@ -171,7 +171,7 @@
   up competing for it. However, since the ETS table is
   an <code>ordered_set</code>, the notification will be performed in a first
   come (blocked) first served (notified) manner. However, we cannot guarantee
-  that the first unblocked client will get the tuple! This non-deteminism is
+  that the first unblocked client will get the tuple! This non-determinism is
   part of the original specification.</p>
 
 <h4>The Operation Counters</h4>

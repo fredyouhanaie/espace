@@ -147,35 +147,36 @@
 
 <h4>The ETS Tables</h4>
 
-<p>The tuples are kept in a pair of ETS tables.</p>
+<p>The tuples are kept in a pair of ETS tables, `espace_tspace' and
+`espace_tspatt'.</p>
 
-<p>The first table, <code>espace_tspace</code> has two columns, an
-  integer, and the tuple itself. All access to the table is handled by
-  a single server, <code>espace_tspace_srv</code>.</p>
+<p>The first table, <code>espace_tspace</code> has two columns, an integer, and
+  the tuple itself. All access to the table is handled by a single
+  server, <code>espace_tspace_srv</code>.</p>
 
-<p>For the cases where no matching tuple is found for a given pattern,
-  a second ETS table <code>espace_tspatt</code> is used to remember
-  the pattern, the client PID and a unique reference for this specific
-  request. The unique reference will be used by the
-  <code>espace</code> client side function to block on a receive for
-  that reference.</p>
+<p>For the cases where no matching tuple is found for a given pattern, and the
+  operation is a blocking one, i.e. `in' or `rd', a second ETS
+  table <code>espace_tspatt</code> is used to remember the pattern, the client
+  PID and a unique reference for this specific request. The unique reference
+  will be used by the <code>espace</code> client side function to block on a
+  receive for that reference.</p>
 
-<p>Each <code>out</code> operation, after inserting the new tuple,
-  will notify <code>espace_tspatt_srv</code> of the new
-  tuple. <code>espace_tspatt_srv</code> will then scan the blocking
-  clients whose pattern matches the newly added tuple. If a match is
-  found, the waiting client is notified and the client entry is
-  removed from the table.</p>
+<p>Each <code>out</code> operation, after inserting the new tuple, will
+  notify <code>espace_tspatt_srv</code> of the new
+  tuple. <code>espace_tspatt_srv</code> will then scan the blocking clients
+  whose pattern matches the newly added tuple. If a match is found, the waiting
+  client is notified and the client entry is removed from the table.</p>
 
 <p>Once the waiting client receives the notification, it will attempt
-  the <code>rd</code> or <code>in</code> operation again. Note that
-  the client is not handed the tuple, but notified to request it
-  again. This waiting and the subsequent notification occurs inside
-  the espace client code. If more than one client have waiting
-  patterns that match the new tuple, then they may end up competing
-  for it. However, since the ETS table is an <code>ordered_set</code>,
-  the notification will be performed in a first come (blocked) first
-  served (notified) manner.</p>
+  the <code>rd</code> or <code>in</code> operation again. Note that the client
+  is not handed the tuple, but notified to request it again. This waiting and
+  the subsequent notification occurs inside the espace client code. If more than
+  one client have waiting patterns that match the new tuple, then they may end
+  up competing for it. However, since the ETS table is
+  an <code>ordered_set</code>, the notification will be performed in a first
+  come (blocked) first served (notified) manner. However, we cannot guarantee
+  that the first unblocked client will get the tuple! This non-deteminism is
+  part of the original specification.</p>
 
 <h4>The Operation Counters</h4>
 

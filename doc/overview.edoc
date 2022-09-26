@@ -192,32 +192,29 @@
 
 <h4>The persistent term records</h4>
 
-<p>In order to provide better visibility of the internal workings of
-  an `espace' instance, as well as simplifying some of the code, a set
-  of `persistent_term' records are maintained for each active
-  instance.</p>
+<p>In order to provide better visibility of the internal workings of an `espace'
+  instance, as well as simplifying some of the code, a set of `persistent_term'
+  records are maintained for each active instance.</p>
 
-<p>The functions for manipulating the terms can be found in the
-  `espace_util' module and are prefixed `pterm_'. The terms are
-  created during the instance startup, and removed during the instance
-  shutdown.</p>
+<p>The functions for manipulating the terms are in the `espace_util' module and
+  are prefixed `pterm_'. The terms are created during the instance startup, and
+  removed during the instance shutdown.</p>
 
-<p>The keys are of the form `{espace, Inst :: atom(), Key :: atom()}',
-  where `Inst' is the instance name, and `Key' specifies the
-  particular term. The current keys are listed below:
+<p>The keys are of the form `{espace, Inst :: atom(), Key :: atom()}', where
+  `Inst' is the instance name, and `Key' specifies the particular term. The
+  current keys are listed below:
 
 <ol>
 
-<li>`espace_sup', `espace_tspace_srv', `espace_tspatt_srv' and
-  `etsmgr_srv' identify the registered server names.</li>
+<li>`espace_sup', `espace_tspace_srv', `espace_tspatt_srv' and `etsmgr_srv'
+  identify the registered server names.</li>
 
 <li>`tspace_tabid' and `tspatt_tabid' contain the ETS table ids.</li>
 
-<li>`opcounters' identifies the reference for the `counters'
-  module.</li>
+<li>`opcounters' identifies the reference for the `counters' module.</li>
 
-<li>`espace_tspace' and `espace_tspatt' identify the table names for
-  the `etsmgr' instance.</li>
+<li>`espace_tspace' and `espace_tspatt' identify the table names for the
+  `etsmgr' instance.</li>
 
 </ol>
 

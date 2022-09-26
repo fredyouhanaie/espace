@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
-%%% @copyright (C) 2021, Fred Youhanaie
+%%% @copyright 2021, Fred Youhanaie
 %%% @doc
 %%%
 %%% `observer_cli' plugin for `espace'.
@@ -38,7 +38,6 @@
            }]}
         ]).
 
-
 %%--------------------------------------------------------------------
 %% @doc Load the default `observer_cli' plugin env data.
 %%
@@ -49,7 +48,6 @@
 -spec load_config() -> ok.
 load_config() ->
     load_config(?Default_config).
-
 
 %%--------------------------------------------------------------------
 %% @doc Load the supplied `observer_cli' plugin env data.
@@ -64,7 +62,6 @@ load_config(Config) ->
     application:load(observer_cli),
     application:set_env(Config).
 
-
 %%--------------------------------------------------------------------
 %% @doc The callback for the attributes section.
 %%
@@ -77,7 +74,6 @@ attributes(Prev_state) ->
     Attrs = [ ],
     Next_state = Prev_state,
     {Attrs, Next_state}.
-
 
 %%--------------------------------------------------------------------
 %% @doc The callback to return the column headings
@@ -94,7 +90,6 @@ sheet_header() ->
                [{atom_to_list(Op), 10} || Op <- ?Ops ] ],
     [ #{title => T, width => W} || {T, W} <- Header ].
 
-
 %%--------------------------------------------------------------------
 %% @doc The callback to return all the counts for all instances.
 %%
@@ -105,7 +100,6 @@ sheet_body(Prev_state) ->
     Body = [ [Inst | inst_counts(Inst)] || Inst <- inst_names() ],
     Next_state = Prev_state,
     {Body, Next_state}.
-
 
 %%--------------------------------------------------------------------
 %% @doc Return a list of the current instances.
@@ -122,7 +116,6 @@ inst_names() ->
             end,
     lists:filtermap(Insts, persistent_term:get()).
 
-
 %%--------------------------------------------------------------------
 %% @doc Return the various counts for an instance as a list.
 %%
@@ -134,10 +127,9 @@ inst_names() ->
 %%--------------------------------------------------------------------
 -spec inst_counts(atom()) -> [integer()].
 inst_counts(Inst_name) ->
-    Counts = espace_util:opcount_counts(Inst_name),
+    Counts = espace_opcount:counts(Inst_name),
     [ inst_tuples(Inst_name), inst_waiting(Inst_name) |
       [ maps:get(Ctr, Counts) || Ctr <- ?Ops ] ].
-
 
 %%--------------------------------------------------------------------
 %% @doc Return the number of tuples in the TS.

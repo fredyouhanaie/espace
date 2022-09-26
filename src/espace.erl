@@ -149,7 +149,7 @@ eval(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec eval(atom(), tuple()) -> pid().
 eval(Inst_name, Tuple) when is_tuple(Tuple) ->
-    espace_util:opcount_incr(Inst_name, eval),
+    espace_opcount:incr(Inst_name, eval),
     {ok, Pid} = run_child(espace_util, eval_out, [Inst_name, Tuple]),
     Pid.
 
@@ -250,7 +250,7 @@ in(Pattern) ->
 %%--------------------------------------------------------------------
 -spec in(atom(), tuple()) -> {list(), tuple()} | quit.
 in(Inst_name, Pattern) ->
-    espace_util:opcount_incr(Inst_name, in),
+    espace_opcount:incr(Inst_name, in),
     espace_op(Inst_name, in, Pattern).
 
 %%--------------------------------------------------------------------
@@ -281,7 +281,7 @@ inp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec inp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 inp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_util:opcount_incr(Inst_name, inp),
+    espace_opcount:incr(Inst_name, inp),
     espace_op(Inst_name, inp, Pattern).
 
 %%--------------------------------------------------------------------
@@ -307,7 +307,7 @@ out(Tuple) when is_tuple(Tuple) ->
 %%--------------------------------------------------------------------
 -spec out(atom(), tuple()) -> done.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
-    espace_util:opcount_incr(Inst_name, out),
+    espace_opcount:incr(Inst_name, out),
     espace_tspace_srv:add_tuple(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
@@ -334,7 +334,7 @@ rd(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rd(atom(), tuple()) -> {list(), tuple()} | quit.
 rd(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_util:opcount_incr(Inst_name, rd),
+    espace_opcount:incr(Inst_name, rd),
     espace_op(Inst_name, rd, Pattern).
 
 %%--------------------------------------------------------------------
@@ -362,7 +362,7 @@ rdp(Pattern) when is_tuple(Pattern) ->
 %%--------------------------------------------------------------------
 -spec rdp(atom(), tuple()) -> nomatch | {list(), tuple()}.
 rdp(Inst_name, Pattern) when is_tuple(Pattern) ->
-    espace_util:opcount_incr(Inst_name, rdp),
+    espace_opcount:incr(Inst_name, rdp),
     espace_op(Inst_name, rdp, Pattern).
 
 %%--------------------------------------------------------------------

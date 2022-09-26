@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Fred Youhanaie <fyrlang@anydata.co.uk>
-%%% @copyright (C) 2019, Fred Youhanaie
+%%% @copyright 2019, Fred Youhanaie
 %%% @doc
 %%%
 %%% A set of utility functions to support the rest of the espace
@@ -14,21 +14,6 @@
 %% API
 -export([eval_out/1, eval_out/2]).
 -export([inst_to_name/2, wait4etsmgr/4]).
-
--export([opcount_new/0, opcount_incr/1, opcount_counts/0, opcount_reset/0]).
--export([opcount_new/1, opcount_incr/2, opcount_counts/1, opcount_reset/1]).
-
-%%--------------------------------------------------------------------
-
--record(opctr, {in, rd, inp, rdp, out, eval}).
-
-%% the counter elements by name
--define(Opctr_names, record_info(fields, opctr)).
--define(Opctr_size,  record_info(size, opctr)).
-
--define(Opctr_ref, espace_pterm:get(Inst_name, opcounters)).
-
--type(espace_op() :: in | rd | inp | rdp | out | eval).
 
 %%%===================================================================
 %%% API
@@ -73,7 +58,6 @@ inst_to_name(Prefix, Inst_name) ->
             V
     end.
 
-
 %%--------------------------------------------------------------------
 %% @doc Conditionally evaluate a tuple and `out' the result to the
 %% unnamed instance.
@@ -112,7 +96,6 @@ eval_out(Inst_name, Tuple_in) ->
     Tuple_out = erlang:list_to_tuple(List_out),
     espace:out(Inst_name, Tuple_out).
 
-
 %%--------------------------------------------------------------------
 %% @doc wait for etsmgr to (re)start, then ask it to manage our table.
 %%
@@ -142,113 +125,6 @@ wait4etsmgr(Inst_name, init, Table_name, Table_opts) ->
 wait4etsmgr(Inst_name, recover, Table_name, Table_id) ->
     etsmgr:wait4etsmgr(Inst_name),
     etsmgr:add_table(Inst_name, Table_name, Table_id).
-
-%%--------------------------------------------------------------------
-
-%%--------------------------------------------------------------------
-%% @doc Create a new ops counter array for the unnamed instance.
-%%
-%% See opcount_new/1 for details.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_new() -> ok.
-opcount_new() ->
-    opcount_new(espace).
-
-
-%%--------------------------------------------------------------------
-%% @doc Create a new ops counter array for a named instance.
-%%
-%% The array will have one counter per espace operation. The counters
-%% ref is saved in as a persistent term.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_new(atom()) -> ok.
-opcount_new(Inst_name) ->
-    Ctr_ref = counters:new(?Opctr_size, []),
-    espace_pterm:put(Inst_name, opcounters, Ctr_ref).
-
-
-%%--------------------------------------------------------------------
-%% @doc Increment a single espace op counter for the unnamed instance.
-%%
-%% See opcount_incr/1 for details.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_incr(espace_op()) -> ok.
-opcount_incr(Op) ->
-    opcount_incr(espace, Op).
-
-
-%%--------------------------------------------------------------------
-%% @doc Increment a single espace op counter for a named instance.
-%%
-%% In the interested of keeping the code simple, the counter index of
-%% each op corresponds to the position of `Op' in the record tuple,
-%% which ranges from 2 to 7.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_incr(Inst_name :: atom(), Op :: espace_op()) -> ok.
-opcount_incr(Inst_name, in)   -> counters:add(?Opctr_ref, #opctr.in,   1);
-opcount_incr(Inst_name, rd)   -> counters:add(?Opctr_ref, #opctr.rd,   1);
-opcount_incr(Inst_name, inp)  -> counters:add(?Opctr_ref, #opctr.inp,  1);
-opcount_incr(Inst_name, rdp)  -> counters:add(?Opctr_ref, #opctr.rdp,  1);
-opcount_incr(Inst_name, out)  -> counters:add(?Opctr_ref, #opctr.out,  1);
-opcount_incr(Inst_name, eval) -> counters:add(?Opctr_ref, #opctr.eval, 1).
-
-
-%%--------------------------------------------------------------------
-%% @doc Return the current counts for the unnamed instance as a map.
-%%
-%% See opcount_count/1 for details.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_counts() -> #{espace_op() => integer()}.
-opcount_counts() ->
-    opcount_counts(espace).
-
-
-%%--------------------------------------------------------------------
-%% @doc Return the current counts for a named instance as a map.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_counts(atom()) -> #{espace_op() => integer()}.
-opcount_counts(Inst_name) ->
-    C = ?Opctr_ref,
-    Counts = [ counters:get(C, Idx) || Idx <- lists:seq(2, ?Opctr_size) ],
-    maps:from_list(lists:zip(?Opctr_names, Counts)).
-
-%%--------------------------------------------------------------------
-%% @doc Reset all the op counters of the unnamed instance.
-%%
-%% See `opcount_reset/1' for details.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_reset() -> ok.
-opcount_reset() ->
-    opcount_reset(espace).
-
-
-%%--------------------------------------------------------------------
-%% @doc Reset all the op counters of a named instance.
-%%
-%% This function has been provided for investigating an application.
-%%
-%% @end
-%%--------------------------------------------------------------------
--spec opcount_reset(atom()) -> ok.
-opcount_reset(Inst_name) ->
-    C = ?Opctr_ref,
-    [ counters:put(C, Idx, 0) || Idx <- lists:seq(2, ?Opctr_size) ],
-    ok.
-
 
 %%%===================================================================
 %%% Internal functions

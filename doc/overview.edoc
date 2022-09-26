@@ -1,7 +1,7 @@
 %% -*- mode:html -*-
 
 @author Fred Youhanaie <fyrlang@anydata.co.uk>
-@copyright 2017-2021 Fred Youhanaie
+@copyright 2017-2022 Fred Youhanaie
 @version 0.7.0
 
 @doc
@@ -34,23 +34,23 @@
   and <code>eval</code> operations, or taken from the pool via
   the <code>in/inp</code> and <code>rd/rdp</code> operations.</p>
 
-<p>An application created to use this system will have many
-  concurrently active worker processes that look, and optionally, wait
-  for tuples that match a desired pattern. The waiting workers will
-  block until a matching tuple is added to the pool by another worker
-  using the <code>out/eval</code> operations.</p>
+<p>These six operations are all that is needed for communication and
+  coordination among the concurrent processes.</p>
 
-<p>The worker processes are started via
-  the <code>espace:worker/1,2</code> function. A worker can in turn
-  start further workers by further
-  calling <code>worker/1,2</code>.</p>
+<p>An application that uses this system will have many concurrently active
+  worker processes that look, and optionally, wait for tuples that match a
+  desired pattern. The waiting workers will block until a matching tuple is
+  added to the pool by another worker using the `out'/`eval' operations.</p>
+
+<p>The worker processes are started via the `espace:worker/1,2' function. A
+  worker can in turn start further workers by calling `worker/1,2'.</p>
 
 <p>A typical application will start with a series of <code>out</code>
-  and <code>eval</code> oprations. Some of the worker processes will
-  then, using the <code>in</code> or <code>rd</code> operations, pick
-  the tuples added via the <code>out</code> operations, process them,
-  then <code>out</code> the results. Other worker processes can then
-  pick the results and process them further.</p>
+  and <code>eval</code> oprations. Some of the worker processes will then, using
+  the <code>in</code> or <code>rd</code> operations, pick the tuples added via
+  the <code>out</code> operations, process them, then <code>out</code> the
+  results. Other worker processes can then pick the results and process them
+  further.</p>
 
 <p>The implementation provides a space for the tuples, currently
   <code>ETS</code>, along with the six basic

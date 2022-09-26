@@ -98,16 +98,14 @@
 <h3>Organization of the Project Modules</h3>
 
 <p><code>espace</code> has been built as an OTP
-  application, <code>espace_app</code>. Multiple instances of the
-  application can run concurrently on the same node without
-  interfering with each other.</p>
+  application, <code>espace_app</code>. Multiple instances of the application
+  can run concurrently on the same node without interfering with each other.</p>
 
-<p>The application server can be started
-  with <code>espace:start/1,2</code>. Once the server is running, the
-  client processes can use the <code>espace</code> module to perform
-  any of the six operations. In fact, one can kick off the whole
-  process by calling a purpose written bootstrap function, which can
-  in turn perform <code>out</code> and <code>eval</code>
+<p>The application server should be started with <code>espace:start/1,2</code>.
+  Once the server is running, the client processes can use
+  the <code>espace</code> module to perform any of the six operations. In fact,
+  one can kick off the whole process by calling a purpose written bootstrap
+  function, which can in turn perform <code>out</code> and <code>eval</code>
   operations.</p>
 
 <p>The top level supervisor started by <code>espace_app</code>
@@ -116,32 +114,29 @@
 
 <ul>
 
-  <li><code>etsmgr_srv</code> is a <code>gen_server</code> that adds
-  resiliency to the ETS tables, should any of their owner servers
-  restart due to some fault. A single instance of `etsmgr_srv' is used
-  for managing both ETS tables. See
-  the <a href="https://github.com/fredyouhanaie/etsmgr">project
-  repo</a> for details.</li>
+  <li><code>etsmgr_srv</code> is a <code>gen_server</code> that adds resiliency
+    to the ETS tables, should any of their owner servers restart due to some
+    fault. A single instance of `etsmgr_srv' is used for managing the two ETS
+    tables. You can find further details in
+    the <a href="https://github.com/fredyouhanaie/etsmgr">project repo</a>.</li>
 
-  <li><code>espace_tspace_srv</code> maintains
-    the <code>espace_tspace</code> ETS table, the main tuple space
-    pool. If a requested pattern does not exist and the request is a
-    blocking one, i.e. <code>in</code> or <code>rd</code>, then the
-    pattern is forwarded to <code>espace_tspatt_srv</code>. In case of
+  <li><code>espace_tspace_srv</code> maintains the <code>espace_tspace</code>
+    ETS table, the main tuple space pool. If a requested pattern does not exist
+    and the request is a blocking one, i.e. <code>in</code> or <code>rd</code>,
+    then the pattern is forwarded to <code>espace_tspatt_srv</code>. In case of
     an <code>out</code> request, the tuple is stored in the table,
-    and <code>espace_tspatt_srv</code> is notified so that it can
-    inform all the blocking clients whose requested pattern matches
-    this tuple to retry the <i>in</i>/<i>rd</i> operation.</li>
+    and <code>espace_tspatt_srv</code> is notified so that it can inform all the
+    blocking clients whose requested pattern matches this tuple to retry
+    the <i>in</i>/<i>rd</i> operation.</li>
 
-  <li><code>espace_tspatt_srv</code> maintains
-    the <code>espace_tspatt</code> ETS table, which contains the tuple
-    patterns that worker processes (clients) are blocked on. It
-    receives two types of messages
-    from <code>espace_tspace_srv</code>, unmatched patterns, which,
-    along with the client details, are then added to
-    the <code>espace_tspatt</code> table, and newly added tuples,
-    which are matched against the existing patterns in the table and,
-    if matched, blocked clients are notified.</li>
+  <li><code>espace_tspatt_srv</code> maintains the <code>espace_tspatt</code>
+    ETS table, which contains the tuple patterns that worker processes (clients)
+    are blocked on. It accepts two types of requests
+    from <code>espace_tspace_srv</code>, one for adding unmatched patterns,
+    which, along with the client details, are then added to
+    the <code>espace_tspatt</code> table, and the other for the newly added
+    tuples, which are matched against the existing patterns in the table and, if
+    matched, notify the blocked clients to retry the `in'/`rd' operation.</li>
 
 </ul>
 

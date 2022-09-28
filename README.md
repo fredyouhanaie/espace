@@ -19,6 +19,14 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 
 ## Recent changes
 
+* Two sets of functions have been moved out of `espace_util` and into their own
+  respective modules, `espace_opcount` and `espace_pterm`.
+
+* The module docs are now auto-generated via github actions and available
+  online, see <https://fredyouhanaie.github.io/espace>
+
+## Less recent changes
+
 * We have a plugin for `observer_cli`, see the module
   `src/espace_observer.erl`. You can find details further below
 
@@ -84,6 +92,16 @@ rebar3 dialyzer
 rebar3 edoc
 ```
 
+* To generate the documentation that includes all the module functions:
+```
+rebar3 as dev edoc
+```
+
+* To generate the EEP-48 doc chunks:
+
+```
+rebar3 as chunks edoc
+```
 
 ## To try out the application
 

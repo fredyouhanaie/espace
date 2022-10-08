@@ -1,6 +1,6 @@
 # espace
 
-[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml)
+[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml) [![Hex.pm](https://img.shields.io/hexpm/v/espace.svg)](https://hex.pm/packages/espace) [![Hex Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/espace)
 
 ## Introduction
 

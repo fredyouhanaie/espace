@@ -1,7 +1,7 @@
 ---
 name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
-on:
+on:  # yamllint disable-line rule:truthy
   # Runs on pushes targeting the default branch
   push:
     branches: ["master"]

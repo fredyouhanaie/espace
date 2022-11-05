@@ -1,10 +1,11 @@
+---
 name: Erlang CI
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 permissions:
   contents: read
@@ -23,8 +24,8 @@ jobs:
           - 25.1.1
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Compile
-      run: rebar3 compile
-    - name: Run tests
-      run: rebar3 do eunit, ct
+      - uses: actions/checkout@v3
+      - name: Compile
+        run: rebar3 compile
+      - name: Run tests
+        run: rebar3 do eunit, ct

@@ -63,7 +63,7 @@
 %%--------------------------------------------------------------------
 %% @doc Add a new tuple to the tuple space ETS table.
 %%
-%% The tuple is inserted with a unique `integer()' as the key, the key
+%% The tuple is inserted with a unique `integer' as the key, the key
 %% is incremented with every insert.
 %%
 %% Once the tuple is added it will trigger the `espace_tspatt_srv'

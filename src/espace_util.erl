@@ -38,7 +38,7 @@
 %% and the full name as value, e.g. `espace_sup_aaa'.
 %%
 %% The use of `persistent_term' store will help speed up all named
-%% instances, including the short lived `eval/2' processes.
+%% instances, including the short lived `espace:eval/2' processes.
 %%
 %% @end
 %%--------------------------------------------------------------------

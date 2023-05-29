@@ -16,7 +16,8 @@
 %%%
 %%% Starting a named instance is slightly more involved, since an
 %%% appropriate app description needs to be created and passed to
-%%% `application:load/1', followed by `application:start/1'.
+%%% `application:load/1', followed by `application:start/1'. This is
+%%% implemented in `espace:start/1'.
 %%%
 %%% To start an instance of espace `espace:start/0,1' should be
 %%% used. The started application will have the same name as the

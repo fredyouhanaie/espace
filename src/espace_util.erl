@@ -117,7 +117,9 @@ eval_out(Inst_name, Tuple_in) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec wait4etsmgr(atom(), init | recover, atom(), term()) -> {ok, pid(), ets:tab()} | {error, term()}.
+-spec wait4etsmgr(atom(), init | recover, atom(), term()) ->
+          {ok, pid(), ets:tab()} |
+          {error, term()}.
 wait4etsmgr(Inst_name, init, Table_name, Table_opts) ->
     etsmgr:wait4etsmgr(Inst_name),
     etsmgr:new_table(Inst_name, Table_name, Table_name, Table_opts);
@@ -142,3 +144,5 @@ do_eval({Fun, Args}) when is_list(Args) andalso is_function(Fun, length(Args)) -
     erlang:apply(Fun, Args);
 do_eval(X) ->
     X.
+
+%%--------------------------------------------------------------------

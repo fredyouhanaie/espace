@@ -4,10 +4,10 @@
 %%% @doc
 %%% Custodian for the `espace_tspatt', waiting patterns, ETS table.
 %%%
-%%% The table is created as a `set' and in `protected' mode. All
-%%% access to the table is expected to come through this server.
-%%% However, other proceses can inspect the contents of the table for
-%%% debugging purposes.
+%%% The table is created as an `ordered_set' and in `protected'
+%%% mode. All access to the table is expected to come through this
+%%% server. However, other proceses can inspect the contents of the
+%%% table for debugging purposes.
 %%%
 %%% The table keeps track of client processes that are blocked on `in'
 %%% or `rd' waiting for a tuple matching their pattern to be added to
@@ -109,13 +109,13 @@ add_pattern(Inst_name, Cli_ref, Pattern, Cli_pid) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) -> ignore |
-                            {error, {already_started, pid()} | term()} |
-                            {ok, pid()}.
+-spec start_link(atom()) ->
+          ignore |
+          {error, {already_started, pid()} | term()} |
+          {ok, pid()}.
 start_link(Inst_name) ->
     Server_name = espace_util:inst_to_name(?SERVER, Inst_name),
     gen_server:start_link({local, Server_name}, ?MODULE, Inst_name, []).
-
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -128,16 +128,10 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> ignore |
-                      {ok, term(), hibernate} |
-                      {ok, term(), timeout()} |
-                      {ok, term(), {continue, term()}} |
-                      {ok, term()} |
-                      {stop, term()}.
+-spec init(atom()) -> {ok, term(), {continue, init}}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     {ok, #state{inst_name=Inst_name}, {continue, init}}.
-
 
 %%--------------------------------------------------------------------
 %% @private
@@ -174,7 +168,6 @@ handle_cast(Request, State) ->
                    server=>?SERVER, request=>Request}),
     {noreply, State}.
 
-
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -186,11 +179,9 @@ handle_cast(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_continue(term(), term()) -> {noreply, term(), hibernate} |
-                                         {noreply, term(), timeout()} |
-                                         {noreply, term(), {continue, term()} } |
-                                         {noreply, term()} |
-                                         {stop, term(), term()}.
+-spec handle_continue(term(), term()) ->
+          {noreply, term(), {continue, term()} } |
+          {noreply, term()}.
 handle_continue(init, State) ->
     case handle_wait4etsmgr(init, State) of
         {ok, State2} ->
@@ -203,7 +194,6 @@ handle_continue(Request, State) ->
     ?Log_warning(#{text=>"Unexpected request - ignored.",
                    server=>?SERVER, request=>Request}),
     {noreply, State}.
-
 
 %%--------------------------------------------------------------------
 %% @private
@@ -220,10 +210,9 @@ handle_continue(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_info(timeout() | term(), term()) -> {noreply, term()} |
-                                                 {noreply, term(), hibernate} |
-                                                 {noreply, term(), timeout()} |
-                                                 {stop, normal | term(), term()}.
+-spec handle_info(timeout() | term(), term()) ->
+          {noreply, term()} |
+          {stop, normal | term(), term()}.
 handle_info({'EXIT', Pid, Reason}, State) ->
     Mgr_pid = State#state.etsmgr_pid,
     case Pid of
@@ -252,7 +241,6 @@ handle_info(Info, State) ->
     ?Log_warning(#{text=>"Unexpected message - ignored.",
                    server=>?SERVER, info=>Info}),
     {noreply, State}.
-
 
 %%--------------------------------------------------------------------
 %% @private
@@ -337,7 +325,9 @@ handle_add_pattern(TabId, Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_wait4etsmgr(atom(), term()) -> {ok, term()} | {error, term()}.
+-spec handle_wait4etsmgr(atom(), term()) ->
+          {ok, term()} |
+          {error, term()}.
 handle_wait4etsmgr(Mode, State) ->
     Inst_name = State#state.inst_name,
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),
@@ -356,3 +346,5 @@ handle_wait4etsmgr(Mode, State) ->
         {error, Error} ->
             {error, Error}
     end.
+
+%%--------------------------------------------------------------------

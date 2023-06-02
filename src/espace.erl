@@ -78,7 +78,6 @@ start(Inst_name) when is_atom(Inst_name) ->
             Error
     end.
 
-
 %%--------------------------------------------------------------------
 %% @doc Stop the unnamed instance of espace.
 %%
@@ -96,7 +95,6 @@ stop() ->
 -spec stop(atom()) -> ok | {error, term()}.
 stop(Inst_name) ->
     application:stop(Inst_name).
-
 
 %%--------------------------------------------------------------------
 %% @doc Perform an `eval' operation via the unnamed espace server.
@@ -153,7 +151,6 @@ eval(Inst_name, Tuple) when is_tuple(Tuple) ->
     {ok, Pid} = run_child(espace_util, eval_out, [Inst_name, Tuple]),
     Pid.
 
-
 %%--------------------------------------------------------------------
 %% @doc
 %% start a new worker process via the unnamed espace server.
@@ -165,7 +162,6 @@ eval(Inst_name, Tuple) when is_tuple(Tuple) ->
 -spec worker(tuple()) -> pid().
 worker(MFA) when is_tuple(MFA) ->
     worker(espace, MFA).
-
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -207,7 +203,6 @@ worker(Inst_name, {Fun, Args}) ->
     ?Log_info(#{text=>"run_child", inst_name=>Inst_name, func=>Fun, args=>Args}),
     {ok, Pid} = run_child(Fun, Args),
     Pid.
-
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -415,7 +410,6 @@ do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
     end,
     do_esp(Inst_name, Rest).
 
-
 %%--------------------------------------------------------------------
 %% @doc Spawn a child process given a `Module'/`Function'/`Args' triple.
 %%
@@ -425,7 +419,6 @@ do_esp(Inst_name, [ {Cmd, Arg} | Rest]) ->
 run_child(M, F, A) ->
     ?Log_info(#{mfa=>{M, F, A}}),
     {ok, spawn(M, F, A)}.
-
 
 %%--------------------------------------------------------------------
 %% @doc Run a child process given a function, or a string
@@ -444,7 +437,6 @@ run_child(Fun, Args) ->
     {ok, Parsed} = erl_parse:parse_exprs(Tokens),
     {value, F, _} = erl_eval:exprs(Parsed, []),
     {ok, spawn(erlang, apply, [F, Args])}.
-
 
 %%--------------------------------------------------------------------
 %% @doc Perform one of the input ops, in/rd/inp/rdp.
@@ -481,3 +473,5 @@ espace_op(Inst_name, Espace_op, Pattern) ->
         {match, {Fields, Tuple}} ->
             {Fields, Tuple}
     end.
+
+%%--------------------------------------------------------------------

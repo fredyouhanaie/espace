@@ -77,7 +77,6 @@
 add_tuple(Inst_name, Tuple) ->
     gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {add_tuple, Tuple}).
 
-
 %%--------------------------------------------------------------------
 %% @doc Lookup a tuple pattern in the tuple space ETS table.
 %%
@@ -99,7 +98,10 @@ add_tuple(Inst_name, Tuple) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec get_tuple(atom(), in|rd|inp|rdp, tuple()) -> {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
+-spec get_tuple(atom(), in|rd|inp|rdp, tuple()) ->
+          {nomatch} |
+          {nomatch, reference()} |
+          {match, {list(), tuple()}}.
 get_tuple(Inst_name, rdp, Pattern) ->
     Tab_id = espace_pterm:get(Inst_name, ?TABLE_IDKEY),
     State = #state{inst_name=Inst_name, tspace_tabid=Tab_id},
@@ -107,7 +109,6 @@ get_tuple(Inst_name, rdp, Pattern) ->
 
 get_tuple(Inst_name, Espace_op, Pattern) ->
     gen_server:call(espace_util:inst_to_name(?SERVER, Inst_name), {get_tuple, Espace_op, Pattern}).
-
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -118,11 +119,13 @@ get_tuple(Inst_name, Espace_op, Pattern) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec start_link(atom()) -> {ok, pid()} |
-                            ignore |
-                            {error, {already_started, pid()} | term()}.
+-spec start_link(atom()) ->
+          {ok, pid()} |
+          ignore |
+          {error, {already_started, pid()} | term()}.
 start_link(Inst_name) ->
-    gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)}, ?MODULE, Inst_name, []).
+    gen_server:start_link({local, espace_util:inst_to_name(?SERVER, Inst_name)},
+                          ?MODULE, Inst_name, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -135,16 +138,10 @@ start_link(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec init(atom()) -> ignore |
-                      {ok, term(), hibernate} |
-                      {ok, term(), timeout()} |
-                      {ok, term(), {continue, term()}} |
-                      {ok, term()} |
-                      {stop, term()}.
+-spec init(atom()) -> {ok, term(), {continue, term()}}.
 init(Inst_name) ->
     process_flag(trap_exit, true),
     {ok, #state{inst_name=Inst_name}, {continue, init}}.
-
 
 %%--------------------------------------------------------------------
 %% @private
@@ -153,14 +150,9 @@ init(Inst_name) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call({get_tuple, tuple()} | {add_tuple, tuple()},
+-spec handle_call({get_tuple|add_tuple, tuple()},
                   {pid(), term()}, term()) ->
-                         {noreply, term(), hibernate | timeout() | {continue, term()}} |
-                         {noreply, term()} |
-                         {reply, term(), term(), hibernate | timeout() | {continue, term()}} |
-                         {reply, term(), term()} |
-                         {stop, term(), term(), term()} |
-                         {stop, term(), term()}.
+          {reply, term(), term()}.
 handle_call({get_tuple, Espace_op, Pattern}, _From={Cli_pid,_}, State) ->
     Reply = handle_get_tuple(State, Espace_op, Pattern, Cli_pid),
     {reply, Reply, State};
@@ -199,11 +191,9 @@ handle_cast(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_continue(term(), term()) -> {noreply, term(), hibernate} |
-                                         {noreply, term(), timeout()} |
-                                         {noreply, term(), {continue, term()}} |
-                                         {noreply, term()} |
-                                         {stop, term(), term()}.
+-spec handle_continue(term(), term()) ->
+          {noreply, term()} |
+          {stop, term(), term()}.
 handle_continue(init, State) ->
     case handle_wait4etsmgr(init, State) of
         {ok, State2} ->
@@ -216,7 +206,6 @@ handle_continue(Request, State) ->
     ?Log_warning(#{text=>"Unexpected request - ignored.",
                    server=>?SERVER, request=>Request}),
     {noreply, State}.
-
 
 %%--------------------------------------------------------------------
 %% @private
@@ -233,10 +222,9 @@ handle_continue(Request, State) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_info(timeout() | term(), term()) -> {noreply, term(), hibernate} |
-                                                 {noreply, term(), timeout()} |
-                                                 {noreply, term()} |
-                                                 {stop, normal | term(), term()}.
+-spec handle_info(timeout() | term(), term()) ->
+          {noreply, term()} |
+          {stop, normal | term(), term()}.
 handle_info({'EXIT', Pid, Reason}, State) ->
     Mgr_pid = State#state.etsmgr_pid,
     case Pid of
@@ -297,7 +285,9 @@ terminate(Reason, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_get_tuple(term(), in|rd|inp|rdp, tuple(), pid()) ->
-                              {nomatch} | {nomatch, reference()} | {match, {list(), tuple()}}.
+          {nomatch} |
+          {nomatch, reference()} |
+          {match, {list(), tuple()}}.
 handle_get_tuple(State, Espace_op, Pattern, Cli_pid) ->
     TabId = State#state.tspace_tabid,
     Match = ets:match(TabId, {'$0', Pattern}, 1),
@@ -329,14 +319,13 @@ handle_get_tuple(State, Espace_op, Pattern, Cli_pid) ->
 
     end.
 
-
 %%--------------------------------------------------------------------
 %% @private
 %% @doc add_tuple handler.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_add_tuple(tuple(), term()) -> term().
+-spec handle_add_tuple(tuple(), term()) -> {done, term()}.
 handle_add_tuple(Tuple, State) ->
     Inst_name = State#state.inst_name,
     Tab_id = State#state.tspace_tabid,
@@ -345,14 +334,13 @@ handle_add_tuple(Tuple, State) ->
     espace_tspatt_srv:check_waitlist(Inst_name, Tuple),
     {done, State}.
 
-
 %%--------------------------------------------------------------------
 %% @doc wait for etsmgr to (re)start, ensure it manages our ETS table,
 %% and update the `State' data.
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_wait4etsmgr(atom(), term()) -> {ok, term()} | {error, term()}.
+-spec handle_wait4etsmgr(atom(), term()) -> {ok|error, term()}.
 handle_wait4etsmgr(Mode, State) ->
     Inst_name = State#state.inst_name,
     Table_name = espace_util:inst_to_name(?TABLE_NAME, Inst_name),

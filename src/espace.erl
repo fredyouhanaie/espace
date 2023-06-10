@@ -28,12 +28,7 @@
 
 %%--------------------------------------------------------------------
 
--include_lib("kernel/include/logger.hrl").
-
--define(Log_base, #{fun_name=>?FUNCTION_NAME}).
--define(Log_info(Log_map), ?LOG_INFO(maps:merge(?Log_base, Log_map))).
-
-%%--------------------------------------------------------------------
+-include_lib("include/espace.hrl").
 
 %%%===================================================================
 %%% API
@@ -55,7 +50,8 @@ start() ->
 %%--------------------------------------------------------------------
 -spec start(atom()) -> ok | {error, term()}.
 start(espace) ->
-    application:start(espace);
+    start_wait(espace);
+
 start(Inst_name) when is_atom(Inst_name) ->
     %% retrieve the main app resource file
 
@@ -73,9 +69,26 @@ start(Inst_name) when is_atom(Inst_name) ->
             App_2 = lists:keyreplace(mod, 1, App_1, {mod, {espace_app, Inst_name}}),
 
             application:load({application, Inst_name, App_2}),
-            application:start(Inst_name);
+            start_wait(Inst_name);
         Error ->
             Error
+    end.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc Start the application and wait until the ETS tables are
+%% created.
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec start_wait(atom()) -> ok | {error, term()}.
+start_wait(Inst_name) ->
+    case application:start(Inst_name) of
+        ok ->
+            espace_mgr:wait_for_ets(Inst_name),
+            ok;
+        {error, Error} ->
+            {error, Error}
     end.
 
 %%--------------------------------------------------------------------
@@ -303,7 +316,7 @@ out(Tuple) when is_tuple(Tuple) ->
 -spec out(atom(), tuple()) -> done.
 out(Inst_name, Tuple) when is_tuple(Tuple) ->
     espace_opcount:incr(Inst_name, out),
-    espace_tspace_srv:add_tuple(Inst_name, Tuple).
+    espace_cli:add_tuple(Inst_name, Tuple).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -460,7 +473,7 @@ run_child(Fun, Args) ->
 %%--------------------------------------------------------------------
 -spec espace_op(atom(), in|rd|inp|rdp, tuple()) -> nomatch | {list(), tuple()} | quit.
 espace_op(Inst_name, Espace_op, Pattern) ->
-    case espace_tspace_srv:get_tuple(Inst_name, Espace_op, Pattern) of
+    case espace_cli:get_tuple(Inst_name, Espace_op, Pattern) of
         {nomatch} ->
             nomatch;
         {nomatch, Cli_ref} ->

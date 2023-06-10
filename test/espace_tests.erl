@@ -213,12 +213,12 @@ etsmgr_test_() ->
 
          ]}},
 
-       {"tspace kill/restart",
+       {"espace server kill/restart",
         [ {"drop a control tuple",
            ?_assertEqual(done, espace:out({goodbye, 2}))},
 
-          {"find/kill the tspace server",
-           ?_assert(erlang:exit(whereis(espace_tspace_srv), kill))},
+          {"find/kill the espace server",
+           ?_assert(erlang:exit(whereis(espace_mgr), kill))},
 
           {"wait a bit",
            ?_assertEqual(ok, timer:sleep(10))},
@@ -226,31 +226,6 @@ etsmgr_test_() ->
           {"ensure the tuple still present",
            ?_assertMatch({[], {goodbye, 2}}, espace:in({goodbye, 2}))}
         ]}
-
-     ]}.
-
-tspatt_recovery_test_() ->
-    {setup, fun setup/0, fun cleanup/1,
-
-     [ {"launch an eval to increment count",
-        ?_assertMatch(Pid when is_pid(Pid),
-                               espace:eval({count,
-                                            fun () ->
-                                                    {[Count], _} = espace:in({count, '$1'}),
-                                                    Count+1
-                                            end}))},
-
-       {"find/kill tspatt server",
-        ?_assert(erlang:exit(whereis(espace_tspatt_srv), kill))},
-
-       {"wait for recovery",
-        ?_assertEqual(ok, timer:sleep(10))},
-
-       {"drop the count into TS",
-        ?_assertEqual(done, espace:out({count, 1}))},
-
-       {"check eval has recovered",
-        ?_assertEqual({[], {count, 2}}, espace:in({count, 2}))}
 
      ]}.
 
@@ -266,3 +241,5 @@ test_add() ->
             done = espace:out({sum, A, B, A+B}),
             test_add()
     end.
+
+%%--------------------------------------------------------------------

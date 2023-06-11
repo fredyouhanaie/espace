@@ -16,8 +16,12 @@ Another good source that describes the paradigm well is the following paper:
 
 Further details can be found on the [wiki pages](https://github.com/fredyouhanaie/espace/wiki).
 
-
 ## Recent changes
+
+* There is an experimental branch where the two `gen_server`s for
+  accessing the data in the ETS tables, `espace_tspace` and `espace_tspatt`, have eliminated, and instead the 
+
+## Less recent changes
 
 * Two sets of functions have been moved out of `espace_util` and into their own
   respective modules, `espace_opcount` and `espace_pterm`.
@@ -25,47 +29,20 @@ Further details can be found on the [wiki pages](https://github.com/fredyouhanai
 * The module docs are now auto-generated via github actions and available
   online, see <https://fredyouhanaie.github.io/espace>
 
-## Less recent changes
-
-* We have a plugin for `observer_cli`, see the module
-  `src/espace_observer.erl`. You can find details further below
-
-* The `rebar3_bench` scripts have been removed, and will be made
-  available as a separate project.
-
-* When an `espace` server terminates, all the waiting clients, i.e
-  those that have called `in/1,2` or `rd/1,2`, will be returned the
-  `quit` atom, instead of blocking indefinitely. This may break
-  applications that are expecting a return of type `{list(),
-  tuple()}`, or those that assume a return implies that the tuple
-  is/was present in the TS.
-
-* Some performance improvements when mapping instance names to actual
-  server objects (`espace_util:inst_to_name/2`).
-
-* A set of op counters is maintained for each active instance. The
-  counters are autoincremented for each espace operation. The counts
-  can be accessed via the `espace_util:opcount_counts/0,1`
-  functions. You can find details in the module docs.
-
-* For each instance there is a set of `persistent_term` records, that
-  can be used for various diagnostic tools. You can find details in
-  the `espace_util` module docs, look for the `pterm_*` functions.
-
-
 ## Current Status
 
 * The project has been developed and tested on a *Linux* system. Using
-  Erlang/OTP 21.3 and later, and rebar3.
+  Erlang/OTP 25.3.2 and later, and rebar3.
 * The software is under constant development, and SHOULD NOT be
   considered fit for production use.
 * Tests are carried out using a set of basic Eunit tests, via `rebar3
   eunit`.
-* General documentation can be found on the [wiki
-  pages](https://github.com/fredyouhanaie/espace/wiki).
+* General documentation can be found on the
+  [wiki](https://github.com/fredyouhanaie/espace/wiki) pages.
 * Documentation for the source code can be generated via `rebar3
   edoc`.
-
+* The online documentation for the latest commit are also available at
+  <https://fredyouhanaie.github.io/espace>.
 
 ## Build and testing
 
@@ -76,7 +53,6 @@ the below commands should be run from the top level directory:
 ```
 rebar3 do clean,compile
 ```
-
 * To run the tests:
 ```
 rebar3 eunit
@@ -145,7 +121,6 @@ $ rebar3 shell
 * There will always be two patterns in the `espace_tspatt` table, `{add,
   '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`.
 
-
 ## Using the `observer_cli` plugin
 
 [observer\_cli](https://github.com/zhongwencool/observer_cli) is a
@@ -173,7 +148,7 @@ You can also run `observer_cli` as a standalone command, see the notes
 in the [escriptize
 section](https://github.com/zhongwencool/observer_cli#escriptize).
 
-Before running the observer_cli escript, start the target node is up
+Before running the observer_cli escript ensure the target node is up
 and running, e.g.
 
 ```

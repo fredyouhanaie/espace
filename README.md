@@ -14,7 +14,12 @@ Another good source that describes the paradigm well is the following paper:
 > How to Write Parallel Programs: A Guide to the Perplexed.
 > ACM Computing Surveys. 21. 323-357.
 
-Further details can be found on the [wiki pages](https://github.com/fredyouhanaie/espace/wiki).
+A copy of the paper can be obtained from the [ACM digital
+library](https://dl.acm.org/doi/10.1145/72551.72553).
+
+Further details about the application can be found on the [wiki
+pages](https://github.com/fredyouhanaie/espace/wiki). Please note that
+the wiki pages are currently _slightly_ out of date :-(
 
 ## Recent changes
 

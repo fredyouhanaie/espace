@@ -104,7 +104,7 @@ sheet_body(Prev_state) ->
 %%--------------------------------------------------------------------
 %% @doc Return a list of the current instances.
 %%
-%% The instances are derived from the pterms for `opscounters'.
+%% The instances are derived from the pterms entry for `opscounters'.
 %%
 %% @end
 %%--------------------------------------------------------------------

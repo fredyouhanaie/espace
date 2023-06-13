@@ -133,7 +133,7 @@ wait4etsmgr(Inst_name, recover, Table_name, Table_id) ->
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @doc check and evaluate a term, if it is a function.
+%% @doc check a term and evaluate it, if it is a function.
 %%
 %% @end
 %%--------------------------------------------------------------------

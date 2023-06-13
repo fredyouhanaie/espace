@@ -439,22 +439,22 @@ run_child(Fun, Args) ->
     {ok, spawn(erlang, apply, [F, Args])}.
 
 %%--------------------------------------------------------------------
-%% @doc Perform one of the input ops, in/rd/inp/rdp.
+%% @doc Perform one of the input ops, `in'/`rd'/`inp'/`rdp'.
 %%
 %% If a match is found we return the matched data.
 %%
-%% If a match is not found we expect to the `{nomatch, Cli_Ref}'
-%% return value from the `tspace' server. For the blocking operations,
-%% `in' and `rd', in which case we will wait indefinitely for the
+%% For the blocking operations, `in' and `rd', if a match is not
+%% found, we expect the `tspace' server to return the value `{nomatch,
+%% Cli_Ref}', in which case we will wait indefinitely for the
 %% `Cli_ref' message. Once we receive the message we try the operation
 %% again.
 %%
-%% If the client is blocking on `rd' or `in' and the espace server is
-%% terminating, a `quit' message will be received from the server, and
-%% the atom `quit' will be returned to the caller.
-%%
 %% For the non-blocking operations, `inp' and `rdp', we just return
 %% `nomatch' to the client.
+%%
+%% If the client is blocking on `rd' or `in' and the espace
+%% application is terminating, a `quit' message will be received from
+%% the server, and the atom `quit' will be returned to the caller.
 %%
 %% @end
 %%--------------------------------------------------------------------

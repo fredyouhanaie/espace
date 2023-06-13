@@ -6,8 +6,8 @@
 %%%
 %%% The table is created as an `ordered_set' and in `protected'
 %%% mode. All access to the table is expected to come through this
-%%% server. However, other proceses can inspect the contents of the
-%%% table for debugging purposes.
+%%% server. However, other proceses can inspect its contents for
+%%% debugging purposes.
 %%%
 %%% The table keeps track of client processes that are blocked on `in'
 %%% or `rd' waiting for a tuple matching their pattern to be added to
@@ -32,7 +32,7 @@
 %%% name. This will be `espace_tspatt' for the default/unnamed instance, and
 %%% `espace_tspatt_abc' for an instance named `abc'.
 %%%
-%%% The `etsmgr' application is used to add resiliency to the server
+%%% The `etsmgr' application is used to add resilience to the server
 %%% data, should the server restart while it is holding tuple
 %%% patterns.
 %%%
@@ -278,8 +278,8 @@ terminate(Reason, State) ->
 %%--------------------------------------------------------------------
 %% @doc
 %%
-%% check tuple against current pattern being waited for, by in or rd
-%% clients.
+%% check tuple against current pattern being waited for by `in' or
+%% `rd' clients.
 %%
 %% @end
 %%--------------------------------------------------------------------

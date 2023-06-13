@@ -4,12 +4,12 @@
 %%% @doc
 %%%
 %%% When `espace' instances are started, a number of instance specific
-%%% `persistent_term' entries are created. The `pterm_*' functions are
-%%% used for handling these terms.
+%%% `persistent_term' entries are created. The functions in this
+%%% module provide access to these entries.
 %%%
 %%% The `persistent_term' entries are expected to have the following
 %%% format: `{espace, Inst_name, Key}', where, `Key' identifies the
-%%% particular `espace' item, such as server name to ETS table name,
+%%% particular `espace' item, such as server name or ETS table name,
 %%% and `Inst_name' is the espace instance name, which is the same as
 %%% the application name. For the unnamed instance the `Inst_name' is
 %%% `espace'.

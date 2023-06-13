@@ -68,7 +68,7 @@ incr(Op) ->
 %%--------------------------------------------------------------------
 %% @doc Increment a single espace op counter for a named instance.
 %%
-%% In the interested of keeping the code simple, the counter index of
+%% In the interest of keeping the code simple, the counter index of
 %% each op corresponds to the position of `Op' in the record tuple,
 %% which ranges from 2 to 7.
 %%

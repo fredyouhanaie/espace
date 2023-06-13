@@ -6,13 +6,11 @@
 %%% Main espace application supervisor.
 %%% It handles the main application components.
 %%%
-%%% There are five child components, four are gen_servers, and the
-%%% fifth is a supervisor. See the main overview for details.
-%%%
-%%% One of the gen_servers is from the `etsmgr' application. Here
-%%% `etsmgr' is used in embedded mode, i.e. there is no separate
-%%% `etsmgr' application. We also make sure that `etsmgr_srv' is the
-%%% first child to be started as the other two servers depend on this
+%%% There are three child components, all are `gen_server's. Two are
+%%% the main application servers, and the third is the `etsmgr'
+%%% application in embedded mode, i.e. there is no separate `etsmgr'
+%%% application. We also make sure that `etsmgr_srv' is the first
+%%% child to be started as the other two servers depend on this
 %%% server.
 %%%
 %%% For the child specification, we rely on the default settings of:

@@ -6,8 +6,8 @@
 %%%
 %%% The table is created as an `ordered_set' and in `protected'
 %%% mode. All access to the table is expected to come through this
-%%% server, although other proceses can inspect the contents for
-%%% debugging purposes.
+%%% server, although other proceses can inspect the contents of the
+%%% table for debugging purposes.
 %%%
 %%% Each record has the form `{Num, {Tuple}}', where `Num' is a unique
 %%% integer key that we initialize to 0 and increment before inserting
@@ -19,9 +19,8 @@
 %%% name. This will be `espace_tspace' for the default/unnamed
 %%% instance, and `espace_tspace_abc' for an instance named `abc'.
 %%%
-%%% The `etsmgr' application is used to add resiliency to the server
-%%% data, should the server restart while it is holding tuple space
-%%% data.
+%%% The `etsmgr' application provides resilience for the server data,
+%%% should the server restart while it is holding tuple space data.
 %%%
 %%% @end
 %%% Created : 10 Jan 2018 by Fred Youhanaie <fyrlang@anydata.co.uk>
@@ -82,19 +81,17 @@ add_tuple(Inst_name, Tuple) ->
 %%
 %% If no match is found, `{nomatch}' is returned.
 %%
-%% If a match is found, `{match, Key, List, Tuple}' is returned, where
-%% `Key' uniquely identifies the ETS record, `List' is the list of the
-%% `$N' elements referenced in the pattern, if any, and `Tuple' is the
-%% second part of the ETS record.
+%% If a match is found, `{match, {List, Tuple}}' is returned, where
+%% `List' is the list of the `$N' elements referenced in the pattern,
+%% if any, and `Tuple' is the second part of the ETS record.
 %%
-%% This function runs within the client process. Since for `rd' and
-%% `rdp' we do not require write access to the table, we can skip
-%% calling the gen_server and read from the ETS table directly.
+%% This function runs within the client process. Since `rdp' does not
+%% require write access to the table, we can skip calling the
+%% gen_server and read the data directly from the ETS table.
 %%
-%% For `rd' and `rdp', although we are bypassing the gen_server, we
-%% still need to provide some of the `State' data to the handler. For
-%% now, this is created manually, but it will be fixed more elegantly
-%% in future.
+%% For `rdp', although we are bypassing the gen_server, we still need
+%% to provide some of the `State' data to the handler. For now, this
+%% is created manually, but it will be fixed more elegantly in future.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -185,9 +182,9 @@ handle_cast(Request, State) ->
 %% @doc
 %% Handling continue requests.
 %%
-%% We use `{continue, init}' from `espace_tspace_srv:init/1' to ensure that
-%% `etsmgr' is started and is managing our ETS table before handling
-%% the first request.
+%% We return `{continue, init}' from `espace_tspace_srv:init/1' to
+%% ensure that `etsmgr' is started and is managing our ETS table
+%% before handling the first request.
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -363,7 +360,8 @@ handle_wait4etsmgr(Mode, State) ->
 %%--------------------------------------------------------------------
 %% @doc Increment and return the next key for inserting new tuple.
 %%
-%% If the key does not exist, it is initialized to 1 and that value is returned.
+%% If the key does not exist, it is initialized to 1 and that value is
+%% returned.
 %%
 %% @end
 %%--------------------------------------------------------------------

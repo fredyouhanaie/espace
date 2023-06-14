@@ -65,8 +65,8 @@ start_link(Inst_name) ->
 %%--------------------------------------------------------------------
 %% @doc Allows the client(s) to wait for the tables to be ready.
 %%
-%% This call will not be serviced until the table have been created
-%% via `{continue,init}'.
+%% This call will not be serviced until the tables have been created
+%% via the `{continue,init}' handler.
 %%
 %% @end
 %%--------------------------------------------------------------------

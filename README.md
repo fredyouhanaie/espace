@@ -104,6 +104,7 @@ $ rebar3 shell
 * Run the tiny test program
 ```
 > cd("Examples/adder1").
+> c(adder1).
 > adder1:start().
 ```
   * This will kick off two worker processes via `eval`.

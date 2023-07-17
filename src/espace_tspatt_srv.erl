@@ -303,7 +303,7 @@ check_tuple(Tuple, TabId, Key) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec handle_check_tuple(ets:tabid(), tuple()) -> true.
+-spec handle_check_tuple(ets:tid(), tuple()) -> true.
 handle_check_tuple(TabId, Tuple) ->
     ets:safe_fixtable(TabId, true), % we may be deleting records while scanning
     check_tuple(Tuple, TabId, ets:first(TabId)),

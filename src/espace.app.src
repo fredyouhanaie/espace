@@ -1,10 +1,15 @@
 {application,espace,
              [{description,"Erlang tuple spaces (Linda)"},
               {vsn,"0.8.0"},
-              {registered,[espace_sup,espace_tspace_srv,espace_tspatt_srv,
-                           etsmgr_srv]},
+              {registered,[espace_sup,
+                           espace_mgr,
+                           etsmgr_srv
+                          ]},
               {mod,{espace_app,espace}},
-              {applications,[kernel,stdlib]},
+              {applications,[kernel,
+                             stdlib,
+                             etsmgr
+                            ]},
               {env,[]},
               {modules,[]},
               {maintainers,["Fred Youhanaie"]},

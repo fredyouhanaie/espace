@@ -4,7 +4,10 @@
               {registered,[espace_sup,espace_tspace_srv,espace_tspatt_srv,
                            etsmgr_srv]},
               {mod,{espace_app,espace}},
-              {applications,[kernel,stdlib]},
+              {applications,[kernel,
+                             stdlib,
+                             etsmgr
+                            ]},
               {env,[]},
               {modules,[]},
               {maintainers,["Fred Youhanaie"]},

@@ -5,8 +5,7 @@
                            etsmgr_srv]},
               {mod,{espace_app,espace}},
               {applications,[kernel,
-                             stdlib,
-                             etsmgr
+                             stdlib
                             ]},
               {env,[]},
               {modules,[]},

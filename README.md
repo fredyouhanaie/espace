@@ -6,7 +6,8 @@
 
 `espace` is an Erlang implementation of the Tuple Spaces
 (or Linda) paradigm. Details can be found on Wikipedia for
-[Linda](https://en.wikipedia.org/wiki/Linda_(coordination_language)) and [Tuple Spaces](https://en.wikipedia.org/wiki/Tuple_space).
+[Linda](https://en.wikipedia.org/wiki/Linda_(coordination_language))
+and [Tuple Spaces](https://en.wikipedia.org/wiki/Tuple_space).
 
 Another good source that describes the paradigm well is the following paper:
 
@@ -17,22 +18,25 @@ Another good source that describes the paradigm well is the following paper:
 A copy of the paper can be obtained from the [ACM digital
 library](https://dl.acm.org/doi/10.1145/72551.72553).
 
-Further details about the application can be found on the [wiki
-pages](https://github.com/fredyouhanaie/espace/wiki). Please note that
-the wiki pages are currently _slightly_ out of date :-(
+Further details about the application can be found on the
+[wiki pages](https://github.com/fredyouhanaie/espace/wiki).
+
 
 ## Recent changes
 
 * There is an experimental branch where the two `gen_server`s for
-  accessing the data in the ETS tables, `espace_tspace` and `espace_tspatt`, have eliminated, and instead the 
+  accessing the data in the ETS tables, `espace_tspace` and
+  `espace_tspatt`, have eliminated, and instead the client functions
+  access the ETS tables directly. See the `exp_serverless` branch for
+  details.
 
 ## Less recent changes
 
-* Two sets of functions have been moved out of `espace_util` and into their own
-  respective modules, `espace_opcount` and `espace_pterm`.
+* Two sets of functions have been moved out of `espace_util` and into
+  their own respective modules, `espace_opcount` and `espace_pterm`.
 
-* The module docs are now auto-generated via github actions and available
-  online, see <https://fredyouhanaie.github.io/espace>
+* The module docs are now auto-generated via github actions and
+  available online, see <https://fredyouhanaie.github.io/espace>
 
 ## Current Status
 

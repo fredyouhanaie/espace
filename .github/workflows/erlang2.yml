@@ -1,0 +1,35 @@
+---
+name: Erlang CI
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        erlang:
+          - 24-alpine
+          - 25-alpine
+          - 26-alpine
+
+    container: erlang:${{ matrix.erlang }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Compile
+        run: rebar3 compile
+      - name: Erlang dialyzer
+        run: rebar3 dialyzer
+      - name: Run erlang tests
+        run: rebar3 eunit

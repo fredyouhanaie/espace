@@ -48,6 +48,11 @@ jobs:
       - name: copy the doc files
         run: cp -r ./doc ./_site/edoc_dev
 
+      - name: generate the ex_doc
+        run: rebar3 ex_doc --output exdoc
+      - name: copy the doc files
+        run: cp -r ./exdoc ./_site/exdoc
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
 

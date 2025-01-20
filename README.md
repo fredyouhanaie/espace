@@ -1,6 +1,8 @@
 # espace
 
-[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang2.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml) [![Hex.pm](https://img.shields.io/hexpm/v/espace.svg)](https://hex.pm/packages/espace) [![Hex Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/espace)
+[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang2.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang2.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/espace.svg)](https://hex.pm/packages/espace)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/espace)
 
 ## Introduction
 
@@ -40,16 +42,23 @@ Further details about the application can be found on the
 
 ## Current Status
 
-* The project has been developed and tested on a *Linux* system. Using
-  Erlang/OTP 25.3.2 and later, and rebar3.
+* The project is being developed and tested on a *Linux* system. Using
+  the latest Erlang/OTP, currently v27.1.3. However, CI tests are run
+  via Github actions using the latest 3 major versions, i.e. v25, v26
+  and v27.
+
 * The software is under constant development, and SHOULD NOT be
   considered fit for production use.
+
 * Tests are carried out using a set of basic Eunit tests, via `rebar3
   eunit`.
+
 * General documentation can be found on the
   [wiki](https://github.com/fredyouhanaie/espace/wiki) pages.
+
 * Documentation for the source code can be generated via `rebar3
   edoc`.
+
 * The online documentation for the latest commit are also available at
   <https://fredyouhanaie.github.io/espace>.
 
@@ -77,7 +86,8 @@ rebar3 dialyzer
 rebar3 edoc
 ```
 
-* To generate the documentation that includes all the module functions:
+* To generate the documentation that includes all the module
+  functions, including the internal ones:
 ```
 rebar3 as dev edoc
 ```
@@ -91,20 +101,25 @@ rebar3 as chunks edoc
 ## To try out the application
 
 * Change to the top level directory of the project
+
 * Ensure that you have the erlang binaries and rebar3 in your shell
   path
+
 * Build the application
 ```
 $ rebar3 do clean,compile
 ```
+
 * Start the application via the shell
 ```
 $ rebar3 shell
 ```
+
 * At the erlang shell prompt, if desired, bring up the Observer
 ```
 > observer:start().
 ```
+
 * Run the tiny test program
 ```
 > cd("Examples/adder1").
@@ -122,14 +137,17 @@ $ rebar3 shell
     generate the corresponding `{sum, X, Y, X+Y}` tuples. These are in
     turn picked up by the second worker, which in turn prints the
     result to the terminal.
+
 * You can use the table viewer in the Observer to see the progress of
   the two workers.
+
 * try adding new tuples to the pool, e.g.
 ```
 > espace:out({add, 42, 43}).
 ```
-* There will always be two patterns in the `espace_tspatt` table, `{add,
-  '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`.
+
+* There will always be two patterns in the `espace_tspatt` table,
+  `{add, '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`.
 
 ## Using the `observer_cli` plugin
 

@@ -2,7 +2,7 @@
 
 @author Fred Youhanaie <fyrlang@anydata.co.uk>
 @copyright 2017-2023 Fred Youhanaie
-@version 0.8.0
+@version 0.9.0
 
 @doc
 
@@ -179,8 +179,8 @@
 </p>
 
 <p>The first table, <code>espace_tspace</code> has two columns, an
-  integer, and the tuple itself. All access to the table is handled by
-  a single server, <code>espace_tspace_srv</code>.
+  integer, and the tuple itself. The table can be read by, and written
+  to, by any process on the same node.
 </p>
 
 <p>For the cases where no matching tuple is found for a given pattern,
@@ -192,11 +192,10 @@
 </p>
 
 <p>Each <code>out</code> operation, after inserting the new tuple,
-  will notify <code>espace_tspatt_srv</code> of the new
-  tuple. <code>espace_tspatt_srv</code> will then scan the blocking
-  clients whose pattern matches the newly added tuple. If a match is
-  found, the waiting client is notified and the client entry is
-  removed from the table.
+  will initiate a scan of the `espace_tspatt' table in search of
+  blocking clients whose requested pattern matches the newly added
+  tuple. If a match is found, the waiting client is notified and the
+  client entry is removed from the table.
 </p>
 
 <p>Once the waiting client receives the notification, it will attempt
@@ -206,10 +205,10 @@
   the espace client code. If more than one client have waiting
   patterns that match the new tuple, then they may end up competing
   for it. However, since the ETS table is an <code>ordered_set</code>,
-  the notification will be performed in a first come (blocked) first
-  served (notified) manner. However, we cannot guarantee that the
-  first unblocked client will get the tuple! This non-determinism is
-  part of the original specification.
+  the notification will be performed in a first come (first blocked)
+  first served (notified) manner. However, we cannot guarantee that
+  the first unblocked client will get the tuple! This non-determinism
+  is part of the original specification.
 </p>
 
 <h4>The Operation Counters</h4>
@@ -237,9 +236,9 @@
   instance.
 </p>
 
-<p>The functions for manipulating the terms are in the `espace_util'
-  module and are prefixed `pterm_'. The terms are created during the
-  instance startup, and removed during the instance shutdown.
+<p>The functions for manipulating the terms are in the `espace_pterm'
+  module. The terms are created during the instance startup, and
+  removed during the instance shutdown.
 </p>
 
 <p>The keys are of the form `{espace, Inst :: atom(), Key :: atom()}',
@@ -248,8 +247,10 @@
 
 <ol>
 
-  <li>`espace_sup', `espace_tspace_srv', `espace_tspatt_srv' and
-    `etsmgr_srv' identify the registered server names.
+  <li>`espace_sup', `espace_mgr' and `etsmgr_srv' identify the
+    registered server names.  The entry for each server is
+    automatically created during the first call of
+    `espace_util:inst_to_name/2' for that server.
   </li>
 
   <li>`tspace_tabid' and `tspatt_tabid' contain the ETS table

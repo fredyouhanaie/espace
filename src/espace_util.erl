@@ -121,11 +121,11 @@ eval_out(Inst_name, Tuple_in) ->
           {ok, pid(), ets:tab()} |
           {error, term()}.
 wait4etsmgr(Inst_name, init, Table_name, Table_opts) ->
-    etsmgr:wait4etsmgr(Inst_name),
+    etsmgr:wait4etsmgr(Inst_name, 100),
     etsmgr:new_table(Inst_name, Table_name, Table_name, Table_opts);
 
 wait4etsmgr(Inst_name, recover, Table_name, Table_id) ->
-    etsmgr:wait4etsmgr(Inst_name),
+    etsmgr:wait4etsmgr(Inst_name, 100),
     etsmgr:add_table(Inst_name, Table_name, Table_id).
 
 %%%===================================================================

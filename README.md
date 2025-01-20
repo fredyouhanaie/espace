@@ -1,12 +1,15 @@
 # espace
 
-[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang.yml) [![Hex.pm](https://img.shields.io/hexpm/v/espace.svg)](https://hex.pm/packages/espace) [![Hex Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/espace)
+[![Erlang CI](https://github.com/fredyouhanaie/espace/actions/workflows/erlang2.yml/badge.svg)](https://github.com/fredyouhanaie/espace/actions/workflows/erlang2.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/espace.svg)](https://hex.pm/packages/espace)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/espace)
 
 ## Introduction
 
 `espace` is an Erlang implementation of the Tuple Spaces
 (or Linda) paradigm. Details can be found on Wikipedia for
-[Linda](https://en.wikipedia.org/wiki/Linda_(coordination_language)) and [Tuple Spaces](https://en.wikipedia.org/wiki/Tuple_space).
+[Linda](https://en.wikipedia.org/wiki/Linda_(coordination_language))
+and [Tuple Spaces](https://en.wikipedia.org/wiki/Tuple_space).
 
 Another good source that describes the paradigm well is the following paper:
 
@@ -14,58 +17,49 @@ Another good source that describes the paradigm well is the following paper:
 > How to Write Parallel Programs: A Guide to the Perplexed.
 > ACM Computing Surveys. 21. 323-357.
 
-Further details can be found on the [wiki pages](https://github.com/fredyouhanaie/espace/wiki).
+A copy of the paper can be obtained from the [ACM digital
+library](https://dl.acm.org/doi/10.1145/72551.72553).
+
+Further details about the application can be found on the
+[wiki pages](https://github.com/fredyouhanaie/espace/wiki).
 
 
 ## Recent changes
 
-* Two sets of functions have been moved out of `espace_util` and into their own
-  respective modules, `espace_opcount` and `espace_pterm`.
-
-* The module docs are now auto-generated via github actions and available
-  online, see <https://fredyouhanaie.github.io/espace>
+* This is the experimental branch where the two `gen_server`s for
+  accessing the data in the ETS tables, `espace_tspace` and
+  `espace_tspatt`, have been eliminated, and instead the client functions
+  access the ETS tables directly.
 
 ## Less recent changes
 
-* We have a plugin for `observer_cli`, see the module
-  `src/espace_observer.erl`. You can find details further below
+* Two sets of functions have been moved out of `espace_util` and into
+  their own respective modules, `espace_opcount` and `espace_pterm`.
 
-* The `rebar3_bench` scripts have been removed, and will be made
-  available as a separate project.
-
-* When an `espace` server terminates, all the waiting clients, i.e
-  those that have called `in/1,2` or `rd/1,2`, will be returned the
-  `quit` atom, instead of blocking indefinitely. This may break
-  applications that are expecting a return of type `{list(),
-  tuple()}`, or those that assume a return implies that the tuple
-  is/was present in the TS.
-
-* Some performance improvements when mapping instance names to actual
-  server objects (`espace_util:inst_to_name/2`).
-
-* A set of op counters is maintained for each active instance. The
-  counters are autoincremented for each espace operation. The counts
-  can be accessed via the `espace_util:opcount_counts/0,1`
-  functions. You can find details in the module docs.
-
-* For each instance there is a set of `persistent_term` records, that
-  can be used for various diagnostic tools. You can find details in
-  the `espace_util` module docs, look for the `pterm_*` functions.
-
+* The module docs are now auto-generated via github actions and
+  available online, see <https://fredyouhanaie.github.io/espace>
 
 ## Current Status
 
-* The project has been developed and tested on a *Linux* system. Using
-  Erlang/OTP 21.3 and later, and rebar3.
+* The project is being developed and tested on a *Linux* system. Using
+  the latest Erlang/OTP, currently v27.1.3. However, CI tests are run
+  via Github actions using the latest 3 major versions, i.e. v25, v26
+  and v27.
+
 * The software is under constant development, and SHOULD NOT be
   considered fit for production use.
+
 * Tests are carried out using a set of basic Eunit tests, via `rebar3
   eunit`.
-* General documentation can be found on the [wiki
-  pages](https://github.com/fredyouhanaie/espace/wiki).
+
+* General documentation can be found on the
+  [wiki](https://github.com/fredyouhanaie/espace/wiki) pages.
+
 * Documentation for the source code can be generated via `rebar3
   edoc`.
 
+* The online documentation for the latest commit are also available at
+  <https://fredyouhanaie.github.io/espace>.
 
 ## Build and testing
 
@@ -76,7 +70,6 @@ the below commands should be run from the top level directory:
 ```
 rebar3 do clean,compile
 ```
-
 * To run the tests:
 ```
 rebar3 eunit
@@ -92,7 +85,8 @@ rebar3 dialyzer
 rebar3 edoc
 ```
 
-* To generate the documentation that includes all the module functions:
+* To generate the documentation that includes all the module
+  functions, including the internal ones:
 ```
 rebar3 as dev edoc
 ```
@@ -106,23 +100,29 @@ rebar3 as chunks edoc
 ## To try out the application
 
 * Change to the top level directory of the project
+
 * Ensure that you have the erlang binaries and rebar3 in your shell
   path
+
 * Build the application
 ```
 $ rebar3 do clean,compile
 ```
+
 * Start the application via the shell
 ```
 $ rebar3 shell
 ```
+
 * At the erlang shell prompt, if desired, bring up the Observer
 ```
 > observer:start().
 ```
+
 * Run the tiny test program
 ```
 > cd("Examples/adder1").
+> c(adder1).
 > adder1:start().
 ```
   * This will kick off two worker processes via `eval`.
@@ -136,15 +136,17 @@ $ rebar3 shell
     generate the corresponding `{sum, X, Y, X+Y}` tuples. These are in
     turn picked up by the second worker, which in turn prints the
     result to the terminal.
+
 * You can use the table viewer in the Observer to see the progress of
   the two workers.
+
 * try adding new tuples to the pool, e.g.
 ```
 > espace:out({add, 42, 43}).
 ```
-* There will always be two patterns in the `espace_tspatt` table, `{add,
-  '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`.
 
+* There will always be two patterns in the `espace_tspatt` table,
+  `{add, '$1', '$2'}` and `{sum, '$1', '$2', '$3'}`.
 
 ## Using the `observer_cli` plugin
 
@@ -173,7 +175,7 @@ You can also run `observer_cli` as a standalone command, see the notes
 in the [escriptize
 section](https://github.com/zhongwencool/observer_cli#escriptize).
 
-Before running the observer_cli escript, start the target node is up
+Before running the observer_cli escript ensure the target node is up
 and running, e.g.
 
 ```

@@ -19,9 +19,9 @@ jobs:
     strategy:
       matrix:
         erlang:
-          - 25-alpine
           - 26-alpine
           - 27-alpine
+          - 28-alpine
 
     container: erlang:${{ matrix.erlang }}
     steps:

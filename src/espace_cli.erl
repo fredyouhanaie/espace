@@ -137,8 +137,9 @@ check_tuple(_Tuple, _Tab_id, '$end_of_table') ->
     done;
 check_tuple(Tuple, Tab_id, Key) ->
     case ets:lookup(Tab_id, Key) of
-        [] -> %% another scanner has already taken the tuple
-            %% and notified the client
+        [] ->
+            %% another scanner has already taken the tuple and
+            %% notified the client
             nomatch;  %% continue with the scan
         [{Key, Cli_ref, Pattern, Cli_pid}] ->
             case ets:test_ms(Tuple, [{Pattern,[],['$$']}]) of
@@ -146,8 +147,9 @@ check_tuple(Tuple, Tab_id, Key) ->
                     nomatch;  %% continue with the scan
                 _ ->
                     case ets:take(Tab_id, Key) of
-                        [] -> %% another scanner has already taken the tuple
-                            %% and notified the client
+                        [] ->
+                            %% another scanner has already taken the
+                            %% tuple and notified the client
                             nomatch; %% continue with the scan
                         _ ->
                             Cli_pid ! {Cli_ref, retry}
@@ -176,7 +178,7 @@ check_tuple(Tuple, Tab_id, Key) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec check_match(atom(), in|rd|inp|rdp, tuple(), ets:tid(), '$end_of_table'|term()) ->
-          {nomatch} | 
+          {nomatch} |
           {nomatch, reference()} |
           {match, {list(), tuple()}}.
 check_match(Inst_name, Espace_op, Pattern, _Tab_id, '$end_of_table') ->
